@@ -1,54 +1,27 @@
 .imageWrapper {
-  display: inline-block;
-  position: relative;
-  line-height: normal;
-  vertical-align: top;
-  margin: 0 4px; /* classic spacing for inline images */
-  max-width: 100%;
-  box-sizing: border-box;
-}
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 8px;
+  overflow: hidden;
+  animation: pulse 1.2s ease-in-out infinite;
 
-.imageWrapper.selected .resizeHandle {
-  opacity: 1;
-}
+  @mixin light {
+    background: linear-gradient(-90deg, var(--mantine-color-gray-3) 0%, var(--mantine-color-gray-1) 50%, var(--mantine-color-gray-3) 100%);
+    background-size: 400% 400%;
+  }
 
-.image {
-  height: auto;
-}
+  @mixin dark {
+    background: linear-gradient(-90deg, var(--mantine-color-dark-6) 0%, var(--mantine-color-dark-5) 50%, var(--mantine-color-dark-6) 100%);
+    background-size: 400% 400%;
+  }
 
-/* Base style for handles */
-.resizeHandle {
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  background-color: var(--mantine-color-blue-filled);
-  border: 1px solid white;
-  z-index: 10;
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-
-/* Corner handles */
-.resizeHandleNw {
-  top: -5px;
-  left: -5px;
-  cursor: nw-resize;
-}
-
-.resizeHandleNe {
-  top: -5px;
-  right: -5px;
-  cursor: ne-resize;
-}
-
-.resizeHandleSw {
-  bottom: -5px;
-  left: -5px;
-  cursor: sw-resize;
-}
-
-.resizeHandleSe {
-  bottom: -5px;
-  right: -5px;
-  cursor: se-resize;
+  @keyframes pulse {
+    0% {
+      background-position: 0% 0%;
+    }
+    100% {
+      background-position: -135% 0%;
+    }
+  }
 }

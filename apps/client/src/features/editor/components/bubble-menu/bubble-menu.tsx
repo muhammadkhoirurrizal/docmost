@@ -1,10 +1,6 @@
-import {
-  BubbleMenu,
-  BubbleMenuProps,
-  isNodeSelection,
-  useEditor,
-  useEditorState,
-} from "@tiptap/react";
+import { BubbleMenu, BubbleMenuProps } from "@tiptap/react/menus";
+import { isNodeSelection, useEditorState } from "@tiptap/react";
+import type { Editor } from "@tiptap/react";
 import { FC, useEffect, useRef, useState } from "react";
 import {
   IconBold,
@@ -38,8 +34,7 @@ export interface BubbleMenuItem {
 }
 
 type EditorBubbleMenuProps = Omit<BubbleMenuProps, "children" | "editor"> & {
-  editor: ReturnType<typeof useEditor>;
-  canComment?: boolean;
+  editor: Editor | null;
 };
 
 export const EditorBubbleMenu: FC<EditorBubbleMenuProps> = (props) => {
@@ -122,11 +117,8 @@ export const EditorBubbleMenu: FC<EditorBubbleMenuProps> = (props) => {
       const { selection } = state;
       const { empty } = selection;
 
-      // Allow showing if editor is editable OR if user canComment
-      const canShow = editor.isEditable || props.canComment;
-
       if (
-        !canShow ||
+        !editor.isEditable ||
         editor.isActive("image") ||
         empty ||
         isNodeSelection(selection) ||
@@ -137,14 +129,9 @@ export const EditorBubbleMenu: FC<EditorBubbleMenuProps> = (props) => {
       }
       return isTextSelected(editor);
     },
-    tippyOptions: {
-      moveTransition: "transform 0.15s ease-out",
-      onCreate: (instance) => {
-        instance.popper.firstChild?.addEventListener("blur", (event) => {
-          event.preventDefault();
-          event.stopImmediatePropagation();
-        });
-      },
+    options: {
+      placement: "top",
+      offset: 8,
       onHide: () => {
         setIsNodeSelectorOpen(false);
         setIsTextAlignmentOpen(false);
@@ -160,74 +147,70 @@ export const EditorBubbleMenu: FC<EditorBubbleMenuProps> = (props) => {
   const [isColorSelectorOpen, setIsColorSelectorOpen] = useState(false);
 
   return (
-    <BubbleMenu {...bubbleMenuProps}>
+    <BubbleMenu {...bubbleMenuProps} style={{ zIndex: 200, position: "relative"}}>
       <div className={classes.bubbleMenu}>
-        {props.editor.isEditable && (
-          <>
-            <NodeSelector
-              editor={props.editor}
-              isOpen={isNodeSelectorOpen}
-              setIsOpen={() => {
-                setIsNodeSelectorOpen(!isNodeSelectorOpen);
-                setIsTextAlignmentOpen(false);
-                setIsLinkSelectorOpen(false);
-                setIsColorSelectorOpen(false);
-              }}
-            />
+        <NodeSelector
+          editor={props.editor}
+          isOpen={isNodeSelectorOpen}
+          setIsOpen={() => {
+            setIsNodeSelectorOpen(!isNodeSelectorOpen);
+            setIsTextAlignmentOpen(false);
+            setIsLinkSelectorOpen(false);
+            setIsColorSelectorOpen(false);
+          }}
+        />
 
-            <TextAlignmentSelector
-              editor={props.editor}
-              isOpen={isTextAlignmentSelectorOpen}
-              setIsOpen={() => {
-                setIsTextAlignmentOpen(!isTextAlignmentSelectorOpen);
-                setIsNodeSelectorOpen(false);
-                setIsLinkSelectorOpen(false);
-                setIsColorSelectorOpen(false);
-              }}
-            />
+        <TextAlignmentSelector
+          editor={props.editor}
+          isOpen={isTextAlignmentSelectorOpen}
+          setIsOpen={() => {
+            setIsTextAlignmentOpen(!isTextAlignmentSelectorOpen);
+            setIsNodeSelectorOpen(false);
+            setIsLinkSelectorOpen(false);
+            setIsColorSelectorOpen(false);
+          }}
+        />
 
-            <ActionIcon.Group>
-              {items.map((item, index) => (
-                <Tooltip key={index} label={t(item.name)} withArrow>
-                  <ActionIcon
-                    key={index}
-                    variant="default"
-                    size="lg"
-                    radius="0"
-                    aria-label={t(item.name)}
-                    className={clsx({ [classes.active]: item.isActive() })}
-                    style={{ border: "none" }}
-                    onClick={item.command}
-                  >
-                    <item.icon style={{ width: rem(16) }} stroke={2} />
-                  </ActionIcon>
-                </Tooltip>
-              ))}
-            </ActionIcon.Group>
+        <ActionIcon.Group>
+          {items.map((item, index) => (
+            <Tooltip key={index} label={t(item.name)} withArrow>
+              <ActionIcon
+                key={index}
+                variant="default"
+                size="lg"
+                radius="0"
+                aria-label={t(item.name)}
+                className={clsx({ [classes.active]: item.isActive() })}
+                style={{ border: "none" }}
+                onClick={item.command}
+              >
+                <item.icon style={{ width: rem(16) }} stroke={2} />
+              </ActionIcon>
+            </Tooltip>
+          ))}
+        </ActionIcon.Group>
 
-            <LinkSelector
-              editor={props.editor}
-              isOpen={isLinkSelectorOpen}
-              setIsOpen={(value) => {
-                setIsLinkSelectorOpen(value);
-                setIsNodeSelectorOpen(false);
-                setIsTextAlignmentOpen(false);
-                setIsColorSelectorOpen(false);
-              }}
-            />
+        <LinkSelector
+          editor={props.editor}
+          isOpen={isLinkSelectorOpen}
+          setIsOpen={(value) => {
+            setIsLinkSelectorOpen(value);
+            setIsNodeSelectorOpen(false);
+            setIsTextAlignmentOpen(false);
+            setIsColorSelectorOpen(false);
+          }}
+        />
 
-            <ColorSelector
-              editor={props.editor}
-              isOpen={isColorSelectorOpen}
-              setIsOpen={() => {
-                setIsColorSelectorOpen(!isColorSelectorOpen);
-                setIsNodeSelectorOpen(false);
-                setIsTextAlignmentOpen(false);
-                setIsLinkSelectorOpen(false);
-              }}
-            />
-          </>
-        )}
+        <ColorSelector
+          editor={props.editor}
+          isOpen={isColorSelectorOpen}
+          setIsOpen={() => {
+            setIsColorSelectorOpen(!isColorSelectorOpen);
+            setIsNodeSelectorOpen(false);
+            setIsTextAlignmentOpen(false);
+            setIsLinkSelectorOpen(false);
+          }}
+        />
 
         <ActionIcon
           variant="default"

@@ -1,7 +1,6 @@
 import Image from "@tiptap/extension-image";
 import { ImageOptions as DefaultImageOptions } from "@tiptap/extension-image";
 import { ReactNodeViewRenderer } from "@tiptap/react";
-import { ImageUploadPlugin } from "./image-upload";
 import { mergeAttributes, Range } from "@tiptap/core";
 
 export interface ImageOptions extends DefaultImageOptions {
@@ -10,12 +9,15 @@ export interface ImageOptions extends DefaultImageOptions {
 export interface ImageAttributes {
   src?: string;
   alt?: string;
-  title?: string;
   align?: string;
   attachmentId?: string;
   size?: number;
   width?: number;
-  caption?: string;
+  aspectRatio?: number;
+  placeholder?: {
+    id: string;
+    name: string;
+  };
 }
 
 declare module "@tiptap/core" {
@@ -23,7 +25,7 @@ declare module "@tiptap/core" {
     imageBlock: {
       setImage: (attributes: ImageAttributes) => ReturnType;
       setImageAt: (
-        attributes: ImageAttributes & { pos: number | Range },
+        attributes: ImageAttributes & { pos: number | Range }
       ) => ReturnType;
       setImageAlign: (align: "left" | "center" | "right") => ReturnType;
       setImageWidth: (width: number) => ReturnType;
@@ -34,10 +36,11 @@ declare module "@tiptap/core" {
 export const TiptapImage = Image.extend<ImageOptions>({
   name: "image",
 
-  inline: true,
-  group: "inline",
-  draggable: true,
-  selectable: true,
+  inline: false,
+  group: "block",
+  isolating: true,
+  atom: true,
+  defining: true,
 
   addOptions() {
     return {
@@ -90,12 +93,16 @@ export const TiptapImage = Image.extend<ImageOptions>({
           "data-size": attributes.size,
         }),
       },
-      caption: {
-        default: "",
-        parseHTML: (element) => element.getAttribute("caption"),
+      aspectRatio: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("data-aspect-ratio"),
         renderHTML: (attributes: ImageAttributes) => ({
-          caption: attributes.caption,
+          "data-aspect-ratio": attributes.aspectRatio,
         }),
+      },
+      placeholder: {
+        default: null,
+        rendered: false,
       },
     };
   },
@@ -111,45 +118,40 @@ export const TiptapImage = Image.extend<ImageOptions>({
     return {
       setImage:
         (attrs: ImageAttributes) =>
-          ({ commands }) => {
-            return commands.insertContent({
-              type: "image",
-              attrs: attrs,
-            });
-          },
+        ({ commands }) => {
+          return commands.insertContent({
+            type: "image",
+            attrs: attrs,
+          });
+        },
 
       setImageAt:
         (attrs) =>
-          ({ commands }) => {
-            return commands.insertContentAt(attrs.pos, {
-              type: "image",
-              attrs: attrs,
-            });
-          },
+        ({ commands }) => {
+          return commands.insertContentAt(attrs.pos, {
+            type: "image",
+            attrs: attrs,
+          });
+        },
 
       setImageAlign:
         (align) =>
-          ({ commands }) =>
-            commands.updateAttributes("image", { align }),
+        ({ commands }) =>
+          commands.updateAttributes("image", { align }),
 
       setImageWidth:
         (width) =>
-          ({ commands }) =>
-            commands.updateAttributes("image", {
-              width: `${Math.max(0, Math.min(100, width))}%`,
-            }),
+        ({ commands }) =>
+          commands.updateAttributes("image", {
+            width: `${Math.max(0, Math.min(100, width))}%`,
+          }),
     };
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(this.options.view, { as: "span" });
-  },
+    // Force the react node view to render immediately using flush sync (https://github.com/ueberdosis/tiptap/blob/b4db352f839e1d82f9add6ee7fb45561336286d8/packages/react/src/ReactRenderer.tsx#L183-L191)
+    this.editor.isInitialized = true;
 
-  addProseMirrorPlugins() {
-    return [
-      ImageUploadPlugin({
-        placeholderClass: "image-upload",
-      }),
-    ];
+    return ReactNodeViewRenderer(this.options.view);
   },
 });

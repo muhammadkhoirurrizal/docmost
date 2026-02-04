@@ -23,6 +23,5 @@ export * from "./lib/subpages";
 export * from "./lib/highlight";
 export * from "./lib/heading/heading";
 export * from "./lib/unique-id";
-export * from "./lib/columns";
-export * from "./lib/data-table/data-table";
-export * from "./lib/kanban-board/kanban-board";
+export * from "./lib/shared-storage";
+export * from "./lib/recreate-transform";

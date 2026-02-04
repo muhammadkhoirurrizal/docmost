@@ -1,6 +1,4 @@
-import { BubbleMenu as BaseBubbleMenu } from "@tiptap/react";
 import React, { useCallback } from "react";
-
 import {
   EditorMenuProps,
   ShouldShowProps,
@@ -17,6 +15,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { TableBackgroundColor } from "./table-background-color";
 import { TableTextAlignment } from "./table-text-alignment";
+import { BubbleMenu } from "@tiptap/react/menus";
 
 export const TableCellMenu = React.memo(
   ({ editor, appendTo }: EditorMenuProps): JSX.Element => {
@@ -29,7 +28,7 @@ export const TableCellMenu = React.memo(
 
         return isCellSelection(state.selection);
       },
-      [editor],
+      [editor]
     );
 
     const mergeCells = useCallback(() => {
@@ -53,16 +52,20 @@ export const TableCellMenu = React.memo(
     }, [editor]);
 
     return (
-      <BaseBubbleMenu
+      <BubbleMenu
         editor={editor}
         pluginKey="table-cell-menu"
         updateDelay={0}
-        tippyOptions={{
-          appendTo: () => {
-            return appendTo?.current;
+        appendTo={() => {
+          return appendTo?.current;
+        }}
+        ref={(element) => {
+          element.style.zIndex = "99";
+        }}
+        options={{
+          offset: {
+            mainAxis: 15,
           },
-          offset: [0, 15],
-          zIndex: 99,
         }}
         shouldShow={shouldShow}
       >
@@ -125,9 +128,9 @@ export const TableCellMenu = React.memo(
             </ActionIcon>
           </Tooltip>
         </ActionIcon.Group>
-      </BaseBubbleMenu>
+      </BubbleMenu>
     );
-  },
+  }
 );
 
 export default TableCellMenu;
