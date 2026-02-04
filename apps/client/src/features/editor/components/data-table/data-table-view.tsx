@@ -499,7 +499,7 @@ export default function DataTableView(props: NodeViewProps) {
             return (
                 <CheckboxCell
                     value={value}
-                    onChange={(val) => updateCell(row.id, col.id, val)}
+                    onChange={(val) => updateCell(row.id, col.id, String(val))}
                     isEditable={true}
                 />
             );
