@@ -37,6 +37,9 @@ import {
   UniqueID,
   addUniqueIdsToDoc,
   DataTable,
+  Column,
+  ColumnGroup,
+  KanbanBoard,
 } from '@docmost/editor-ext';
 import { generateText, getSchema, JSONContent } from '@tiptap/core';
 import { generateHTML, generateJSON } from '../common/helpers/prosemirror/html';
@@ -90,6 +93,9 @@ export const tiptapExtensions = [
   Mention,
   Subpages,
   DataTable,
+  Column,
+  ColumnGroup,
+  KanbanBoard,
 ] as any;
 
 export function jsonToHtml(tiptapJson: any) {

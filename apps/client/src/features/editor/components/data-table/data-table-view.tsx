@@ -612,64 +612,64 @@ export default function DataTableView(props: NodeViewProps) {
                 </Box>
                 <ScrollArea.Autosize mah={800} type="always">
                     <div style={{ paddingBottom: 12 }}>
-                        <table style={{ width: '100%', minWidth: totalColumnsWidth }}>
-                            <thead>
-                                <DndContext
-                                    sensors={sensors}
-                                    collisionDetection={closestCenter}
-                                    onDragStart={handleColumnDragStart}
-                                    onDragEnd={handleColumnDragEnd}
-                                    modifiers={[modifiers.restrictToHorizontalAxis]}
-                                    autoScroll={false}
-                                >
-                                    <SortableContext items={columns.map(c => c.id)} strategy={horizontalListSortingStrategy}>
-                                        <tr>
-                                            {isEditable && (
-                                                <th style={{ width: 50, textAlign: 'center', verticalAlign: 'middle' }}>
-                                                    <ActionIcon variant="subtle" size="sm" onClick={addRow} c="dimmed"><IconPlus size={16} /></ActionIcon>
-                                                </th>
-                                            )}
-                                            {columns.map((col, idx) => (
-                                                <SortableHeader
-                                                    key={col.id}
-                                                    col={col}
+                        <DndContext
+                            sensors={sensors}
+                            collisionDetection={closestCenter}
+                            onDragStart={handleColumnDragStart}
+                            onDragEnd={handleColumnDragEnd}
+                            modifiers={[modifiers.restrictToHorizontalAxis]}
+                            autoScroll={false}
+                        >
+                            <DndContext
+                                sensors={sensors}
+                                collisionDetection={closestCenter}
+                                onDragStart={handleRowDragStart}
+                                onDragEnd={handleRowDragEnd}
+                                modifiers={[modifiers.restrictToVerticalAxis]}
+                                autoScroll={false}
+                            >
+                                <table style={{ width: '100%', minWidth: totalColumnsWidth }}>
+                                    <thead>
+                                        <SortableContext items={columns.map(c => c.id)} strategy={horizontalListSortingStrategy}>
+                                            <tr>
+                                                {isEditable && (
+                                                    <th style={{ width: 50, textAlign: 'center', verticalAlign: 'middle' }}>
+                                                        <ActionIcon variant="subtle" size="sm" onClick={addRow} c="dimmed"><IconPlus size={16} /></ActionIcon>
+                                                    </th>
+                                                )}
+                                                {columns.map((col, idx) => (
+                                                    <SortableHeader
+                                                        key={col.id}
+                                                        col={col}
+                                                        idx={idx}
+                                                        isEditable={isEditable}
+                                                        updateColumnName={updateColumnName}
+                                                        removeColumn={removeColumn}
+                                                        handleResizeStart={handleResizeStart}
+                                                    />
+                                                ))}
+                                            </tr>
+                                        </SortableContext>
+                                    </thead>
+                                    <tbody>
+                                        <SortableContext items={visibleRows.map(r => r.id)} strategy={verticalListSortingStrategy}>
+                                            {visibleRows.map((row, idx) => (
+                                                <SortableRow
+                                                    key={row.id}
+                                                    row={row}
                                                     idx={idx}
+                                                    columns={columns}
                                                     isEditable={isEditable}
-                                                    updateColumnName={updateColumnName}
-                                                    removeColumn={removeColumn}
-                                                    handleResizeStart={handleResizeStart}
+                                                    removeRow={removeRow}
+                                                    renderInput={renderInput}
+                                                    handleOpenRow={handleOpenRow}
                                                 />
                                             ))}
-                                        </tr>
-                                    </SortableContext>
-                                </DndContext>
-                            </thead>
-                            <tbody>
-                                <DndContext
-                                    sensors={sensors}
-                                    collisionDetection={closestCenter}
-                                    onDragStart={handleRowDragStart}
-                                    onDragEnd={handleRowDragEnd}
-                                    modifiers={[modifiers.restrictToVerticalAxis]}
-                                    autoScroll={false}
-                                >
-                                    <SortableContext items={visibleRows.map(r => r.id)} strategy={verticalListSortingStrategy}>
-                                        {visibleRows.map((row, idx) => (
-                                            <SortableRow
-                                                key={row.id}
-                                                row={row}
-                                                idx={idx}
-                                                columns={columns}
-                                                isEditable={isEditable}
-                                                removeRow={removeRow}
-                                                renderInput={renderInput}
-                                                handleOpenRow={handleOpenRow}
-                                            />
-                                        ))}
-                                    </SortableContext>
-                                </DndContext>
-                            </tbody>
-                        </table>
+                                        </SortableContext>
+                                    </tbody>
+                                </table>
+                            </DndContext>
+                        </DndContext>
                     </div>
                 </ScrollArea.Autosize>
             </div>
