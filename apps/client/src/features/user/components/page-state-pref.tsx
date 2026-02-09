@@ -57,7 +57,6 @@ export function PageStateSegmentedControl({
       const editorPageId = pageEditor?.storage?.pageId;
       if (newValue === PageEditMode.Read && hasUnsavedChanges && pageEditor && pageId) {
         if (editorPageId !== pageId) {
-          console.warn("Editor pageId mismatch, skipping auto-save to prevent data leak.");
           const updatedUser = await updateUser({ pageEditMode: newValue });
           setValue(newValue);
           setUser(updatedUser);

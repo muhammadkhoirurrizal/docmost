@@ -31,27 +31,27 @@ export class HistoryListener {
       }
     }
 
-    const pageCreationTime = new Date(page.createdAt).getTime();
-    const currentTime = Date.now();
-    const FIVE_MINUTES = 5 * 60 * 1000;
+    // const pageCreationTime = new Date(page.createdAt).getTime();
+    // const currentTime = Date.now();
+    // const FIVE_MINUTES = 5 * 60 * 1000;
 
-    if (currentTime - pageCreationTime < FIVE_MINUTES) {
-      return;
-    }
+    // if (currentTime - pageCreationTime < FIVE_MINUTES) {
+    //   return;
+    // }
 
-    const lastHistory = await this.pageHistoryRepo.findPageLastHistory(page.id);
+    // const lastHistory = await this.pageHistoryRepo.findPageLastHistory(page.id);
 
-    if (
-      !lastHistory ||
-      (!isDeepStrictEqual(lastHistory.content, page.content) &&
-        currentTime - new Date(lastHistory.createdAt).getTime() >= FIVE_MINUTES)
-    ) {
-      try {
-        await this.pageHistoryRepo.saveHistory(page);
-        this.logger.debug(`New history created for: ${page.id}`);
-      } catch (err) {
-        this.logger.error(`Failed to create history for page: ${page.id}`, err);
-      }
-    }
+    // if (
+    //   !lastHistory ||
+    //   (!isDeepStrictEqual(lastHistory.content, page.content) &&
+    //     currentTime - new Date(lastHistory.createdAt).getTime() >= FIVE_MINUTES)
+    // ) {
+    //   try {
+    //     await this.pageHistoryRepo.saveHistory(page);
+    //     this.logger.debug(`New history created for: ${page.id}`);
+    //   } catch (err) {
+    //     this.logger.error(`Failed to create history for page: ${page.id}`, err);
+    //   }
+    // }
   }
 }
