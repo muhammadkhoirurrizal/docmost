@@ -601,12 +601,16 @@ export default function DataTableView(props: NodeViewProps) {
         if (col.type === 'checkbox') return (value === 'true' || value === true) ? "Checked" : "Unchecked";
         if (col.type === 'status' || col.type === 'select') {
             const opt = col.options?.find(o => o.id === value);
-            return opt ? opt.label : value;
+            const label = opt ? opt.label : value;
+            return label ? label.toUpperCase() : label;
         }
         if (col.type === 'multi-select') {
             try {
                 const ids = JSON.parse(value || "[]");
-                const labels = ids.map((id: string) => col.options?.find(o => o.id === id)?.label || id);
+                const labels = ids.map((id: string) => {
+                    const label = col.options?.find(o => o.id === id)?.label || id;
+                    return label ? label.toUpperCase() : label;
+                });
                 return labels.join(", ");
             } catch { return value; }
         }
