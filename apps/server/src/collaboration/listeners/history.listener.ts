@@ -4,6 +4,8 @@ import { PageHistoryRepo } from '@docmost/db/repos/page/page-history.repo';
 import { Page } from '@docmost/db/types/entity.types';
 import { isDeepStrictEqual } from 'node:util';
 
+import { normalizeTiptapJson } from '../collaboration.util';
+
 export class UpdatedPageEvent {
   page: Page;
   forceHistory?: boolean;
@@ -18,15 +20,22 @@ export class HistoryListener {
   @OnEvent('collab.page.updated')
   async handleCreatePageHistory(event: UpdatedPageEvent) {
     const { page, forceHistory } = event;
+    const lastHistory = await this.pageHistoryRepo.findPageLastHistory(page.id);
+
+    const normalizedContent = normalizeTiptapJson(page.content);
+    const lastNormalizedContent = lastHistory ? normalizeTiptapJson(lastHistory.content) : null;
 
     // If forceHistory is true, bypass all checks and create history immediately
-    if (forceHistory) {
+    if (forceHistory && (!lastHistory || (normalizedContent && !isDeepStrictEqual(lastNormalizedContent, normalizedContent)))) {
       try {
-        await this.pageHistoryRepo.saveHistory(page);
-        this.logger.debug(`Forced history created for: ${page.id}`);
+        await this.pageHistoryRepo.saveHistory({
+          ...page,
+          content: normalizedContent,
+        });
+        this.logger.debug(`History created for: ${page.id} (force: ${!!forceHistory})`);
         return;
       } catch (err) {
-        this.logger.error(`Failed to create forced history for page: ${page.id}`, err);
+        this.logger.error(`Failed to create history for page: ${page.id}`, err);
         return;
       }
     }
@@ -39,18 +48,19 @@ export class HistoryListener {
     //   return;
     // }
 
-    // const lastHistory = await this.pageHistoryRepo.findPageLastHistory(page.id);
-
     // if (
     //   !lastHistory ||
-    //   (!isDeepStrictEqual(lastHistory.content, page.content) &&
+    //   (!isDeepStrictEqual(lastNormalizedContent, normalizedContent) &&
     //     currentTime - new Date(lastHistory.createdAt).getTime() >= FIVE_MINUTES)
     // ) {
     //   try {
-    //     await this.pageHistoryRepo.saveHistory(page);
-    //     this.logger.debug(`New history created for: ${page.id}`);
+    //     await this.pageHistoryRepo.saveHistory({
+    //       ...page,
+    //       content: normalizedContent,
+    //     });
+    //     this.logger.debug(`New periodic history created for: ${page.id}`);
     //   } catch (err) {
-    //     this.logger.error(`Failed to create history for page: ${page.id}`, err);
+    //     this.logger.error(`Failed to create periodic history for page: ${page.id}`, err);
     //   }
     // }
   }

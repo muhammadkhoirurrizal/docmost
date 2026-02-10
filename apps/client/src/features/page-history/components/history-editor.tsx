@@ -35,7 +35,7 @@ const DiffMark = Mark.create({
   renderHTML({ HTMLAttributes }) {
     const type = HTMLAttributes['data-diff-type'];
     let style = "";
-    
+
     if (type === 'add') {
       style = 'background-color: #acf2bd !important; color: #1e3a22 !important; padding: 2px 0; border-radius: 2px; text-decoration: none !important; box-decoration-break: clone; -webkit-box-decoration-break: clone;';
     } else if (type === 'remove') {
@@ -69,7 +69,7 @@ export function HistoryEditor({
   const diffTitle = useMemo(() => {
     const displayTitle = title || t("Untitled");
     if (!previousTitle || title === previousTitle) return `<h1>${displayTitle}</h1>`;
-    
+
     const diffs = computeDiff(previousTitle, title);
     const html = diffs
       .map((d) => {
@@ -96,7 +96,16 @@ export function HistoryEditor({
     return diffs
       .map((d) => {
         const isTag = d.value.startsWith('<') && d.value.endsWith('>');
-        if (isTag) return d.value;
+
+        if (isTag) {
+          if (d.type === 'remove') {
+            // For block tags, if we output both old and new, Prosemirror often ignores the second one.
+            // For now, we omit removed tags to ensure the latest version renders correctly.
+            // Text tokens inside the removed block will still be rendered in red.
+            return '';
+          }
+          return d.value;
+        }
 
         if (d.type === "add") {
           return `<span data-diff-type="add">${d.value}</span>`;
@@ -128,7 +137,16 @@ export function HistoryEditor({
     extensions: historyExtensions,
     editable: false,
     immediatelyRender: false,
+    onCreate({ editor: e }) {
+      e.storage.previousContent = previousContent;
+    },
   });
+
+  useEffect(() => {
+    if (contentEditor) {
+      contentEditor.storage.previousContent = previousContent;
+    }
+  }, [contentEditor, previousContent]);
 
   useEffect(() => {
     if (titleEditor) {
@@ -143,13 +161,14 @@ export function HistoryEditor({
   }, [diffContent, contentEditor]);
 
   return (
-    <Container 
-      size={900} 
+    <Container
+      size={900}
       className={clsx(classes.editor)}
       style={{ position: 'relative' }}
     >
       {/* Global CSS to ensure Red/Green blocks are always visible */}
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         .tiptap span[data-diff-type="add"] {
           background-color: #acf2bd !important;
           color: #1e3a22 !important;
@@ -179,7 +198,7 @@ export function HistoryEditor({
           <EditorContent editor={contentEditor} />
         </div>
       </div>
-      
+
       {/* Overlay to block interaction */}
       <div style={{
         position: 'absolute',

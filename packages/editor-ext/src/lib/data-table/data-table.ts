@@ -55,6 +55,13 @@ export const DataTable = Node.create<DataTableOptions>({
 
   addAttributes() {
     return {
+      id: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("data-id"),
+        renderHTML: (attributes) => ({
+          "data-id": attributes.id,
+        }),
+      },
       columns: {
         default: [
           { id: "name", name: "Name", type: "text", width: 250 },

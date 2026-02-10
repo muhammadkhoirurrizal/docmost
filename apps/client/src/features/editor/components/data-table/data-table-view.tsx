@@ -177,6 +177,47 @@ export default function DataTableView(props: NodeViewProps) {
         return columns.reduce((acc, col) => acc + (col.width || 150), 0);
     }, [columns]);
 
+    const previousTable = useMemo(() => {
+        const previousContent = (editor.storage as any).previousContent;
+        if (!previousContent || !node.attrs.id) return null;
+
+        const findTableById = (content: any): any => {
+            if (!content) return null;
+            if (Array.isArray(content)) {
+                for (const item of content) {
+                    const found = findTableById(item);
+                    if (found) return found;
+                }
+            } else if (content.type === 'dataTable') {
+                if (node.attrs.id && content.attrs?.id === node.attrs.id) {
+                    return content;
+                }
+                // Fallback: match by row IDs if any match
+                const currentRows = node.attrs.rows || [];
+                const prevRows = content.attrs?.rows || [];
+                const matches = currentRows.some((r: any) => prevRows.some((pr: any) => pr.id === r.id));
+                if (matches) return content;
+            } else if (content.content) {
+                return findTableById(content.content);
+            }
+            return null;
+        };
+
+        const found = findTableById(previousContent);
+        return found;
+    }, [editor.storage, node.attrs.id, node.attrs.rows]);
+
+    const getCellDiff = (rowId: string, colId: string, currentValue: any) => {
+        if (!previousTable) return null;
+        const prevRow = previousTable.attrs.rows.find((r: any) => r.id === rowId);
+        if (!prevRow) return { type: 'add', prevValue: null };
+        const prevValue = prevRow[colId];
+        if (prevValue !== currentValue) {
+            return { type: 'change', prevValue };
+        }
+        return null;
+    };
+
     const activeRow = useMemo(() => rows.find(r => r.id === activeRowId), [rows, activeRowId]);
 
     const isRowEmpty = (row: DataTableRow) => {
@@ -555,6 +596,45 @@ export default function DataTableView(props: NodeViewProps) {
         );
     };
 
+    const renderValue = (col: DataTableColumn, value: any) => {
+        if (!value || value === "") return "Empty";
+        if (col.type === 'checkbox') return (value === 'true' || value === true) ? "Checked" : "Unchecked";
+        if (col.type === 'status' || col.type === 'select') {
+            const opt = col.options?.find(o => o.id === value);
+            return opt ? opt.label : value;
+        }
+        if (col.type === 'multi-select') {
+            try {
+                const ids = JSON.parse(value || "[]");
+                const labels = ids.map((id: string) => col.options?.find(o => o.id === id)?.label || id);
+                return labels.join(", ");
+            } catch { return value; }
+        }
+        return String(value);
+    };
+
+    const renderCell = (row: DataTableRow, col: DataTableColumn) => {
+        const currentValue = row[col.id];
+        const diff = getCellDiff(row.id, col.id, currentValue);
+
+        if (diff && !isEditable) {
+            return (
+                <div className={classes.diffCell}>
+                    {diff.type === 'change' && diff.prevValue !== null && (
+                        <div className={classes.diffRemove}>
+                            {renderValue(col, diff.prevValue)}
+                        </div>
+                    )}
+                    <div className={classes.diffAdd}>
+                        {renderValue(col, currentValue)}
+                    </div>
+                </div>
+            );
+        }
+
+        return renderInput(row, col);
+    };
+
     return (
         <NodeViewWrapper
             className={clsx(classes.dataTableWrapper, "docmost-data-table")}
@@ -660,7 +740,7 @@ export default function DataTableView(props: NodeViewProps) {
                                                 columns={columns}
                                                 isEditable={isEditable}
                                                 removeRow={removeRow}
-                                                renderInput={renderInput}
+                                                renderInput={renderCell}
                                                 handleOpenRow={handleOpenRow}
                                             />
                                         ))}

@@ -118,7 +118,7 @@ export const baseExtensions = [
   }),
   Heading,
   UniqueID.configure({
-    types: ["heading", "paragraph"],
+    types: ["heading", "paragraph", "dataTable", "kanbanBoard"],
     filterTransaction: (transaction) => !isChangeOrigin(transaction),
   }),
   Placeholder.configure({

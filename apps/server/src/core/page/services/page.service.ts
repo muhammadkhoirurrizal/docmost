@@ -177,10 +177,12 @@ export class PageService {
 
     // Emit event for forced history creation if forceHistorySave is true
     if (updatePageDto.forceHistorySave) {
+      const finalContent = updatePageDto.content || updatedPage.content;
+
       this.eventEmitter.emit('collab.page.updated', {
         page: {
           ...updatedPage,
-          content: updatePageDto.content || updatedPage.content,
+          content: finalContent,
         },
         forceHistory: true,
       });

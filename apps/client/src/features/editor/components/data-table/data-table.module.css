@@ -317,3 +317,37 @@
 [data-mantine-color-scheme="dark"] .personSelectItem:hover {
   background-color: var(--mantine-color-dark-5);
 }
+
+.diffAdd {
+  background-color: #acf2bd !important;
+  color: #1e3a22 !important;
+  border-radius: 2px;
+  padding: 0 4px;
+}
+
+.diffRemove {
+  background-color: #fdb8c0 !important;
+  color: #4b1113 !important;
+  text-decoration: line-through !important;
+  border-radius: 2px;
+  padding: 0 4px;
+  margin-right: 4px;
+}
+
+[data-mantine-color-scheme="dark"] .diffAdd {
+  background-color: rgba(46, 160, 67, 0.4) !important;
+  color: #acf2bd !important;
+}
+
+[data-mantine-color-scheme="dark"] .diffRemove {
+  background-color: rgba(248, 81, 73, 0.4) !important;
+  color: #fdb8c0 !important;
+}
+
+.diffCell {
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  padding: 8px 12px !important;
+  gap: 4px;
+}

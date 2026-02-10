@@ -121,6 +121,48 @@ export function jsonToNode(tiptapJson: JSONContent) {
   return Node.fromJSON(getSchema(tiptapExtensions), tiptapJson);
 }
 
+export function normalizeTiptapJson(tiptapJson: any) {
+  if (!tiptapJson) return tiptapJson;
+
+  const clean = (obj: any): any => {
+    if (!obj || typeof obj !== "object") return obj;
+
+    if (Array.isArray(obj)) {
+      return obj.map(clean).filter((v) => v !== undefined && v !== null);
+    }
+
+    const newObj: any = {};
+    let hasKeys = false;
+    for (const [key, value] of Object.entries(obj)) {
+      const cleanedValue = clean(value);
+
+      if (cleanedValue === null || cleanedValue === undefined) {
+        continue;
+      }
+
+      if (
+        (key === "attrs" || key === "content") &&
+        typeof cleanedValue === "object" &&
+        Object.keys(cleanedValue).length === 0
+      ) {
+        continue;
+      }
+
+      newObj[key] = cleanedValue;
+      hasKeys = true;
+    }
+
+    return hasKeys ? newObj : undefined;
+  };
+
+  try {
+    const node = jsonToNode(tiptapJson);
+    return clean(node.toJSON());
+  } catch (error) {
+    return clean(tiptapJson);
+  }
+}
+
 export function getPageId(documentName: string) {
   return documentName.split('.')[1];
 }
