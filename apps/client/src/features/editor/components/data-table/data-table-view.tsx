@@ -171,6 +171,7 @@ export default function DataTableView(props: NodeViewProps) {
     const menuContainerRef = useRef<HTMLDivElement>(null);
     const [search, setSearch] = useState("");
     const [isDragging, setIsDragging] = useState(false);
+    const [dragType, setDragType] = useState<'row' | 'col' | null>(null);
 
     const totalColumnsWidth = useMemo(() => {
         return columns.reduce((acc, col) => acc + (col.width || 150), 0);
@@ -435,28 +436,34 @@ export default function DataTableView(props: NodeViewProps) {
         useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
     );
 
-    const handleRowDragStart = () => setIsDragging(true);
-    const handleRowDragEnd = (event: DragEndEvent) => {
-        setIsDragging(false);
-        const { active, over } = event;
-        if (!over || active.id === over.id) return;
-        const oldIndex = rows.findIndex((row) => row.id === active.id);
-        const newIndex = rows.findIndex((row) => row.id === over.id);
-        const newRows = arrayMove(rows, oldIndex, newIndex);
-        updateAttributes({ rows: newRows });
+    const handleDragStart = (event: DragStartEvent) => {
+        setIsDragging(true);
+        const { active } = event;
+        setDragType(active.data.current?.type);
     };
 
-    const handleColumnDragStart = () => setIsDragging(true);
-    const handleColumnDragEnd = (event: DragEndEvent) => {
+    const handleDragEnd = (event: DragEndEvent) => {
         setIsDragging(false);
+        const type = dragType;
+        setDragType(null);
+
         const { active, over } = event;
         if (!over || active.id === over.id) return;
-        const oldIndex = columns.findIndex((col) => col.id === active.id);
-        const newIndex = columns.findIndex((col) => col.id === over.id);
-        if (oldIndex === 0 || newIndex === 0) return;
-        const newColumns = arrayMove(columns, oldIndex, newIndex);
-        updateAttributes({ columns: newColumns });
+
+        if (type === 'col') {
+            const oldIndex = columns.findIndex((col) => col.id === active.id);
+            const newIndex = columns.findIndex((col) => col.id === over.id);
+            if (oldIndex === 0 || newIndex === 0) return;
+            const newColumns = arrayMove(columns, oldIndex, newIndex);
+            updateAttributes({ columns: newColumns });
+        } else if (type === 'row') {
+            const oldIndex = rows.findIndex((row) => row.id === active.id);
+            const newIndex = rows.findIndex((row) => row.id === over.id);
+            const newRows = arrayMove(rows, oldIndex, newIndex);
+            updateAttributes({ rows: newRows });
+        }
     };
+
 
     const renderInput = (row: DataTableRow, col: DataTableColumn, variant: 'table' | 'modal' = 'table') => {
         const value = row[col.id] || "";
@@ -615,63 +622,55 @@ export default function DataTableView(props: NodeViewProps) {
                         <DndContext
                             sensors={sensors}
                             collisionDetection={closestCenter}
-                            onDragStart={handleColumnDragStart}
-                            onDragEnd={handleColumnDragEnd}
-                            modifiers={[modifiers.restrictToHorizontalAxis]}
+                            onDragStart={handleDragStart}
+                            onDragEnd={handleDragEnd}
+                            modifiers={dragType === 'col' ? [modifiers.restrictToHorizontalAxis] : dragType === 'row' ? [modifiers.restrictToVerticalAxis] : []}
                             autoScroll={false}
                         >
-                            <DndContext
-                                sensors={sensors}
-                                collisionDetection={closestCenter}
-                                onDragStart={handleRowDragStart}
-                                onDragEnd={handleRowDragEnd}
-                                modifiers={[modifiers.restrictToVerticalAxis]}
-                                autoScroll={false}
-                            >
-                                <table style={{ width: '100%', minWidth: totalColumnsWidth }}>
-                                    <thead>
-                                        <SortableContext items={columns.map(c => c.id)} strategy={horizontalListSortingStrategy}>
-                                            <tr>
-                                                {isEditable && (
-                                                    <th style={{ width: 50, textAlign: 'center', verticalAlign: 'middle' }}>
-                                                        <ActionIcon variant="subtle" size="sm" onClick={addRow} c="dimmed"><IconPlus size={16} /></ActionIcon>
-                                                    </th>
-                                                )}
-                                                {columns.map((col, idx) => (
-                                                    <SortableHeader
-                                                        key={col.id}
-                                                        col={col}
-                                                        idx={idx}
-                                                        isEditable={isEditable}
-                                                        updateColumnName={updateColumnName}
-                                                        removeColumn={removeColumn}
-                                                        handleResizeStart={handleResizeStart}
-                                                    />
-                                                ))}
-                                            </tr>
-                                        </SortableContext>
-                                    </thead>
-                                    <tbody>
-                                        <SortableContext items={visibleRows.map(r => r.id)} strategy={verticalListSortingStrategy}>
-                                            {visibleRows.map((row, idx) => (
-                                                <SortableRow
-                                                    key={row.id}
-                                                    row={row}
+                            <table style={{ width: '100%', minWidth: totalColumnsWidth }}>
+                                <thead>
+                                    <SortableContext items={columns.map(c => c.id)} strategy={horizontalListSortingStrategy}>
+                                        <tr>
+                                            {isEditable && (
+                                                <th style={{ width: 50, textAlign: 'center', verticalAlign: 'middle' }}>
+                                                    <ActionIcon variant="subtle" size="sm" onClick={addRow} c="dimmed"><IconPlus size={16} /></ActionIcon>
+                                                </th>
+                                            )}
+                                            {columns.map((col, idx) => (
+                                                <SortableHeader
+                                                    key={col.id}
+                                                    col={col}
                                                     idx={idx}
-                                                    columns={columns}
                                                     isEditable={isEditable}
-                                                    removeRow={removeRow}
-                                                    renderInput={renderInput}
-                                                    handleOpenRow={handleOpenRow}
+                                                    updateColumnName={updateColumnName}
+                                                    removeColumn={removeColumn}
+                                                    handleResizeStart={handleResizeStart}
                                                 />
                                             ))}
-                                        </SortableContext>
-                                    </tbody>
-                                </table>
-                            </DndContext>
+                                        </tr>
+                                    </SortableContext>
+                                </thead>
+                                <tbody>
+                                    <SortableContext items={visibleRows.map(r => r.id)} strategy={verticalListSortingStrategy}>
+                                        {visibleRows.map((row, idx) => (
+                                            <SortableRow
+                                                key={row.id}
+                                                row={row}
+                                                idx={idx}
+                                                columns={columns}
+                                                isEditable={isEditable}
+                                                removeRow={removeRow}
+                                                renderInput={renderInput}
+                                                handleOpenRow={handleOpenRow}
+                                            />
+                                        ))}
+                                    </SortableContext>
+                                </tbody>
+                            </table>
                         </DndContext>
                     </div>
                 </ScrollArea.Autosize>
+
             </div>
 
             <Modal opened={opened} onClose={close} size="90%" withCloseButton={false} centered styles={{ content: { padding: "16px" } }}>
@@ -729,9 +728,14 @@ export default function DataTableView(props: NodeViewProps) {
 }
 
 function SortableHeader({ col, idx, isEditable, updateColumnName, removeColumn, handleResizeStart }: any) {
-    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: col.id, disabled: idx === 0 });
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+        id: col.id,
+        disabled: idx === 0,
+        data: { type: 'col' }
+    });
     const style = {
         transform: CSS.Transform.toString(transform),
+
         transition,
         zIndex: isDragging ? 10 : 1,
         minWidth: col.width || (idx === 0 ? 250 : 200),
@@ -784,9 +788,13 @@ function SortableHeader({ col, idx, isEditable, updateColumnName, removeColumn, 
 }
 
 function SortableRow({ row, idx, columns, isEditable, removeRow, renderInput, handleOpenRow }: any) {
-    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: row.id });
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+        id: row.id,
+        data: { type: 'row' }
+    });
     const style = {
         transform: CSS.Transform.toString(transform),
+
         transition,
         zIndex: isDragging ? 10 : 1,
         opacity: isDragging ? 0.5 : 1,
