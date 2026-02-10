@@ -53,7 +53,9 @@ import {
   GoogleDriveIcon,
   GoogleDocsIcon,
   GoogleSheetsIcon,
+  GoogleSlidesIcon,
   LoomIcon,
+
   MiroIcon,
   TypeformIcon,
   VimeoIcon,
@@ -719,6 +721,21 @@ const CommandGroups: SlashMenuGroupedItemsType = {
           .run();
       },
     },
+    {
+      title: "Google Slides",
+      description: "Embed Google Slides content",
+      searchTerms: ["google slides", "gslides", "ppt", "presentation"],
+      icon: GoogleSlidesIcon,
+      command: ({ editor, range }: CommandProps) => {
+        editor
+          .chain()
+          .focus()
+          .deleteRange(range)
+          .setEmbed({ provider: "gslides" })
+          .run();
+      },
+    },
+
   ],
 };
 

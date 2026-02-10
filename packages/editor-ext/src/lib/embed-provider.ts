@@ -117,6 +117,19 @@ export const embedProviders: IEmbedProvider[] = [
     },
   },
   {
+    id: "gslides",
+    name: "Google Slides",
+    regex:
+      /^((?:https?:)?\/\/)?((?:www|m)\.)?(docs\.google\.com)\/presentation\/d\/(?:e\/)?([a-zA-Z0-9_-]+)(?:\/.*)?$/,
+    getEmbedUrl: (match, url: string) => {
+      if (url.includes("/edit")) {
+        return url.replace("/edit", "/embed");
+      }
+      return url;
+    },
+  },
+
+  {
     id: "iframe",
     name: "Iframe",
     regex: /any-iframe/,
