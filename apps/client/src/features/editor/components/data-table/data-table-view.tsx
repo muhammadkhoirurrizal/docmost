@@ -43,7 +43,7 @@ import {
     IconMarkdown,
     IconGripVertical
 } from "@tabler/icons-react";
-import { DataTableColumn, DataTableRow, DataTableFilter } from "@docmost/editor-ext";
+import { DataTableColumn, DataTableRow, DataTableFilter, DataTableSort } from "@docmost/editor-ext";
 import classes from "./data-table.module.css";
 import { useDisclosure } from "@mantine/hooks";
 import React, { useState, useMemo, useRef, useEffect, useCallback } from "react";
@@ -67,6 +67,7 @@ import { MultiSelectCell } from "./multi-select-cell";
 import { CheckboxCell } from "./checkbox-cell";
 import { RichTextCell } from "./rich-text-cell";
 import { FilterDropdown } from "./filter-dropdown";
+import { SortDropdown } from "./sort-dropdown";
 
 // Drag and Drop imports
 import {
@@ -150,10 +151,11 @@ const PropertyTypes = [
 
 export default function DataTableView(props: NodeViewProps) {
     const { node, updateAttributes, editor, getPos } = props;
-    const { columns, rows, filters = [] } = node.attrs as {
+    const { columns, rows, filters = [], sorts = [] } = node.attrs as {
         columns: DataTableColumn[];
         rows: DataTableRow[];
         filters?: DataTableFilter[];
+        sorts?: DataTableSort[];
     };
 
     const { isVisitor } = useUserRole();
@@ -299,6 +301,43 @@ export default function DataTableView(props: NodeViewProps) {
         if (isEditable) return filteredRows;
         return filteredRows.filter(row => !isRowEmpty(row));
     }, [filteredRows, columns, isEditable]);
+
+    const sortedRows = useMemo(() => {
+        if (sorts.length === 0) return visibleRows;
+
+        return [...visibleRows].sort((a, b) => {
+            for (const sort of sorts) {
+                const column = columns.find(c => c.id === sort.columnId);
+                if (!column) continue;
+
+                let valA = a[sort.columnId];
+                let valB = b[sort.columnId];
+
+                if (column.type === 'number') {
+                    valA = parseFloat(valA) || 0;
+                    valB = parseFloat(valB) || 0;
+                } else if (column.type === 'checkbox') {
+                    valA = valA === 'true' || valA === true ? 1 : 0;
+                    valB = valB === 'true' || valB === true ? 1 : 0;
+                } else if (column.type === 'date') {
+                    valA = valA ? new Date(valA).getTime() : 0;
+                    valB = valB ? new Date(valB).getTime() : 0;
+                } else if (column.type === 'select' || column.type === 'status') {
+                    const optA = column.options?.find(o => o.id === valA);
+                    valA = (optA ? optA.label : valA || "").toLowerCase();
+                    const optB = column.options?.find(o => o.id === valB);
+                    valB = (optB ? optB.label : valB || "").toLowerCase();
+                } else {
+                    valA = String(valA || "").toLowerCase();
+                    valB = String(valB || "").toLowerCase();
+                }
+
+                if (valA < valB) return sort.direction === 'asc' ? -1 : 1;
+                if (valA > valB) return sort.direction === 'asc' ? 1 : -1;
+            }
+            return 0;
+        });
+    }, [visibleRows, sorts, columns]);
 
     const visibleProperties = useMemo(() => {
         if (showAllProperties) return columns;
@@ -699,6 +738,11 @@ export default function DataTableView(props: NodeViewProps) {
                             filters={filters}
                             onFiltersChange={(newFilters) => updateAttributes({ filters: newFilters })}
                         />
+                        <SortDropdown
+                            columns={columns}
+                            sorts={sorts}
+                            onSortsChange={(newSorts) => updateAttributes({ sorts: newSorts })}
+                        />
                     </Group>
                 </Box>
                 <ScrollArea.Autosize mah={800} type="always">
@@ -735,8 +779,8 @@ export default function DataTableView(props: NodeViewProps) {
                                     </SortableContext>
                                 </thead>
                                 <tbody>
-                                    <SortableContext items={visibleRows.map(r => r.id)} strategy={verticalListSortingStrategy}>
-                                        {visibleRows.map((row, idx) => (
+                                    <SortableContext items={sortedRows.map(r => r.id)} strategy={verticalListSortingStrategy}>
+                                        {sortedRows.map((row, idx) => (
                                             <SortableRow
                                                 key={row.id}
                                                 row={row}
