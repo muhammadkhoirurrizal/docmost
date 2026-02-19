@@ -41,7 +41,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     server: {
-      port: 3001,
+      port: 3100,
       proxy: {
         "/api": {
           target: APP_URL,

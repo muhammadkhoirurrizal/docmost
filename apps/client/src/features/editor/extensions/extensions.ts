@@ -50,6 +50,7 @@ import {
   ColumnGroup,
   DataTable,
   KanbanBoard,
+  TwineEditor,
 } from "@docmost/editor-ext";
 import {
   randomElement,
@@ -66,6 +67,7 @@ import CodeBlockView from "@/features/editor/components/code-block/code-block-vi
 import DrawioView from "../components/drawio/drawio-view";
 import ExcalidrawView from "@/features/editor/components/excalidraw/excalidraw-view.tsx";
 import EmbedView from "@/features/editor/components/embed/embed-view.tsx";
+import TwineView from "@/features/editor/components/twine/twine-view.tsx";
 import SubpagesView from "@/features/editor/components/subpages/subpages-view.tsx";
 import DataTableView from "@/features/editor/components/data-table/data-table-view.tsx";
 import KanbanBoardView from "@/features/editor/components/kanban/kanban-board-view.tsx";
@@ -238,6 +240,9 @@ export const baseExtensions = [
   }),
   Subpages.configure({
     view: SubpagesView,
+  }),
+  TwineEditor.configure({
+    view: TwineView,
   }),
   MarkdownClipboard.configure({
     transformPastedText: true,

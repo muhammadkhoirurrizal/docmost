@@ -98,7 +98,6 @@ export function PageStateSegmentedControl({
     }
   }, [pageEditMode, value]);
 
-  console.log(hasUnsavedChanges);
   return (
     <SegmentedControl
       size={size}

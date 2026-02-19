@@ -29,6 +29,7 @@ import {
   IconLayoutColumns,
   IconRectangle,
   IconAt,
+  IconDeviceGamepad,
 } from "@tabler/icons-react";
 import { modals } from "@mantine/modals";
 import { DatePicker } from "../date-picker/date-picker";
@@ -477,6 +478,17 @@ const CommandGroups: SlashMenuGroupedItemsType = {
       icon: IconDrawio,
       command: ({ editor, range }: CommandProps) =>
         editor.chain().focus().deleteRange(range).setDrawio().run(),
+    },
+    {
+      title: "Twinery",
+      description: "Embed Twine story data and auto-play in read mode.",
+      searchTerms: ["twine", "twinery", "game", "story"],
+      icon: IconDeviceGamepad,
+      command: ({ editor, range }: CommandProps) =>
+        (editor.chain().focus() as any)
+          .deleteRange(range)
+          .insertTwineEditor()
+          .run(),
     },
     {
       title: "Excalidraw diagram",
