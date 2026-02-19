@@ -52,7 +52,7 @@ import { EnvironmentService } from '../../integrations/environment/environment.s
 import { TokenService } from '../auth/services/token.service';
 import { JwtAttachmentPayload, JwtType } from '../auth/dto/jwt-payload';
 import * as path from 'path';
-import { RemoveIconDto } from './dto/attachment.dto';
+import { DeleteAttachmentDto, RemoveIconDto } from './dto/attachment.dto';
 
 @Controller()
 export class AttachmentController {
@@ -67,7 +67,7 @@ export class AttachmentController {
     private readonly attachmentRepo: AttachmentRepo,
     private readonly environmentService: EnvironmentService,
     private readonly tokenService: TokenService,
-  ) {}
+  ) { }
 
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
@@ -146,6 +146,38 @@ export class AttachmentController {
       this.logger.error(err);
       throw new BadRequestException('Error processing file upload.');
     }
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @Post('files/delete')
+  async deleteFile(
+    @Body() dto: DeleteAttachmentDto,
+    @AuthUser() user: User,
+  ) {
+    const attachment = await this.attachmentRepo.findById(dto.attachmentId);
+
+    if (!attachment) {
+      throw new NotFoundException('Attachment not found');
+    }
+
+    const page = await this.pageRepo.findById(attachment.pageId);
+    if (!page) {
+      throw new NotFoundException('Page not found');
+    }
+
+    const spaceAbility = await this.spaceAbility.createForUser(
+      user,
+      page.spaceId,
+    );
+
+    if (spaceAbility.cannot(SpaceCaslAction.Manage, SpaceCaslSubject.Page)) {
+      throw new ForbiddenException();
+    }
+
+    await this.attachmentService.deleteAttachmentById(dto.attachmentId);
+
+    return { success: true };
   }
 
   @UseGuards(JwtAuthGuard)
@@ -374,7 +406,7 @@ export class AttachmentController {
       });
       return res.send(fileStream);
     } catch (err) {
-     // this.logger.error(err);
+      // this.logger.error(err);
       throw new NotFoundException('File not found');
     }
   }

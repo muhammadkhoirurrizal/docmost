@@ -38,7 +38,7 @@ export class AttachmentService {
     private readonly spaceRepo: SpaceRepo,
     @InjectKysely() private readonly db: KyselyDB,
     @InjectQueue(QueueName.ATTACHMENT_QUEUE) private attachmentQueue: Queue,
-  ) {}
+  ) { }
 
   async uploadFile(opts: {
     filePromise: Promise<MultipartFile>;
@@ -229,6 +229,14 @@ export class AttachmentService {
       await this.attachmentRepo.deleteAttachmentByFilePath(filePath);
     } catch (error) {
       this.logger.error('deleteRedundantFile', error);
+    }
+  }
+
+  async deleteAttachmentById(attachmentId: string) {
+    const attachment = await this.attachmentRepo.findById(attachmentId);
+    if (attachment) {
+      await this.storageService.delete(attachment.filePath);
+      await this.attachmentRepo.deleteAttachmentById(attachmentId);
     }
   }
 

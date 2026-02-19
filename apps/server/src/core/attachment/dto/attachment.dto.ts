@@ -15,3 +15,9 @@ export class RemoveIconDto {
   @IsUUID()
   spaceId: string;
 }
+
+export class DeleteAttachmentDto {
+  @IsUUID()
+  @IsNotEmpty()
+  attachmentId: string;
+}

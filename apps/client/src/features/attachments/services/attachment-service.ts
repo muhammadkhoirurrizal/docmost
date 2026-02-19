@@ -62,3 +62,7 @@ export async function removeSpaceIcon(spaceId: string): Promise<void> {
 export async function removeWorkspaceIcon(): Promise<void> {
   await removeIcon(AvatarIconType.WORKSPACE_ICON);
 }
+
+export async function deleteAttachment(attachmentId: string): Promise<void> {
+  await api.post("/files/delete", { attachmentId });
+}

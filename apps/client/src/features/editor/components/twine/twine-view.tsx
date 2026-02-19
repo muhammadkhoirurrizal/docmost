@@ -13,6 +13,7 @@ import { useTranslation } from "react-i18next";
 import { getFileUrl } from "@/lib/config.ts";
 import { ResizableWrapper } from "../common/resizable-wrapper";
 import { uploadFile } from "@/features/page/services/page-service.ts";
+import { deleteAttachment } from "@/features/attachments/services/attachment-service.ts";
 import { IAttachment } from "@/features/attachments/types/attachment.types.ts";
 import { notifications } from "@mantine/notifications";
 import classes from "./twine-view.module.css";
@@ -50,6 +51,7 @@ export default function TwineView(props: NodeViewProps) {
         if (!pageId) return;
 
         try {
+            const oldAttachmentId = attachmentId;
             const response = await uploadFile(file, pageId);
             // handled potential wrapping by TransformHttpResponseInterceptor
             // @ts-ignore
@@ -67,6 +69,13 @@ export default function TwineView(props: NodeViewProps) {
                 attachmentId: attachment.id,
                 title: attachment.fileName || file.name,
             });
+
+            if (oldAttachmentId) {
+                deleteAttachment(oldAttachmentId).catch(err => {
+                    console.error("Failed to delete old attachment:", err);
+                });
+            }
+
             notifications.show({
                 message: t("Story uploaded successfully"),
                 color: "green",
