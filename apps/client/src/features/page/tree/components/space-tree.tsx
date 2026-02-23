@@ -481,11 +481,13 @@ function Node({ node, style, dragHandle, tree }: NodeRendererProps<any>) {
         <div className={classes.actions}>
           {!userRole.isVisitor && (
             <>
-              <NodeMenu
-                node={node}
-                treeApi={tree}
-                spaceId={node.data.spaceId}
-              />
+              {!isFolder && (
+                <NodeMenu
+                  node={node}
+                  treeApi={tree}
+                  spaceId={node.data.spaceId}
+                />
+              )}
               {!tree.props.disableEdit && isFolder && (
                 <CreateNode
                   node={node}
