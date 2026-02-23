@@ -1,9 +1,11 @@
 import { NodeViewProps, NodeViewWrapper } from "@tiptap/react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Image as MantineImage, TextInput } from "@mantine/core";
+import { ActionIcon, Modal, TextInput } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import { getFileUrl } from "@/lib/config.ts";
 import clsx from "clsx";
 import classes from "./image-view.module.css";
+import { IconX } from "@tabler/icons-react";
 
 export default function ImageView(props: NodeViewProps) {
   const { node, selected, updateAttributes, editor } = props;
@@ -11,6 +13,7 @@ export default function ImageView(props: NodeViewProps) {
   const [hovered, setHovered] = useState(false);
   const [resizing, setResizing] = useState(false);
   const [currentWidth, setCurrentWidth] = useState<number | string>(width || "100%");
+  const [opened, { open, close }] = useDisclosure(false);
 
   const resizeRef = useRef<{
     startX: number;
@@ -117,14 +120,63 @@ export default function ImageView(props: NodeViewProps) {
         src={getFileUrl(src)}
         alt={title}
         className={classes.image}
+        onClick={!isEditable ? open : undefined}
         style={{
           width: "100%",
           height: "auto",
           display: "block",
           borderRadius: "var(--mantine-radius-md)",
-          objectFit: "contain"
+          objectFit: "contain",
+          cursor: !isEditable ? "zoom-in" : undefined
         }}
       />
+
+      <Modal
+        opened={opened}
+        onClose={close}
+        size="auto"
+        centered
+        withCloseButton={false}
+        padding={0}
+        styles={{
+          content: {
+            backgroundColor: "transparent",
+            boxShadow: "none",
+          },
+          body: {
+            padding: 0,
+            position: "relative",
+          }
+        }}
+      >
+        <div style={{ position: "relative" }}>
+          <ActionIcon
+            variant="filled"
+            color="dark"
+            onClick={close}
+            style={{
+              position: "absolute",
+              top: 10,
+              right: 10,
+              zIndex: 1000,
+              borderRadius: "50%"
+            }}
+          >
+            <IconX size={18} />
+          </ActionIcon>
+          <img
+            src={getFileUrl(src)}
+            alt={title}
+            style={{
+              maxWidth: "90vw",
+              maxHeight: "90vh",
+              display: "block",
+              borderRadius: "var(--mantine-radius-md)",
+              boxShadow: "var(--mantine-shadow-xl)"
+            }}
+          />
+        </div>
+      </Modal>
 
       {/* Visual resize handles */}
       {isEditable && (selected || resizing) && (
