@@ -334,7 +334,7 @@ export const TableOfContentsOnPage = () => {
     }
   }, [headingDOMNodes, pageEditor]);
 
-  const [opened, { toggle }] = useDisclosure(true);
+  const [opened, { toggle }] = useDisclosure(false);
 
   if (!pageEditor) return null;
   if (!links.length) return null;
