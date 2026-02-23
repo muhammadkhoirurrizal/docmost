@@ -69,8 +69,6 @@
 
 .tableofcontent {
   height: 100%;
-  padding: 8px 0;
-  margin: 48px auto;
   padding-left: 3rem;
   padding-right: 3rem;
   padding-top: 2rem;
@@ -79,5 +77,18 @@
     padding-left: 0;
     padding-right: 0;
     padding-top: 0;
+  }
+}
+
+.tocHeader {
+  padding: 4px;
+  border-radius: var(--mantine-radius-sm);
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: light-dark(
+      var(--mantine-color-gray-1),
+      var(--mantine-color-dark-6)
+    );
   }
 }
