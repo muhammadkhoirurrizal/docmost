@@ -401,6 +401,7 @@ function Node({ node, style, dragHandle, tree }: NodeRendererProps<any>) {
       e.stopPropagation();
       node.focus();
       node.toggle();
+      handleLoadChildren(node);
     } else {
       if (mobileSidebarOpened) {
         toggleMobileSidebar();
