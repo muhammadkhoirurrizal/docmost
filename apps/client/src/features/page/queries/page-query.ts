@@ -110,9 +110,10 @@ export function useUpdateTitlePageMutation() {
 }
 
 export function useUpdatePageMutation() {
+  const { t } = useTranslation();
   return useMutation<IPage, Error, Partial<IPageInput>>({
     mutationFn: (data) => updatePage(data),
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
       updatePageData(data);
 
       invalidateOnUpdatePage(
@@ -122,6 +123,12 @@ export function useUpdatePageMutation() {
         data.title,
         data.icon,
       );
+
+      if (variables.forceHistorySave) {
+        notifications.show({
+          message: t("Page saved"),
+        });
+      }
     },
   });
 }

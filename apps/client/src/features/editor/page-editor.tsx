@@ -266,6 +266,7 @@ export default function PageEditor({
           keydown: (_view, event) => {
             if ((event.ctrlKey || event.metaKey) && event.code === "KeyS") {
               event.preventDefault();
+              handleSave();
               return true;
             }
             if ((event.ctrlKey || event.metaKey) && event.code === "KeyK") {
@@ -449,6 +450,20 @@ export default function PageEditor({
   }, [userPageEditMode, editor, editable]);
 
   const updatePageMutation = useUpdatePageMutation();
+
+  const handleSave = useCallback(() => {
+    const editorPageId = editor?.storage?.pageId;
+    if (hasUnsavedChanges && editor && pageId && editorPageId === pageId) {
+      const content = editor.getJSON();
+      updatePageMutation.mutate({
+        pageId,
+        content,
+        forceHistorySave: true,
+      });
+      setHasUnsavedChanges(false);
+    }
+  }, [editor, hasUnsavedChanges, pageId]);
+
   const hasUnsavedChangesRef = useRef(hasUnsavedChanges);
 
   useEffect(() => {
