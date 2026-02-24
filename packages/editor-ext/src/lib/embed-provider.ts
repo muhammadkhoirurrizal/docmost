@@ -90,8 +90,11 @@ export const embedProviders: IEmbedProvider[] = [
     id: "gdrive",
     name: "Google Drive",
     regex:
-      /^((?:https?:)?\/\/)?((?:www|m)\.)?(drive\.google\.com)\/file\/d\/([a-zA-Z0-9_-]+)\/.*$/,
-    getEmbedUrl: (match) => {
+      /^((?:https?:)?\/\/)?((?:www|m)\.)?(drive\.google\.com)\/(?:file\/d\/|open\?id=|drive\/(?:u\/\d+\/)?folders\/)([a-zA-Z0-9_-]+)(?:\/.*|&.*)?$/,
+    getEmbedUrl: (match, url: string) => {
+      if (url.includes("/folders/")) {
+        return `https://drive.google.com/embeddedfolderview?id=${match[4]}#list`;
+      }
       return `https://drive.google.com/file/d/${match[4]}/preview`;
     },
   },
@@ -141,7 +144,9 @@ export const embedProviders: IEmbedProvider[] = [
 
 export function getEmbedProviderById(id: string) {
   return embedProviders.find(
-    (provider) => provider.id.toLowerCase() === id.toLowerCase(),
+    (provider) =>
+      provider.id.toLowerCase() === id.toLowerCase() ||
+      provider.name.toLowerCase() === id.toLowerCase(),
   );
 }
 
@@ -156,7 +161,7 @@ export function getEmbedUrlAndProvider(url: string): IEmbedResult {
     if (match) {
       return {
         embedUrl: provider.getEmbedUrl(match, url),
-        provider: provider.name.toLowerCase(),
+        provider: provider.id,
       };
     }
   }

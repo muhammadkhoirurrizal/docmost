@@ -260,41 +260,6 @@ export default function PageEditor({
       immediatelyRender: false,
       shouldRerenderOnTransaction: false,
       editorProps: {
-        scrollThreshold: 80,
-        scrollMargin: 80,
-        handleDOMEvents: {
-          keydown: (_view, event) => {
-            if ((event.ctrlKey || event.metaKey) && event.code === "KeyS") {
-              event.preventDefault();
-              handleSave();
-              return true;
-            }
-            if ((event.ctrlKey || event.metaKey) && event.code === "KeyK") {
-              searchSpotlight.open();
-              return true;
-            }
-            if (["ArrowUp", "ArrowDown", "Enter"].includes(event.key)) {
-              const slashCommand = document.querySelector("#slash-command");
-              if (slashCommand) {
-                return true;
-              }
-            }
-            if (
-              [
-                "ArrowUp",
-                "ArrowDown",
-                "ArrowLeft",
-                "ArrowRight",
-                "Enter",
-              ].includes(event.key)
-            ) {
-              const emojiCommand = document.querySelector("#emoji-command");
-              if (emojiCommand) {
-                return true;
-              }
-            }
-          },
-        },
         handlePaste: (view, event) =>
           handlePaste(view, event, pageId, currentUser?.user.id),
         handleDrop: (view, event, _slice, moved) =>
