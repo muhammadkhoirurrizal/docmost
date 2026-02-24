@@ -61,6 +61,7 @@ export class SearchService {
         qb.where('creatorId', '=', searchParams.creatorId),
       )
       .where('deletedAt', 'is', null)
+      .where('archivedAt', 'is', null)
       .orderBy('rank', 'desc')
       .limit(searchParams.limit | 25)
       .offset(searchParams.offset || 0);
@@ -191,6 +192,7 @@ export class SearchService {
           ),
         )
         .where('deletedAt', 'is', null)
+        .where('archivedAt', 'is', null)
         .where('workspaceId', '=', workspaceId)
         .limit(limit);
 

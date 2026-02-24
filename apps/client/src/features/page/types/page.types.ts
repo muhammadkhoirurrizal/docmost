@@ -16,6 +16,7 @@ export interface IPage {
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date;
+  archivedAt: Date;
   position: string;
   hasChildren: boolean;
   creator: ICreator;

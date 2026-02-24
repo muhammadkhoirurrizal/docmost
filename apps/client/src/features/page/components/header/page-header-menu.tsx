@@ -1,5 +1,6 @@
 import { ActionIcon, Group, Menu, Text, Tooltip } from "@mantine/core";
 import {
+  IconArchive,
   IconArrowRight,
   IconArrowsHorizontal,
   IconDots,
@@ -23,11 +24,15 @@ import {
   useDisclosure,
   useHotkeys,
 } from "@mantine/hooks";
-import { useParams } from "react-router-dom";
-import { usePageQuery } from "@/features/page/queries/page-query.ts";
+import { useNavigate, useParams } from "react-router-dom";
+import {
+  usePageQuery,
+  useArchivePageMutation,
+  useUnarchivePageMutation,
+} from "@/features/page/queries/page-query.ts";
 import { buildPageUrl } from "@/features/page/page.utils.ts";
 import { notifications } from "@mantine/notifications";
-import { getAppUrl } from "@/lib/config.ts";
+import { getAppUrl, getSpaceUrl } from "@/lib/config.ts";
 import { extractPageSlugId } from "@/lib";
 import { treeApiAtom } from "@/features/page/tree/atoms/tree-api-atom.ts";
 import { useDeletePageModal } from "@/features/page/hooks/use-delete-page-modal.tsx";
@@ -130,10 +135,25 @@ function PageActionMenu({ readOnly }: PageActionMenuProps) {
   const [, setHistoryModalOpen] = useAtom(historyAtoms);
   const clipboard = useClipboard({ timeout: 500 });
   const { pageSlug, spaceSlug } = useParams();
+  const navigate = useNavigate();
   const { data: page, isLoading } = usePageQuery({
     pageId: extractPageSlugId(pageSlug),
   });
   const { openDeleteModal } = useDeletePageModal();
+  const archivePageMutation = useArchivePageMutation();
+  const unarchivePageMutation = useUnarchivePageMutation();
+
+  const handleArchive = async () => {
+    await archivePageMutation.mutateAsync(page.id);
+    navigate(getSpaceUrl(spaceSlug));
+  };
+
+  const handleUnarchive = async () => {
+    await unarchivePageMutation.mutateAsync(page.id);
+    // Optional: could redirect or stay, but if archived page was being viewed (e.g. from Archive list),
+    // redirecting to space home might be safer to refresh sidebar
+    navigate(getSpaceUrl(spaceSlug));
+  };
   const [tree] = useAtom(treeApiAtom);
   const [exportOpened, { open: openExportModal, close: closeExportModal }] =
     useDisclosure(false);
@@ -233,6 +253,21 @@ function PageActionMenu({ readOnly }: PageActionMenuProps) {
 
               {!readOnly && (
                 <>
+                  {page.archivedAt ? (
+                    <Menu.Item
+                      leftSection={<IconArchive size={16} />}
+                      onClick={handleUnarchive}
+                    >
+                      {t("Unarchive")}
+                    </Menu.Item>
+                  ) : (
+                    <Menu.Item
+                      leftSection={<IconArchive size={16} />}
+                      onClick={handleArchive}
+                    >
+                      {t("Archive")}
+                    </Menu.Item>
+                  )}
                   <Menu.Divider />
                   <Menu.Item
                     color={"red"}

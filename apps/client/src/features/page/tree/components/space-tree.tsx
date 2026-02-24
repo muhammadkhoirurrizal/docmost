@@ -12,12 +12,15 @@ import {
   useGetRootSidebarPagesQuery,
   usePageQuery,
   useUpdatePageMutation,
+  useArchivePageMutation,
+  useUnarchivePageMutation,
 } from "@/features/page/queries/page-query.ts";
 import { useEffect, useRef, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import classes from "@/features/page/tree/styles/tree.module.css";
 import { ActionIcon, Box, Menu, rem, TextInput } from "@mantine/core";
 import {
+  IconArchive,
   IconArrowRight,
   IconChevronDown,
   IconChevronRight,
@@ -66,7 +69,7 @@ import { dfs } from "react-arborist/dist/module/utils";
 import { useQueryEmit } from "@/features/websocket/use-query-emit.ts";
 import { buildPageUrl } from "@/features/page/page.utils.ts";
 import { notifications } from "@mantine/notifications";
-import { getAppUrl } from "@/lib/config.ts";
+import { getAppUrl, getSpaceUrl } from "@/lib/config.ts";
 import { extractPageSlugId } from "@/lib";
 import { useDeletePageModal } from "@/features/page/hooks/use-delete-page-modal.tsx";
 import { useTranslation } from "react-i18next";
@@ -481,13 +484,11 @@ function Node({ node, style, dragHandle, tree }: NodeRendererProps<any>) {
         <div className={classes.actions}>
           {!userRole.isVisitor && (
             <>
-              {!isFolder && (
-                <NodeMenu
-                  node={node}
-                  treeApi={tree}
-                  spaceId={node.data.spaceId}
-                />
-              )}
+              <NodeMenu
+                node={node}
+                treeApi={tree}
+                spaceId={node.data.spaceId}
+              />
               {!tree.props.disableEdit && isFolder && (
                 <CreateNode
                   node={node}
@@ -574,8 +575,23 @@ interface NodeMenuProps {
 function NodeMenu({ node, treeApi, spaceId }: NodeMenuProps) {
   const { t } = useTranslation();
   const clipboard = useClipboard({ timeout: 500 });
-  const { spaceSlug } = useParams();
+  const { spaceSlug, pageSlug } = useParams();
+  const navigate = useNavigate();
   const { openDeleteModal } = useDeletePageModal();
+  const archivePageMutation = useArchivePageMutation();
+  const unarchivePageMutation = useUnarchivePageMutation();
+
+  const handleArchive = async () => {
+    await archivePageMutation.mutateAsync(node.id);
+
+    if (pageSlug && node.data.slugId === pageSlug.split("-")[1]) {
+      navigate(getSpaceUrl(spaceSlug));
+    }
+  };
+
+  const handleUnarchive = async () => {
+    await unarchivePageMutation.mutateAsync(node.id);
+  };
   const [data, setData] = useAtom(treeDataAtom);
   const emit = useQueryEmit();
   const [exportOpened, { open: openExportModal, close: closeExportModal }] =
@@ -729,40 +745,46 @@ function NodeMenu({ node, treeApi, spaceId }: NodeMenuProps) {
             {t("Rename")}
           </Menu.Item>
 
-          <Menu.Item
-            leftSection={<IconLink size={16} />}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              handleCopyLink();
-            }}
-          >
-            {t("Copy link")}
-          </Menu.Item>
-
-          <Menu.Item
-            leftSection={<IconFileExport size={16} />}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              openExportModal();
-            }}
-          >
-            {t("Export page")}
-          </Menu.Item>
-
-          {!(treeApi.props.disableEdit as boolean) && (
+          {node.data.icon !== "📁" && (
             <>
               <Menu.Item
-                leftSection={<IconCopy size={16} />}
+                leftSection={<IconLink size={16} />}
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  handleDuplicatePage();
+                  handleCopyLink();
                 }}
               >
-                {t("Duplicate")}
+                {t("Copy link")}
               </Menu.Item>
+
+              <Menu.Item
+                leftSection={<IconFileExport size={16} />}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  openExportModal();
+                }}
+              >
+                {t("Export page")}
+              </Menu.Item>
+            </>
+          )}
+
+          {!(treeApi.props.disableEdit as boolean) && (
+            <>
+              {node.data.icon !== "📁" && (
+                <Menu.Item
+                  leftSection={<IconCopy size={16} />}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleDuplicatePage();
+                  }}
+                >
+                  {t("Duplicate")}
+                </Menu.Item>
+              )}
 
               <Menu.Item
                 leftSection={<IconArrowRight size={16} />}
@@ -785,6 +807,30 @@ function NodeMenu({ node, treeApi, spaceId }: NodeMenuProps) {
               >
                 {t("Copy to space")}
               </Menu.Item>
+
+              {node.data.archivedAt ? (
+                <Menu.Item
+                  leftSection={<IconArchive size={16} />}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleUnarchive();
+                  }}
+                >
+                  {t("Unarchive")}
+                </Menu.Item>
+              ) : (
+                <Menu.Item
+                  leftSection={<IconArchive size={16} />}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleArchive();
+                  }}
+                >
+                  {t("Archive")}
+                </Menu.Item>
+              )}
 
               <Menu.Divider />
               <Menu.Item

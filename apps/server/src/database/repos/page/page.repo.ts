@@ -41,6 +41,7 @@ export class PageRepo {
     'createdAt',
     'updatedAt',
     'deletedAt',
+    'archivedAt',
     'contributorIds',
   ];
 
@@ -275,6 +276,36 @@ export class PageRepo {
     });
   }
 
+  async archivePage(pageId: string, workspaceId: string): Promise<void> {
+    await this.db
+      .updateTable('pages')
+      .set({ archivedAt: new Date() })
+      .where('id', '=', pageId)
+      .execute();
+
+    this.eventEmitter.emit(EventName.PAGE_UPDATED, {
+      pageIds: [pageId],
+      workspaceId,
+    });
+  }
+
+  async unarchivePage(
+    pageId: string,
+    workspaceId: string,
+    extraData: Partial<UpdatablePage> = {},
+  ): Promise<void> {
+    await this.db
+      .updateTable('pages')
+      .set({ ...extraData, archivedAt: null })
+      .where('id', '=', pageId)
+      .execute();
+
+    this.eventEmitter.emit(EventName.PAGE_UPDATED, {
+      pageIds: [pageId],
+      workspaceId,
+    });
+  }
+
   async getRecentPagesInSpace(spaceId: string, pagination: PaginationOptions) {
     const query = this.db
       .selectFrom('pages')
@@ -282,8 +313,28 @@ export class PageRepo {
       .select((eb) => this.withSpace(eb))
       .where('spaceId', '=', spaceId)
       .where('deletedAt', 'is', null)
+      .where('archivedAt', 'is', null)
       .where((eb) => eb.or([eb('icon', 'is', null), eb('icon', '!=', '📁')]))
       .orderBy('updatedAt', 'desc');
+
+    const result = executeWithPagination(query, {
+      page: pagination.page,
+      perPage: pagination.limit,
+    });
+
+    return result;
+  }
+
+  async getArchivedPagesInSpace(spaceId: string, pagination: PaginationOptions) {
+    const query = this.db
+      .selectFrom('pages')
+      .select(this.baseFields)
+      .select('content')
+      .select((eb) => this.withSpace(eb))
+      .where('spaceId', '=', spaceId)
+      .where('archivedAt', 'is not', null)
+      .where('deletedAt', 'is', null)
+      .orderBy('archivedAt', 'desc');
 
     const result = executeWithPagination(query, {
       page: pagination.page,
@@ -300,6 +351,7 @@ export class PageRepo {
       .select((eb) => this.withSpace(eb))
       .where('spaceId', 'in', this.spaceMemberRepo.getUserSpaceIdsQuery(userId))
       .where('deletedAt', 'is', null)
+      .where('archivedAt', 'is', null)
       .where((eb) => eb.or([eb('icon', 'is', null), eb('icon', '!=', '📁')]))
       .orderBy('updatedAt', 'desc');
 

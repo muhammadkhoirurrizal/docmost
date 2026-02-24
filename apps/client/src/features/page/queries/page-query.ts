@@ -19,7 +19,10 @@ import {
   getRecentChanges,
   getAllSidebarPages,
   getDeletedPages,
+  getArchivedPages,
   restorePage,
+  archivePage,
+  unarchivePage,
 } from "@/features/page/services/page-service";
 import {
   IMovePage,
@@ -166,6 +169,66 @@ export function useDeletePageMutation() {
     },
     onError: (error) => {
       notifications.show({ message: t("Failed to delete page"), color: "red" });
+    },
+  });
+}
+
+export function useArchivePageMutation() {
+  const [treeData, setTreeData] = useAtom(treeDataAtom);
+  const emit = useQueryEmit();
+
+  return useMutation({
+    mutationFn: (pageId: string) => archivePage(pageId),
+    onSuccess: (_, pageId) => {
+      notifications.show({ message: "Page archived" });
+
+      const treeApi = new SimpleTree<SpaceTreeNode>(treeData);
+      const node = treeApi.find(pageId);
+
+      if (node) {
+        treeApi.drop({ id: pageId });
+        setTreeData(treeApi.data);
+
+        // Emit websocket event to sync with other users
+        setTimeout(() => {
+          emit({
+            operation: "deleteTreeNode",
+            spaceId: node.data.spaceId,
+            payload: { node: node.data },
+          });
+        }, 50);
+      }
+
+      invalidateOnDeletePage(pageId);
+
+      // Invalidate to refresh archive lists
+      queryClient.invalidateQueries({
+        predicate: (item) =>
+          ["archive-list"].includes(item.queryKey[0] as string),
+      });
+    },
+    onError: (error) => {
+      notifications.show({ message: "Failed to archive page", color: "red" });
+    },
+  });
+}
+
+export function useUnarchivePageMutation() {
+  return useMutation({
+    mutationFn: (pageId: string) => unarchivePage(pageId),
+    onSuccess: () => {
+      notifications.show({ message: "Page unarchived" });
+      queryClient.invalidateQueries({ queryKey: ["root-sidebar-pages"] });
+      queryClient.invalidateQueries({ queryKey: ["sidebar-pages"] });
+
+      // Invalidate to refresh archive lists
+      queryClient.invalidateQueries({
+        predicate: (item) =>
+          ["archive-list"].includes(item.queryKey[0] as string),
+      });
+    },
+    onError: (error) => {
+      notifications.show({ message: "Failed to unarchive page", color: "red" });
     },
   });
 }
@@ -332,6 +395,23 @@ export function useDeletedPagesQuery(
     queryKey: ["trash-list", spaceId, params],
     queryFn: async () => {
       const data = await getDeletedPages(spaceId, params);
+      return data ?? null;
+    },
+    enabled: !!spaceId,
+    placeholderData: keepPreviousData,
+    refetchOnMount: true,
+    staleTime: 0,
+  });
+}
+
+export function useArchivedPagesQuery(
+  spaceId: string,
+  params?: QueryParams,
+): UseQueryResult<IPagination<IPage>, Error> {
+  return useQuery({
+    queryKey: ["archive-list", spaceId, params],
+    queryFn: async () => {
+      const data = await getArchivedPages(spaceId, params);
       return data ?? null;
     },
     enabled: !!spaceId,

@@ -166,6 +166,48 @@ export class PageController {
   }
 
   @HttpCode(HttpStatus.OK)
+  @Post('archive')
+  async archive(
+    @Body() pageIdDto: PageIdDto,
+    @AuthUser() user: User,
+    @AuthWorkspace() workspace: Workspace,
+  ) {
+    const page = await this.pageRepo.findById(pageIdDto.pageId);
+
+    if (!page) {
+      throw new NotFoundException('Page not found');
+    }
+
+    const ability = await this.spaceAbility.createForUser(user, page.spaceId);
+    if (ability.cannot(SpaceCaslAction.Manage, SpaceCaslSubject.Page)) {
+      throw new ForbiddenException();
+    }
+
+    await this.pageService.archive(pageIdDto.pageId, workspace.id);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('unarchive')
+  async unarchive(
+    @Body() pageIdDto: PageIdDto,
+    @AuthUser() user: User,
+    @AuthWorkspace() workspace: Workspace,
+  ) {
+    const page = await this.pageRepo.findById(pageIdDto.pageId);
+
+    if (!page) {
+      throw new NotFoundException('Page not found');
+    }
+
+    const ability = await this.spaceAbility.createForUser(user, page.spaceId);
+    if (ability.cannot(SpaceCaslAction.Manage, SpaceCaslSubject.Page)) {
+      throw new ForbiddenException();
+    }
+
+    await this.pageService.unarchive(pageIdDto.pageId, workspace.id);
+  }
+
+  @HttpCode(HttpStatus.OK)
   @Post('recent')
   async getRecentPages(
     @Body() recentPageDto: RecentPageDto,
@@ -209,6 +251,30 @@ export class PageController {
       }
 
       return this.pageService.getDeletedSpacePages(
+        deletedPageDto.spaceId,
+        pagination,
+      );
+    }
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('archive-list')
+  async getArchivedPages(
+    @Body() deletedPageDto: DeletedPageDto, // Reuse this DTO as it has spaceId
+    @Body() pagination: PaginationOptions,
+    @AuthUser() user: User,
+  ) {
+    if (deletedPageDto.spaceId) {
+      const ability = await this.spaceAbility.createForUser(
+        user,
+        deletedPageDto.spaceId,
+      );
+
+      if (ability.cannot(SpaceCaslAction.Manage, SpaceCaslSubject.Page)) {
+        throw new ForbiddenException();
+      }
+
+      return this.pageService.getArchivedSpacePages(
         deletedPageDto.spaceId,
         pagination,
       );

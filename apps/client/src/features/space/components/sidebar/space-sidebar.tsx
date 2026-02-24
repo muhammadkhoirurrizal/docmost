@@ -7,6 +7,7 @@ import {
   UnstyledButton,
 } from "@mantine/core";
 import {
+  IconArchive,
   IconArrowDown,
   IconDots,
   IconFileDescription,
@@ -314,6 +315,14 @@ function SpaceMenu({ spaceId, onSpaceSettings, tree }: SpaceMenuProps) {
             leftSection={<IconSettings size={16} />}
           >
             {t("Space settings")}
+          </Menu.Item>
+
+          <Menu.Item
+            component={Link}
+            to={`/s/${spaceSlug}/archive`}
+            leftSection={<IconArchive size={16} />}
+          >
+            {t("Archive")}
           </Menu.Item>
 
           <Menu.Item
