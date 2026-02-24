@@ -12,7 +12,7 @@ import Paginate from "@/components/common/paginate.tsx";
 export default function WorkspaceInvitesTable() {
   const { t } = useTranslation();
   const [page, setPage] = useState(1);
-  const { data, isLoading } = useWorkspaceInvitationsQuery({
+  const { data } = useWorkspaceInvitationsQuery({
     page,
     limit: 100,
   });

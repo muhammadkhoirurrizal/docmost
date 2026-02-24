@@ -28,7 +28,7 @@ export function useManualSave(pageId: string) {
                 message: "Page saved successfully",
                 color: "green",
             });
-        } catch (error) {
+        } catch {
             notifications.show({
                 message: "Failed to save page",
                 color: "red",

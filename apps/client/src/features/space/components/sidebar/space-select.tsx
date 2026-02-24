@@ -36,7 +36,7 @@ const renderSelectOption: SelectProps["renderOption"] = ({ option }) => (
 
 export function SpaceSelect({
   onChange,
-  label,
+  label: _label,
   value,
   width,
   opened,
@@ -45,7 +45,7 @@ export function SpaceSelect({
   const { t } = useTranslation();
   const [searchValue, setSearchValue] = useState("");
   const [debouncedQuery] = useDebouncedValue(searchValue, 500);
-  const { data: spaces, isLoading } = useGetSpacesQuery({
+  const { data: spaces } = useGetSpacesQuery({
     query: debouncedQuery,
     limit: 50,
   });

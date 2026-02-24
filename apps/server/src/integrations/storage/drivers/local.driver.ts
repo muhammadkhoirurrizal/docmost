@@ -28,7 +28,7 @@ export class LocalDriver implements StorageDriver {
     }
   }
 
-  async uploadStream(filePath: string, file: Readable, options?: { recreateClient?: boolean }): Promise<void> {
+  async uploadStream(filePath: string, file: Readable, _options?: { recreateClient?: boolean }): Promise<void> {
     try {
       const fullPath = this._fullPath(filePath);
       await fs.mkdir(dirname(fullPath), { recursive: true });
@@ -77,7 +77,7 @@ export class LocalDriver implements StorageDriver {
     }
   }
 
-  async getSignedUrl(filePath: string, expireIn: number): Promise<string> {
+  async getSignedUrl(_filePath: string, _expireIn: number): Promise<string> {
     throw new Error('Signed URLs are not supported for local storage.');
   }
 

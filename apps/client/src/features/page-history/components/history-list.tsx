@@ -93,16 +93,16 @@ function HistoryList({ pageId }: Props) {
         }
 
         setHistoryModalOpen(false);
-        notifications.show({ 
-          message: t("Successfully restored"),
-          color: "green"
-        });
-      } catch (error) {
-        notifications.show({ 
-          message: t("Failed to restore version"),
-          color: "red"
-        });
-      }
+          notifications.show({ 
+            message: t("Successfully restored"),
+            color: "green"
+          });
+        } catch {
+          notifications.show({ 
+            message: t("Failed to restore version"),
+            color: "red"
+          });
+        }
     }
   }, [activeHistoryData, mainEditor, mainEditorTitle, setHistoryModalOpen, t, updatePageMutation, pageId]);
 

@@ -10,7 +10,7 @@ import { useTranslation } from "react-i18next";
 export default function PasswordReset() {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
-  const { data, isLoading, isError } = useVerifyUserTokenQuery({
+  const { data: _data, isLoading, isError } = useVerifyUserTokenQuery({
     token: searchParams.get("token"),
     type: "forgot-password",
   });

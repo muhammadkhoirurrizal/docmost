@@ -28,7 +28,7 @@ export class EnvironmentService {
     try {
       const url = new URL(appUrl);
       return url.protocol === 'https:';
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -69,7 +69,7 @@ export class EnvironmentService {
     let msUntilExpiry: number;
     try {
       msUntilExpiry = ms(expiresInStr as StringValue);
-    } catch (err) {
+    } catch {
       msUntilExpiry = ms('90d');
     }
     return new Date(Date.now() + msUntilExpiry);

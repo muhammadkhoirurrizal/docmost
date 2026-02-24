@@ -130,7 +130,7 @@ export class SearchController {
         userId: userId,
         workspaceId,
       });
-    } catch (err) {
+    } catch {
       this.logger.debug(
         'Typesense module requested but enterprise module not bundled in this build',
       );

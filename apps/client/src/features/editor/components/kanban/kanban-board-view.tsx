@@ -6,7 +6,6 @@ import {
     Group,
     Modal,
     Box,
-    Divider,
     Text,
     ScrollArea,
     UnstyledButton,
@@ -19,12 +18,7 @@ import clsx from "clsx";
 import {
     IconPlus,
     IconTrash,
-    IconChevronDown,
     IconDotsVertical,
-    IconArrowLeft,
-    IconArrowRight,
-    IconArrowUp,
-    IconArrowDown,
     IconEdit
 } from "@tabler/icons-react";
 import { KanbanColumn, KanbanCard } from "@docmost/editor-ext";
@@ -168,7 +162,7 @@ export default function KanbanBoardView(props: NodeViewProps) {
         setSelectedCardIds([]);
     };
 
-    const moveCard = (cardId: string, direction: 'up' | 'down' | 'left' | 'right') => {
+    const _moveCard = (cardId: string, direction: 'up' | 'down' | 'left' | 'right') => {
         const cardIndex = cards.findIndex(c => c.id === cardId);
         if (cardIndex === -1) return;
 

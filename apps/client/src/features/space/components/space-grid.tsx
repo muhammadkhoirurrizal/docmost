@@ -15,9 +15,9 @@ import { AvatarIconType } from "@/features/attachments/types/attachment.types.ts
 
 export default function SpaceGrid() {
   const { t } = useTranslation();
-  const { data, isLoading } = useGetSpacesQuery({ page: 1, limit: 10 });
+  const { data } = useGetSpacesQuery({ page: 1, limit: 10 });
 
-  const cards = data?.items.slice(0, 9).map((space, index) => (
+  const cards = data?.items.slice(0, 9).map((space, _index) => (
     <Card
       key={space.id}
       p="xs"

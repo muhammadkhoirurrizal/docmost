@@ -23,7 +23,7 @@ export default function AccountAvatar() {
       if (currentUser?.user) {
         setUser({ ...currentUser.user, avatarUrl: avatar.fileName });
       }
-    } catch (err) {
+    } catch (_err) {
       // skip
     } finally {
       setIsLoading(false);
@@ -37,7 +37,7 @@ export default function AccountAvatar() {
       if (currentUser?.user) {
         setUser({ ...currentUser.user, avatarUrl: null });
       }
-    } catch (err) {
+    } catch (_err) {
       // skip
     } finally {
       setIsLoading(false);

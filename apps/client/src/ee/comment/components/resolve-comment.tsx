@@ -21,7 +21,6 @@ function ResolveComment({
   const resolveCommentMutation = useResolveCommentMutation();
 
   const isResolved = resolvedAt != null;
-  const iconColor = isResolved ? "green" : "gray";
 
   const handleResolveToggle = async () => {
     try {

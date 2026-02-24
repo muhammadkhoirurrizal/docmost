@@ -13,7 +13,7 @@ export default function Spaces() {
   const { isAdmin } = useUserRole();
   const { search, page, setPage, handleSearch } = usePaginateAndSearch();
 
-  const { data, isLoading } = useGetSpacesQuery({
+  const { data } = useGetSpacesQuery({
     page,
     limit: 30,
     query: search,

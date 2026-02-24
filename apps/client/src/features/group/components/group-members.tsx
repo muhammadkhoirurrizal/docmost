@@ -17,7 +17,7 @@ export default function GroupMembersList() {
   const { t } = useTranslation();
   const { groupId } = useParams();
   const [page, setPage] = useState(1);
-  const { data, isLoading } = useGroupMembersQuery(groupId, { page });
+  const { data } = useGroupMembersQuery(groupId, { page });
   const removeGroupMember = useRemoveGroupMemberMutation();
   const { isAdmin } = useUserRole();
 

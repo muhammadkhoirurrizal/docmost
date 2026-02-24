@@ -22,7 +22,7 @@ import MemberActionMenu from "@/features/workspace/components/members/components
 export default function WorkspaceMembersTable() {
   const { t } = useTranslation();
   const { search, page, setPage, handleSearch } = usePaginateAndSearch();
-  const { data, isLoading } = useWorkspaceMembersQuery({
+  const { data } = useWorkspaceMembersQuery({
     page,
     limit: 100,
     query: search,

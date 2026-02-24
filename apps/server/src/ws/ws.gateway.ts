@@ -24,7 +24,7 @@ export class WsGateway implements OnGatewayConnection, OnModuleDestroy {
     private spaceMemberRepo: SpaceMemberRepo,
   ) {}
 
-  async handleConnection(client: Socket, ...args: any[]): Promise<void> {
+  async handleConnection(client: Socket, ..._args: any[]): Promise<void> {
     try {
       const cookies = cookie.parse(client.handshake.headers.cookie);
       const token: JwtPayload = await this.tokenService.verifyJwt(
@@ -41,7 +41,7 @@ export class WsGateway implements OnGatewayConnection, OnModuleDestroy {
       const spaceRooms = userSpaceIds.map((id) => this.getSpaceRoomName(id));
 
       client.join([workspaceRoom, ...spaceRooms]);
-    } catch (err) {
+    } catch {
       client.emit('Unauthorized');
       client.disconnect();
     }
@@ -66,7 +66,7 @@ export class WsGateway implements OnGatewayConnection, OnModuleDestroy {
   }
 
   @SubscribeMessage('join-room')
-  handleJoinRoom(client: Socket, @MessageBody() roomName: string): void {
+  handleJoinRoom(_client: Socket, @MessageBody() _roomName: string): void {
     // if room is a space, check if user has permissions
     //client.join(roomName);
   }

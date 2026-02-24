@@ -8,18 +8,14 @@ import {
     Divider,
     Menu,
     TextInput,
-    ActionIcon
 } from '@mantine/core';
 import { DatePicker as MantineDatePicker, TimeInput } from '@mantine/dates';
 import {
     IconChevronRight,
-    IconHelpCircle,
-    IconChevronLeft,
-    IconChevronRight as IconNext
 } from '@tabler/icons-react';
 import classes from './date-picker.module.css';
 import dayjs from 'dayjs';
-import { DatePickerValue, getDateFormat, getFormatLabel, formatSelectedDate } from './utils';
+import { DatePickerValue, getFormatLabel, formatSelectedDate } from './utils';
 
 
 interface DatePickerProps {

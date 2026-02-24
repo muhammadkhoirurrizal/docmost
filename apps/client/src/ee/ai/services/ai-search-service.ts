@@ -1,4 +1,3 @@
-import api from "@/lib/api-client.ts";
 import { IPageSearchParams } from "@/features/search/types/search.types.ts";
 
 export interface IAiSearchResponse {

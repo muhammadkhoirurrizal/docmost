@@ -8,13 +8,12 @@ import { formatMemberCount } from "@/lib";
 import { IGroup } from "@/features/group/types/group.types.ts";
 import Paginate from "@/components/common/paginate.tsx";
 import { queryClient } from "@/main.tsx";
-import { getSpaces } from "@/features/space/services/space-service.ts";
 import { getGroupMembers } from "@/features/group/services/group-service.ts";
 
 export default function GroupList() {
   const { t } = useTranslation();
   const [page, setPage] = useState(1);
-  const { data, isLoading } = useGetGroupsQuery({ page });
+  const { data } = useGetGroupsQuery({ page });
 
   const prefetchGroupMembers = (groupId: string) => {
     queryClient.prefetchQuery({

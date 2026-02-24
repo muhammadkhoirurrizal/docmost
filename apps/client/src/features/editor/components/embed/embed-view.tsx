@@ -1,5 +1,5 @@
 import { NodeViewProps, NodeViewWrapper } from "@tiptap/react";
-import React, { useMemo, useCallback, useRef, useState, useEffect } from "react";
+import React, { useMemo, useCallback, useRef, useEffect } from "react";
 import clsx from "clsx";
 import {
   ActionIcon,

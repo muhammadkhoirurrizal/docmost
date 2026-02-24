@@ -1,7 +1,6 @@
 import React, { Dispatch, FC, SetStateAction } from "react";
-import { IconCheck, IconChevronDown, IconPalette } from "@tabler/icons-react";
+import { IconCheck, IconChevronDown } from "@tabler/icons-react";
 import {
-  ActionIcon,
   Button,
   Popover,
   rem,

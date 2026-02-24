@@ -76,7 +76,7 @@ export function PageStateSegmentedControl({
             message: t("Page saved successfully"),
             color: "green",
           });
-        } catch (error) {
+        } catch {
           notifications.show({
             message: t("Failed to save page"),
             color: "red",

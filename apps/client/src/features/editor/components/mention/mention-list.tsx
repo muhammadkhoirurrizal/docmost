@@ -244,7 +244,7 @@ const MentionList = forwardRef<any, MentionListProps>((props, ref) => {
       });
     }, 50);
 
-    } catch (err) {
+    } catch {
       throw new Error("Failed to create page");
     }
   }

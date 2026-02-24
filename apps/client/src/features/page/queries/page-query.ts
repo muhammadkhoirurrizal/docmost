@@ -76,7 +76,7 @@ export function useCreatePageMutation() {
     onSuccess: (data) => {
       invalidateOnCreatePage(data);
     },
-    onError: (error) => {
+    onError: (_error) => {
       notifications.show({ message: t("Failed to create page"), color: "red" });
     },
   });
@@ -147,7 +147,7 @@ export function useRemovePageMutation() {
           ["trash-list"].includes(item.queryKey[0] as string),
       });
     },
-    onError: (error) => {
+    onError: (_error) => {
       notifications.show({ message: "Failed to delete page", color: "red" });
     },
   });
@@ -157,7 +157,7 @@ export function useDeletePageMutation() {
   const { t } = useTranslation();
   return useMutation({
     mutationFn: (pageId: string) => deletePage(pageId, true),
-    onSuccess: (data, pageId) => {
+    onSuccess: (_data, pageId) => {
       notifications.show({ message: t("Page deleted successfully") });
       invalidateOnDeletePage(pageId);
 
@@ -167,7 +167,7 @@ export function useDeletePageMutation() {
           ["trash-list"].includes(item.queryKey[0] as string),
       });
     },
-    onError: (error) => {
+    onError: (_error) => {
       notifications.show({ message: t("Failed to delete page"), color: "red" });
     },
   });
@@ -207,7 +207,7 @@ export function useArchivePageMutation() {
           ["archive-list"].includes(item.queryKey[0] as string),
       });
     },
-    onError: (error) => {
+    onError: (_error) => {
       notifications.show({ message: "Failed to archive page", color: "red" });
     },
   });
@@ -227,7 +227,7 @@ export function useUnarchivePageMutation() {
           ["archive-list"].includes(item.queryKey[0] as string),
       });
     },
-    onError: (error) => {
+    onError: (_error) => {
       notifications.show({ message: "Failed to unarchive page", color: "red" });
     },
   });
@@ -314,7 +314,7 @@ export function useRestorePageMutation() {
         queryKey: ["trash-list", restoredPage.spaceId],
       });
     },
-    onError: (error) => {
+    onError: (_error) => {
       notifications.show({ message: "Failed to restore page", color: "red" });
     },
   });
@@ -472,7 +472,7 @@ export function invalidateOnCreatePage(data: Partial<IPage>) {
       exact: false,
     });
 
-    subSideBarMatches.forEach(([key, d]) => {
+    subSideBarMatches.forEach(([key, _d]) => {
       queryClient.setQueryData<InfiniteData<IPagination<IPage>>>(key, (old) => {
         if (!old) return old;
         return {
@@ -495,7 +495,7 @@ export function invalidateOnCreatePage(data: Partial<IPage>) {
       exact: false,
     });
 
-    rootSideBarMatches.forEach(([key, d]) => {
+    rootSideBarMatches.forEach(([key, _d]) => {
       queryClient.setQueryData<InfiniteData<IPagination<IPage>>>(key, (old) => {
         if (!old) return old;
         return {
@@ -578,7 +578,7 @@ export function invalidateOnDeletePage(pageId: string) {
       query.queryKey[0] === "sidebar-pages",
   });
 
-  allSideBarMatches.forEach(([key, d]) => {
+  allSideBarMatches.forEach(([key, _d]) => {
     queryClient.setQueryData<InfiniteData<IPagination<IPage>>>(key, (old) => {
       if (!old) return old;
       return {

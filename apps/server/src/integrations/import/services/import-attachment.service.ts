@@ -58,7 +58,6 @@ export class ImportAttachmentService {
     const {
       html,
       pageRelativePath,
-      extractDir,
       pageId,
       fileTask,
       attachmentCandidates,
@@ -448,7 +447,7 @@ export class ImportAttachmentService {
       });
 
     // Add Draw.io diagrams that weren't referenced in the HTML content
-    for (const [drawioHref, pair] of drawioPairs) {
+    for (const [drawioHref, _pair] of drawioPairs) {
       const drawioSvg = drawioSvgMap.get(drawioHref);
       if (!drawioSvg) continue;
 

@@ -12,14 +12,14 @@ import classes from "./mention.module.css";
 
 export default function MentionView(props: NodeViewProps) {
   const { node } = props;
-  const { label, entityType, entityId, slugId, anchorId } = node.attrs;
+  const { label, entityType, entityId: _entityId, slugId, anchorId } = node.attrs;
   const { spaceSlug, pageSlug } = useParams();
   const { shareId } = useParams();
   const navigate = useNavigate();
   const {
     data: page,
-    isLoading,
-    isError,
+    isLoading: _isLoading,
+    isError: _isError,
   } = usePageQuery({ pageId: entityType === "page" ? slugId : null });
 
   const location = useLocation();

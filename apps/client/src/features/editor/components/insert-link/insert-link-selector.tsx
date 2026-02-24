@@ -1,7 +1,6 @@
 import { useState } from "react";
 import {
   TextInput,
-  Tabs,
   Stack,
   Text,
   Group,
@@ -13,8 +12,6 @@ import {
 import { useTranslation } from "react-i18next";
 import {
   IconSearch,
-  IconClock,
-  IconLink,
   IconFileDescription,
 } from "@tabler/icons-react";
 import { useSearchSuggestionsQuery } from "@/features/search/queries/search-query";

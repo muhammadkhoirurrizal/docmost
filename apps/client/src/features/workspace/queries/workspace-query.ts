@@ -77,7 +77,7 @@ export function useDeleteWorkspaceMemberMutation() {
     }
   >({
     mutationFn: (data) => deleteWorkspaceMember(data),
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, _variables) => {
       notifications.show({ message: "Member deleted successfully" });
       queryClient.invalidateQueries({
         queryKey: ["workspaceMembers"],
@@ -95,7 +95,7 @@ export function useChangeMemberRoleMutation() {
 
   return useMutation<any, Error, any>({
     mutationFn: (data) => changeMemberRole(data),
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, _variables) => {
       notifications.show({ message: "Member role updated successfully" });
       queryClient.refetchQueries({
         queryKey: ["workspaceMembers"],
@@ -127,7 +127,7 @@ export function useCreateInvitationMutation() {
 
   return useMutation<void, Error, ICreateInvite>({
     mutationFn: (data) => createInvitation(data),
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, _variables) => {
       notifications.show({ message: t("Invitation sent") });
       queryClient.refetchQueries({
         queryKey: ["invitations"],
@@ -149,7 +149,7 @@ export function useResendInvitationMutation() {
     }
   >({
     mutationFn: (data) => resendInvitation(data),
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, _variables) => {
       notifications.show({ message: "Invitation resent" });
     },
     onError: (error) => {
@@ -170,7 +170,7 @@ export function useRevokeInvitationMutation() {
     }
   >({
     mutationFn: (data) => revokeInvitation(data),
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, _variables) => {
       notifications.show({ message: "Invitation revoked" });
       queryClient.invalidateQueries({
         queryKey: ["invitations"],

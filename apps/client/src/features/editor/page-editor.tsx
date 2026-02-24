@@ -55,7 +55,6 @@ import DrawioMenu from "./components/drawio/drawio-menu";
 import { useCollabToken } from "@/features/auth/queries/auth-query.tsx";
 import SearchAndReplaceDialog from "@/features/editor/components/search-and-replace/search-and-replace-dialog.tsx";
 import { useDebouncedCallback, useDocumentVisibility } from "@mantine/hooks";
-import { notifications } from "@mantine/notifications";
 import { useIdle } from "@/hooks/use-idle.ts";
 import { queryClient } from "@/main.tsx";
 import { IPage } from "@/features/page/types/page.types.ts";
@@ -66,7 +65,6 @@ import { extractPageSlugId } from "@/lib";
 import { FIVE_MINUTES } from "@/lib/constants.ts";
 import { PageEditMode } from "@/features/user/types/user.types.ts";
 import { jwtDecode } from "jwt-decode";
-import { searchSpotlight } from "@/features/search/constants.ts";
 import { useEditorScroll } from "./hooks/use-editor-scroll";
 
 interface PageEditorProps {
@@ -82,7 +80,7 @@ export default function PageEditor({
   content,
   canComment = false,
 }: PageEditorProps) {
-  const { t } = useTranslation();
+  const { t: _t } = useTranslation();
   const collaborationURL = useCollaborationUrl();
   const isComponentMounted = useRef(false);
   const editorCreated = useRef(false);
@@ -112,7 +110,7 @@ export default function PageEditor({
   const ydoc = ydocRef.current;
   const [isLocalSynced, setLocalSynced] = useState(false);
   const [isRemoteSynced, setRemoteSynced] = useState(false);
-  const [yjsConnectionStatus, setYjsConnectionStatus] = useAtom(
+  const [, setYjsConnectionStatus] = useAtom(
     yjsConnectionStatusAtom,
   );
   const menuContainerRef = useRef(null);
@@ -142,11 +140,10 @@ export default function PageEditor({
   } | null>(null);
   const [providersReady, setProvidersReady] = useState(false);
 
-  const localProvider = providersRef.current?.local;
   const remoteProvider = providersRef.current?.remote;
 
   // Track when collaborative provider is ready and synced
-  const [collabReady, setCollabReady] = useState(false);
+  const [, setCollabReady] = useState(false);
   useEffect(() => {
     if (
       remoteProvider?.status === WebSocketStatus.Connected &&
@@ -168,7 +165,7 @@ export default function PageEditor({
         token: collabQuery?.token,
         connect: true,
         preserveConnection: false,
-        onAuthenticationFailed: (auth: onAuthenticationFailedParameters) => {
+        onAuthenticationFailed: (_auth: onAuthenticationFailedParameters) => {
           const payload = jwtDecode(collabQuery?.token);
           const now = Date.now().valueOf() / 1000;
           const isTokenExpired = now >= payload.exp;
@@ -416,7 +413,7 @@ export default function PageEditor({
 
   const updatePageMutation = useUpdatePageMutation();
 
-  const handleSave = useCallback(() => {
+  const _handleSave = useCallback(() => {
     const editorPageId = editor?.storage?.pageId;
     if (hasUnsavedChanges && editor && pageId && editorPageId === pageId) {
       const content = editor.getJSON();

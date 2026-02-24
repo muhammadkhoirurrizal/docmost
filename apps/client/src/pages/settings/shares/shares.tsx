@@ -3,7 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { getAppName } from "@/lib/config.ts";
 import { useTranslation } from "react-i18next";
 import ShareList from "@/features/share/components/share-list.tsx";
-import { Alert, Text } from "@mantine/core";
+import { Alert } from "@mantine/core";
 import { IconInfoCircle } from "@tabler/icons-react";
 import React from "react";
 

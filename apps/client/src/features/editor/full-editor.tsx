@@ -5,7 +5,6 @@ import PageEditor from "@/features/editor/page-editor";
 import { Container } from "@mantine/core";
 import { useAtom } from "jotai";
 import { userAtom } from "@/features/user/atoms/current-user-atom.ts";
-import { pageEditorAtom } from "@/features/editor/atoms/editor-atoms.ts";
 import useUserRole from "@/hooks/use-user-role";
 import { TableOfContentsOnPage } from "@/features/editor/components/table-of-contents/table-of-contents.tsx";
 import { PrintHeader } from "@/components/common/print-header.tsx";

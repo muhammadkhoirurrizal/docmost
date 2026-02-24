@@ -207,7 +207,7 @@ export class AttachmentService {
           throw new BadRequestException(`Image upload aborted.`);
         }
       });
-    } catch (err) {
+    } catch {
       // delete uploaded file on db update failure
       await this.deleteRedundantFile(filePath);
       throw new BadRequestException('Failed to upload image');

@@ -266,7 +266,7 @@ interface SpaceMenuProps {
   onSpaceSettings: () => void;
   tree: TreeApi<SpaceTreeNode> | null;
 }
-function SpaceMenu({ spaceId, onSpaceSettings, tree }: SpaceMenuProps) {
+function SpaceMenu({ spaceId, onSpaceSettings, tree: _tree }: SpaceMenuProps) {
   const { t } = useTranslation();
   const { spaceSlug } = useParams();
   const [importOpened, { open: openImportModal, close: closeImportModal }] =

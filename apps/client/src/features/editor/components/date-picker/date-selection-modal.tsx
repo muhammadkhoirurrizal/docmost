@@ -3,7 +3,6 @@ import { DatePicker } from './date-picker';
 import { DatePickerValue } from './utils';
 import { Box, Button, Group } from '@mantine/core';
 import { modals } from '@mantine/modals';
-import dayjs from 'dayjs';
 
 interface DateSelectionModalProps {
     initialValue: DatePickerValue;

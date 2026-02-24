@@ -1,4 +1,4 @@
-import { Group, Text, Switch, MantineSize, Title } from "@mantine/core";
+import { Group, Text, Switch, MantineSize } from "@mantine/core";
 import { useAtom } from "jotai";
 import { workspaceAtom } from "@/features/user/atoms/current-user-atom.ts";
 import React, { useState } from "react";

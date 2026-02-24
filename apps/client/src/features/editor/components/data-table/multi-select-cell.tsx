@@ -1,4 +1,4 @@
-import { Badge, Box, Combobox, useCombobox, Pill, PillsInput, Group, CheckIcon, ColorSwatch, Menu, ActionIcon } from "@mantine/core";
+import { Badge, Box, Combobox, useCombobox, Group, CheckIcon, ColorSwatch, Menu, ActionIcon } from "@mantine/core";
 import { IconX } from "@tabler/icons-react";
 import classes from "./data-table.module.css";
 import { DataTableColumn } from "@docmost/editor-ext";
@@ -28,7 +28,7 @@ export function MultiSelectCell({ value, column, onChange, onUpdateColumn, isEdi
     try {
         selectedIds = value ? JSON.parse(value) : [];
         if (!Array.isArray(selectedIds)) selectedIds = [];
-    } catch (e) {
+    } catch (_e) {
         selectedIds = [];
     }
 

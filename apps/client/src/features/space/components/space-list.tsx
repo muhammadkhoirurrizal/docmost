@@ -12,7 +12,7 @@ import { AvatarIconType } from "@/features/attachments/types/attachment.types.ts
 export default function SpaceList() {
   const { t } = useTranslation();
   const [page, setPage] = useState(1);
-  const { data, isLoading } = useGetSpacesQuery({ page });
+  const { data } = useGetSpacesQuery({ page });
   const [opened, { open, close }] = useDisclosure(false);
   const [selectedSpaceId, setSelectedSpaceId] = useState<string>(null);
 

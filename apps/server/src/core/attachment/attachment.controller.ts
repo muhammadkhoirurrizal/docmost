@@ -187,7 +187,7 @@ export class AttachmentController {
     @AuthUser() user: User,
     @AuthWorkspace() workspace: Workspace,
     @Param('fileId') fileId: string,
-    @Param('fileName') fileName?: string,
+    @Param('fileName') _fileName?: string,
   ) {
     if (!isValidUUID(fileId)) {
       throw new NotFoundException('Invalid file id');
@@ -247,7 +247,7 @@ export class AttachmentController {
         jwtToken,
         JwtType.ATTACHMENT,
       );
-    } catch (err) {
+    } catch {
       throw new BadRequestException(
         'Expired or invalid attachment access token',
       );
@@ -405,7 +405,7 @@ export class AttachmentController {
         'Cache-Control': 'private, max-age=86400',
       });
       return res.send(fileStream);
-    } catch (err) {
+    } catch {
       // this.logger.error(err);
       throw new NotFoundException('File not found');
     }

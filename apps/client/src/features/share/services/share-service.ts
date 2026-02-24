@@ -1,5 +1,4 @@
 import api from "@/lib/api-client";
-import { IPage } from "@/features/page/types/page.types";
 
 import {
   ICreateShare,

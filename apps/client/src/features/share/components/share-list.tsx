@@ -15,7 +15,7 @@ import classes from "./share.module.css";
 export default function ShareList() {
   const { t } = useTranslation();
   const [page, setPage] = useState(1);
-  const { data, isLoading } = useGetSharesQuery({ page });
+  const { data, isLoading: _isLoading } = useGetSharesQuery({ page });
 
   return (
     <>

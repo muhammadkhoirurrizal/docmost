@@ -495,7 +495,7 @@ export class PageService {
     // validate position value by attempting to generate a key
     try {
       generateJitteredKeyBetween(dto.position, null);
-    } catch (err) {
+    } catch {
       throw new BadRequestException('Invalid move position');
     }
 

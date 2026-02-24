@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
-import { UnstyledButton, Popover, Text, Box } from '@mantine/core';
+import { UnstyledButton, Popover, Text } from '@mantine/core';
 import { DatePicker } from '../date-picker/date-picker';
-import { DatePickerValue, getDateFormat, formatSelectedDate } from '../date-picker/utils';
+import { DatePickerValue, getDateFormat } from '../date-picker/utils';
 import classes from './data-table.module.css';
 import dayjs from 'dayjs';
 
@@ -30,7 +30,7 @@ export function DateCell({ value, onChange, isEditable }: DateCellProps) {
                 start: parsed.start ? new Date(parsed.start) : null,
                 end: parsed.end ? new Date(parsed.end) : null
             };
-        } catch (e) {
+        } catch (_e) {
             return {
                 start: null,
                 end: null,

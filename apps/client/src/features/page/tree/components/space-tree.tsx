@@ -54,7 +54,6 @@ import { SpaceTreeNode } from "@/features/page/tree/types.ts";
 import {
   getPageBreadcrumbs,
   getPageById,
-  getSidebarPages,
 } from "@/features/page/services/page-service.ts";
 import { IPage, SidebarPagesParams } from "@/features/page/types/page.types.ts";
 import { queryClient } from "@/main.tsx";
@@ -105,7 +104,7 @@ export default function SpaceTree({ spaceId, readOnly }: SpaceTreeProps) {
   const [openTreeNodes, setOpenTreeNodes] = useAtom<OpenMap>(openTreeNodesAtom);
   const rootElement = useRef<HTMLDivElement>();
   const [isRootReady, setIsRootReady] = useState(false);
-  const { ref: sizeRef, width, height } = useElementSize();
+  const { ref: sizeRef, width, height: _height } = useElementSize();
   const mergedRef = useMergedRef((element) => {
     rootElement.current = element;
     if (element && !isRootReady) {

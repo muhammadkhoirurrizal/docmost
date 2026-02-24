@@ -41,7 +41,7 @@ export default function SpaceMembersList({
 }: SpaceMembersProps) {
   const { t } = useTranslation();
   const { search, page, setPage, handleSearch } = usePaginateAndSearch();
-  const { data, isLoading } = useSpaceMembersQuery(spaceId, {
+  const { data } = useSpaceMembersQuery(spaceId, {
     page,
     limit: 100,
     query: search,

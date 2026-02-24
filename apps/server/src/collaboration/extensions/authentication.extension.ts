@@ -33,7 +33,7 @@ export class AuthenticationExtension implements Extension {
 
     try {
       jwtPayload = await this.tokenService.verifyJwt(token, JwtType.COLLAB);
-    } catch (error) {
+    } catch {
       throw new UnauthorizedException('Invalid collab token');
     }
 

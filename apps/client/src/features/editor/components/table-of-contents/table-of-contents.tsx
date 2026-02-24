@@ -13,7 +13,7 @@ import { getAppUrl } from "@/lib/config";
 import { extractPageSlugId } from "@/lib";
 import { copyToClipboard } from "@/features/editor/utils/clipboard";
 import { usePageQuery } from "@/features/page/queries/page-query.ts";
-import { Collapse, Divider, Space } from "@mantine/core";
+import { Collapse, Divider } from "@mantine/core";
 import { useAtom } from "jotai";
 import { pageEditorAtom } from "../../atoms/editor-atoms";
 import { useDisclosure } from "@mantine/hooks";
@@ -233,7 +233,7 @@ export const TableOfContentsOnPage = () => {
   const { t } = useTranslation();
   const [links, setLinks] = useState<HeadingLink[]>([]);
   const [headingDOMNodes, setHeadingDOMNodes] = useState<HTMLElement[]>([]);
-  const [activeElement, setActiveElement] = useState<HTMLElement | null>(null);
+  const [_activeElement, setActiveElement] = useState<HTMLElement | null>(null);
   const headerPaddingRef = useRef<HTMLDivElement | null>(null);
   const { pageSlug, spaceSlug } = useParams();
   const { data: page } = usePageQuery({

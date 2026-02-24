@@ -11,9 +11,7 @@ import {
   StorageOption,
 } from '../interfaces';
 import { LocalDriver, S3Driver } from '../drivers';
-import * as process from 'node:process';
 import { LOCAL_STORAGE_PATH } from '../../../common/helpers';
-import path from 'path';
 
 function createStorageDriver(disk: StorageConfig): StorageDriver {
   switch (disk.driver) {

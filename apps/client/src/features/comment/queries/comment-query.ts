@@ -47,7 +47,7 @@ export function useCreateCommentMutation() {
       queryClient.refetchQueries({ queryKey: RQ_KEY(data.pageId) });
       notifications.show({ message: t("Comment created successfully") });
     },
-    onError: (error) => {
+    onError: (_error) => {
       notifications.show({
         message: t("Error creating comment"),
         color: "red",
@@ -61,10 +61,10 @@ export function useUpdateCommentMutation() {
 
   return useMutation<IComment, Error, Partial<IComment>>({
     mutationFn: (data) => updateComment(data),
-    onSuccess: (data) => {
+    onSuccess: (_data) => {
       notifications.show({ message: t("Comment updated successfully") });
     },
-    onError: (error) => {
+    onError: (_error) => {
       notifications.show({
         message: t("Failed to update comment"),
         color: "red",
@@ -79,7 +79,7 @@ export function useDeleteCommentMutation(pageId?: string) {
 
   return useMutation({
     mutationFn: (commentId: string) => deleteComment(commentId),
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       const comments = queryClient.getQueryData(
         RQ_KEY(pageId),
       ) as IPagination<IComment>;
@@ -97,7 +97,7 @@ export function useDeleteCommentMutation(pageId?: string) {
 
       notifications.show({ message: t("Comment deleted successfully") });
     },
-    onError: (error) => {
+    onError: (_error) => {
       notifications.show({
         message: t("Failed to delete comment"),
         color: "red",

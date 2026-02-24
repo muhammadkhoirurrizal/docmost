@@ -119,7 +119,7 @@ function mathInline(turndownService: TurndownService) {
         node.getAttribute('data-type') === 'mathInline'
       );
     },
-    replacement: function (content: any, node: HTMLInputElement) {
+    replacement: function (content: any, _node: HTMLInputElement) {
       return `$${content}$`;
     },
   });
@@ -133,7 +133,7 @@ function mathBlock(turndownService: TurndownService) {
         node.getAttribute('data-type') === 'mathBlock'
       );
     },
-    replacement: function (content: any, node: HTMLInputElement) {
+    replacement: function (content: any, _node: HTMLInputElement) {
       return `\n$$\n${content}\n$$\n`;
     },
   });

@@ -28,7 +28,6 @@ import { jsonArrayFrom } from 'kysely/helpers/postgres';
 import { addDays } from 'date-fns';
 import { DISALLOWED_HOSTNAMES, WorkspaceStatus } from '../workspace.constants';
 import { v4 } from 'uuid';
-import { AttachmentType } from 'src/core/attachment/attachment.constants';
 import { InjectQueue } from '@nestjs/bullmq';
 import { QueueJob, QueueName } from '../../../integrations/queue/constants';
 import { Queue } from 'bullmq';
@@ -533,7 +532,7 @@ export class WorkspaceService {
 
     try {
       await this.attachmentQueue.add(QueueJob.DELETE_USER_AVATARS, user);
-    } catch (err) {
+    } catch {
       // empty
     }
   }

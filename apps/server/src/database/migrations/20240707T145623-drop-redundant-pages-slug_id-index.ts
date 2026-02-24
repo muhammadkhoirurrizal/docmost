@@ -4,4 +4,4 @@ export async function up(db: Kysely<any>): Promise<void> {
   await db.schema.dropIndex('pages_slug_id_idx').ifExists().execute();
 }
 
-export async function down(db: Kysely<any>): Promise<void> {}
+export async function down(_db: Kysely<any>): Promise<void> {}

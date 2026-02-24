@@ -1,13 +1,13 @@
 import { useAtom } from "jotai";
 import { currentUserAtom } from "@/features/user/atoms/current-user-atom.ts";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button, CopyButton, Group, Text, TextInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
 export default function WorkspaceInviteSection() {
   const { t } = useTranslation();
-  const [currentUser] = useAtom(currentUserAtom);
-  const [inviteLink, setInviteLink] = useState<string>("");
+  const [_currentUser] = useAtom(currentUserAtom);
+  const [inviteLink, _setInviteLink] = useState<string>("");
 
   /*
   useEffect(() => {

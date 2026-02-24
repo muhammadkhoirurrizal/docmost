@@ -1,6 +1,5 @@
 import { Box, Textarea, Modal, Button, Group } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconMarkdown } from "@tabler/icons-react";
 import classes from "./data-table.module.css";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";

@@ -16,8 +16,8 @@ const EmojiList = ({
   items,
   isLoading,
   command,
-  editor,
-  range,
+  editor: _editor,
+  range: _range,
 }: {
   items: EmojiMenuItemType[];
   isLoading: boolean;

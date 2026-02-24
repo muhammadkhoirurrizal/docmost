@@ -1,7 +1,7 @@
 import api from "@/lib/api-client.ts";
 import { IAuthProvider } from "@/ee/security/types/security.types.ts";
 
-export async function getSsoProviderById(data: {
+export async function getSsoProviderById(_data: {
   providerId: string;
 }): Promise<any> {
   const req = await api.post<IAuthProvider>("/sso/info");

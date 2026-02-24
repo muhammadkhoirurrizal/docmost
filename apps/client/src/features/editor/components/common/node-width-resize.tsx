@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useLayoutEffect, useState } from 'react';
+import { memo, useCallback, useLayoutEffect, useState } from 'react';
 import { Slider } from '@mantine/core';
 
 export type ImageWidthProps = {

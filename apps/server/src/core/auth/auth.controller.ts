@@ -50,7 +50,7 @@ export class AuthController {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       MfaModule = require('./../../ee/mfa/services/mfa.service');
       isMfaModuleReady = true;
-    } catch (err) {
+    } catch {
       this.logger.debug(
         'MFA module requested but EE module not bundled in this build',
       );

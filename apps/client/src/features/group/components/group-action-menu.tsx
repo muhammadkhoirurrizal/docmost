@@ -14,7 +14,7 @@ import { useTranslation } from "react-i18next";
 export default function GroupActionMenu() {
   const { t } = useTranslation();
   const { groupId } = useParams();
-  const { data: group, isLoading } = useGroupQuery(groupId);
+  const { data: group, isLoading: _isLoading } = useGroupQuery(groupId);
   const deleteGroupMutation = useDeleteGroupMutation();
   const navigate = useNavigate();
   const [opened, { open, close }] = useDisclosure(false);

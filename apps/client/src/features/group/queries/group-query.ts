@@ -20,7 +20,6 @@ import { notifications } from "@mantine/notifications";
 import { IPagination, QueryParams } from "@/lib/types.ts";
 import { IUser } from "@/features/user/types/user.types.ts";
 import { useEffect } from "react";
-import { validate as isValidUuid } from "uuid";
 import { queryClient } from "@/main.tsx";
 import { useTranslation } from 'react-i18next';
 
@@ -78,7 +77,7 @@ export function useUpdateGroupMutation() {
 
   return useMutation<IGroup, Error, Partial<IGroup>>({
     mutationFn: (data) => updateGroup(data),
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       notifications.show({ message: t("Group updated successfully") });
       queryClient.invalidateQueries({
         queryKey: ["group", variables.groupId],
@@ -97,7 +96,7 @@ export function useDeleteGroupMutation() {
 
   return useMutation({
     mutationFn: (groupId: string) => deleteGroup({ groupId }),
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, _variables) => {
       notifications.show({ message: t("Group deleted successfully") });
       queryClient.refetchQueries({ queryKey: ["groups"] });
     },

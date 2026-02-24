@@ -158,7 +158,7 @@ export function normalizeTiptapJson(tiptapJson: any) {
   try {
     const node = jsonToNode(tiptapJson);
     return clean(node.toJSON());
-  } catch (error) {
+  } catch {
     return clean(tiptapJson);
   }
 }

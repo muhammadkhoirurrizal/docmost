@@ -9,7 +9,7 @@ import {
 } from "react-arborist";
 import { useAtom } from "jotai";
 import { treeDataAtom } from "@/features/page/tree/atoms/tree-data-atom.ts";
-import { IMovePage, IPage, IPageInput } from "@/features/page/types/page.types.ts";
+import { IMovePage, IPage } from "@/features/page/types/page.types.ts";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   useCreatePageMutation,
@@ -53,7 +53,7 @@ export function useTreeMutation<T>(spaceId: string) {
     let createdPage: IPage;
     try {
       createdPage = await createPageMutation.mutateAsync(payload);
-    } catch (err) {
+    } catch {
       throw new Error("Failed to create page");
     }
 

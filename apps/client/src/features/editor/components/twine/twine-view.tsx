@@ -14,7 +14,6 @@ import { getFileUrl } from "@/lib/config.ts";
 import { ResizableWrapper } from "../common/resizable-wrapper";
 import { uploadFile } from "@/features/page/services/page-service.ts";
 import { deleteAttachment } from "@/features/attachments/services/attachment-service.ts";
-import { IAttachment } from "@/features/attachments/types/attachment.types.ts";
 import { notifications } from "@mantine/notifications";
 import classes from "./twine-view.module.css";
 
@@ -80,7 +79,7 @@ export default function TwineView(props: NodeViewProps) {
                 message: t("Story uploaded successfully"),
                 color: "green",
             });
-        } catch (error) {
+        } catch (_error) {
             notifications.show({
                 message: t("Failed to upload story"),
                 color: "red",

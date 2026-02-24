@@ -46,7 +46,7 @@ import {
 import { DataTableColumn, DataTableRow, DataTableFilter, DataTableSort } from "@docmost/editor-ext";
 import classes from "./data-table.module.css";
 import { useDisclosure } from "@mantine/hooks";
-import React, { useState, useMemo, useRef, useEffect, useCallback } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import { EditorContent, useEditor, useEditorState } from "@tiptap/react";
 import { mainExtensions } from "@/features/editor/extensions/extensions";
 import useUserRole from "@/hooks/use-user-role";
@@ -172,7 +172,7 @@ export default function DataTableView(props: NodeViewProps) {
     const [activeRowId, setActiveRowId] = useState<string | null>(null);
     const menuContainerRef = useRef<HTMLDivElement>(null);
     const [search, setSearch] = useState("");
-    const [isDragging, setIsDragging] = useState(false);
+    const [_isDragging, setIsDragging] = useState(false);
     const [dragType, setDragType] = useState<'row' | 'col' | null>(null);
 
     const totalColumnsWidth = useMemo(() => {
@@ -416,7 +416,7 @@ export default function DataTableView(props: NodeViewProps) {
         if (!isEditable) return;
         const newColumns = columns.filter(c => c.id !== colId);
         const newRows = rows.map(row => {
-            const { [colId]: _, ...rest } = row;
+            const { [colId]: _val, ...rest } = row;
             return rest;
         });
         updateAttributes({ columns: newColumns, rows: newRows });
@@ -803,7 +803,7 @@ export default function DataTableView(props: NodeViewProps) {
 
             <Modal opened={opened} onClose={close} size="90%" withCloseButton={false} centered styles={{ content: { padding: "16px" } }}>
                 <Box mb="xl">
-                    {visibleProperties.map((col, index) => {
+                    {visibleProperties.map((col, _index) => {
                         const Icon = IconMap[col.type] || IconAlphabetLatin;
                         return (
                             <Group key={col.id} mb="sm" wrap="nowrap" align="center">
@@ -915,7 +915,7 @@ function SortableHeader({ col, idx, isEditable, updateColumnName, removeColumn, 
     );
 }
 
-function SortableRow({ row, idx, columns, isEditable, removeRow, renderInput, handleOpenRow }: any) {
+function SortableRow({ row, _idx, columns, isEditable, removeRow, renderInput, handleOpenRow }: any) {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: row.id,
         data: { type: 'row' }

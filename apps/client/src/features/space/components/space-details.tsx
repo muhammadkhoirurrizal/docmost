@@ -25,7 +25,7 @@ interface SpaceDetailsProps {
 }
 export default function SpaceDetails({ spaceId, readOnly }: SpaceDetailsProps) {
   const { t } = useTranslation();
-  const { data: space, isLoading, refetch } = useSpaceQuery(spaceId);
+  const { data: space, refetch } = useSpaceQuery(spaceId);
   const [exportOpened, { open: openExportModal, close: closeExportModal }] =
     useDisclosure(false);
   const [isIconUploading, setIsIconUploading] = useState(false);
@@ -38,7 +38,7 @@ export default function SpaceDetails({ spaceId, readOnly }: SpaceDetailsProps) {
       await queryClient.invalidateQueries({
         predicate: (item) => ["spaces"].includes(item.queryKey[0] as string),
       });
-    } catch (err) {
+    } catch (_err) {
       // skip
     } finally {
       setIsIconUploading(false);
@@ -53,7 +53,7 @@ export default function SpaceDetails({ spaceId, readOnly }: SpaceDetailsProps) {
       await queryClient.invalidateQueries({
         predicate: (item) => ["spaces"].includes(item.queryKey[0] as string),
       });
-    } catch (err) {
+    } catch (_err) {
       // skip
     } finally {
       setIsIconUploading(false);

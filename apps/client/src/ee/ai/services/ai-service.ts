@@ -65,7 +65,7 @@ export async function generateAiContentStream(
                 } else {
                   onChunk(parsed);
                 }
-              } catch (e) {
+              } catch {
                 // Ignore parse errors for incomplete chunks
               }
             }

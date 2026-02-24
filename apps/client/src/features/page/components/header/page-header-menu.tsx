@@ -10,7 +10,6 @@ import {
   IconList,
   IconMessage,
   IconPrinter,
-  IconSearch,
   IconTrash,
   IconWifiOff,
 } from "@tabler/icons-react";
@@ -19,7 +18,6 @@ import useToggleAside from "@/hooks/use-toggle-aside.tsx";
 import { useAtom } from "jotai";
 import { historyAtoms } from "@/features/page-history/atoms/history-atoms.ts";
 import {
-  getHotkeyHandler,
   useClipboard,
   useDisclosure,
   useHotkeys,
@@ -43,8 +41,7 @@ import {
   pageEditorAtom,
   yjsConnectionStatusAtom,
 } from "@/features/editor/atoms/editor-atoms.ts";
-import { searchAndReplaceStateAtom } from "@/features/editor/components/search-and-replace/atoms/search-and-replace-state-atom.ts";
-import { formattedDate, timeAgo } from "@/lib/time.ts";
+import { formattedDate } from "@/lib/time.ts";
 import { PageStateSegmentedControl } from "@/features/user/components/page-state-pref.tsx";
 import MovePageModal from "@/features/page/components/move-page-modal.tsx";
 import { useTimeAgo } from "@/hooks/use-time-ago.tsx";
@@ -136,7 +133,7 @@ function PageActionMenu({ readOnly }: PageActionMenuProps) {
   const clipboard = useClipboard({ timeout: 500 });
   const { pageSlug, spaceSlug } = useParams();
   const navigate = useNavigate();
-  const { data: page, isLoading } = usePageQuery({
+  const { data: page, isLoading: _isLoading } = usePageQuery({
     pageId: extractPageSlugId(pageSlug),
   });
   const { openDeleteModal } = useDeletePageModal();
