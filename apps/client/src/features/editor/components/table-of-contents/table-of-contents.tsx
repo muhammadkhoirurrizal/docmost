@@ -372,10 +372,10 @@ export const TableOfContentsOnPage = () => {
               key={idx}
               className={clsx(classes.link, 'p0 mt0')}
               style={{
-                paddingLeft: `calc(${item.level} * var(--mantine-spacing-md))`,
+                paddingLeft: item.level > 1 ? `calc(${item.level - 1} * var(--mantine-spacing-md))` : 0,
               }}
             >
-              <Group justify="space-between" wrap="nowrap" gap={4}>
+              <Group ml={4} justify="space-between" wrap="nowrap" gap={4}>
                 <Text truncate fw={500} size="sm" style={{ flex: 1 }}>
                   {item.label}
                   <Tooltip label={t("Copy link")}>
