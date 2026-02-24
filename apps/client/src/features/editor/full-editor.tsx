@@ -8,6 +8,7 @@ import { userAtom } from "@/features/user/atoms/current-user-atom.ts";
 import { pageEditorAtom } from "@/features/editor/atoms/editor-atoms.ts";
 import useUserRole from "@/hooks/use-user-role";
 import { TableOfContentsOnPage } from "@/features/editor/components/table-of-contents/table-of-contents.tsx";
+import { PrintHeader } from "@/components/common/print-header.tsx";
 
 const MemoizedTitleEditor = React.memo(TitleEditor);
 const MemoizedPageEditor = React.memo(PageEditor);
@@ -41,6 +42,7 @@ export function FullEditor({
       size={!fullPageWidth && 900}
       className={classes.editor}
     >
+      <PrintHeader />
       <MemoizedTitleEditor
         pageId={pageId}
         slugId={slugId}

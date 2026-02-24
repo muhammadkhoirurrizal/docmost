@@ -20,6 +20,7 @@
   border-top-right-radius: var(--mantine-radius-sm);
   border-bottom-right-radius: var(--mantine-radius-sm);
   border: none;
+  text-decoration: none;
 
   @mixin hover {
     background-color: light-dark(

@@ -8,6 +8,7 @@ import ReadonlyPageEditor from "@/features/editor/readonly-page-editor.tsx";
 import { extractPageSlugId } from "@/lib";
 import { Error404 } from "@/components/ui/error-404.tsx";
 import ShareBranding from "@/features/share/components/share-branding.tsx";
+import { PrintHeader } from "@/components/common/print-header.tsx";
 
 export default function SharedPage() {
   const { t } = useTranslation();
@@ -48,6 +49,7 @@ export default function SharedPage() {
       </Helmet>
 
       <Container size={900} p={0}>
+        <PrintHeader />
         <ReadonlyPageEditor
           key={data.page.id}
           title={data.page.title}

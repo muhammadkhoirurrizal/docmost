@@ -190,9 +190,13 @@ export const TableOfContents: FC<TableOfContentsProps> = (props) => {
       )}
       <div className={props.isShare ? classes.leftBorder : ""}>
         {links.map((item, idx) => (
-          <Box<"button">
-            component="button"
-            onClick={() => handleScrollToHeading(item.position)}
+          <Box<"a">
+            component="a"
+            href={`#${item.id}`}
+            onClick={(e) => {
+              e.preventDefault();
+              handleScrollToHeading(item.position);
+            }}
             key={idx}
             className={clsx(classes.link, {
               [classes.linkActive]: item.element === activeElement,
@@ -358,9 +362,13 @@ export const TableOfContentsOnPage = () => {
 
         <Collapse in={opened}>
           {links.map((item, idx) => (
-            <Box<"button">
-              component="button"
-              onClick={() => handleScrollToHeading(item.position)}
+            <Box<"a">
+              component="a"
+              href={`#${item.id}`}
+              onClick={(e) => {
+                e.preventDefault();
+                handleScrollToHeading(item.position);
+              }}
               key={idx}
               className={clsx(classes.link, 'p0 mt0')}
               style={{
