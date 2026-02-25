@@ -67,6 +67,7 @@ import { PageEditMode } from "@/features/user/types/user.types.ts";
 import { jwtDecode } from "jwt-decode";
 import { useEditorScroll } from "./hooks/use-editor-scroll";
 import { useStickyHeader } from "./hooks/use-sticky-header";
+import { DragHandleMenu } from "./components/block-handle-menu/drag-handle-menu";
 
 interface PageEditorProps {
   pageId: string;
@@ -547,6 +548,7 @@ export default function PageEditor({
 
   return (
     <div className="editor-container" style={{ position: "relative" }}>
+      <DragHandleMenu editor={editor} />
       <div ref={menuContainerRef}>
         <EditorContent editor={editor} />
 

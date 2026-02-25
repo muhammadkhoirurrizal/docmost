@@ -10,92 +10,137 @@ export const useStickyHeader = (editor: Editor | null) => {
     useEffect(() => {
         if (!editor) return;
 
+        const scrollParentCache = new Map<Element, HTMLElement>();
+
         const getScrollParent = (node: HTMLElement): HTMLElement => {
             if (node == null || node === document.documentElement) {
                 return document.documentElement;
             }
+            if (scrollParentCache.has(node)) {
+                return scrollParentCache.get(node)!;
+            }
             const style = window.getComputedStyle(node);
             const isScrollable = /(auto|scroll)/.test(style.overflow + style.overflowY);
             if (isScrollable && node.scrollHeight > node.clientHeight) {
+                scrollParentCache.set(node, node);
                 return node;
             } else {
-                return getScrollParent(node.parentNode as HTMLElement);
+                const res = getScrollParent(node.parentNode as HTMLElement);
+                scrollParentCache.set(node, res);
+                return res;
             }
         };
 
+        let isUpdating = false;
+
         const updateStickyHeaders = () => {
+            if (isUpdating || !editor.view.dom) return;
+            isUpdating = true;
+
             const allHeaders = Array.from(editor.view.dom.querySelectorAll("th")) as HTMLTableCellElement[];
-            if (allHeaders.length === 0) return;
+            if (allHeaders.length === 0) {
+                isUpdating = false;
+                return;
+            }
 
             // Group headers by their scroll parent
             const containerMap = new Map<HTMLElement, HTMLTableCellElement[]>();
-            allHeaders.forEach(th => {
-                const parent = th.closest(".docmost-data-table") as HTMLElement || getScrollParent(th);
-                if (!containerMap.has(parent)) {
-                    containerMap.set(parent, []);
+
+            // Optimization: Find scroll parent for each table instead of each cell
+            const tables = Array.from(editor.view.dom.querySelectorAll("table"));
+            tables.forEach(table => {
+                const parent = table.closest(".docmost-data-table") as HTMLElement || getScrollParent(table as HTMLElement);
+                const tableHeaders = Array.from(table.querySelectorAll("th"));
+                if (tableHeaders.length > 0) {
+                    if (!containerMap.has(parent)) {
+                        containerMap.set(parent, []);
+                    }
+                    containerMap.get(parent)!.push(...tableHeaders);
                 }
-                containerMap.get(parent)!.push(th);
             });
 
             containerMap.forEach((headers, container) => {
                 const containerRect = container.getBoundingClientRect();
-
-                // Find all headers that have reached or passed the top of the container
                 const passedHeaders: HTMLTableCellElement[] = [];
 
                 headers.forEach((th) => {
                     const rect = th.getBoundingClientRect();
-                    // Using a small buffer (5px). If the header's top is at or above the container's top.
                     if (rect.top <= containerRect.top + 5) {
                         passedHeaders.push(th);
                     }
                 });
 
                 if (passedHeaders.length === 0) {
-                    headers.forEach(th => th.classList.remove("is-covered"));
+                    headers.forEach(th => {
+                        if (th.classList.contains("is-covered")) th.classList.remove("is-covered");
+                    });
                     return;
                 }
 
-                // The "active" header is the LAST one in DOM order that has passed the top.
                 const activeHeader = passedHeaders[passedHeaders.length - 1];
                 const activeRow = activeHeader.closest("tr");
 
                 headers.forEach((th) => {
                     const row = th.closest("tr");
-                    if (row === activeRow) {
-                        th.classList.remove("is-covered");
-                        return;
-                    }
-
-                    // Any header row that appeared BEFORE the active row in the DOM
-                    // and has already "passed" the top should be covered.
-                    // Actually, we can just cover ALL headers before the active one.
                     const thIndex = headers.indexOf(th);
                     const activeIndex = headers.indexOf(activeHeader);
 
-                    if (thIndex < activeIndex) {
-                        th.classList.add("is-covered");
+                    const shouldBeCovered = row !== activeRow && thIndex < activeIndex;
+
+                    if (shouldBeCovered) {
+                        if (!th.classList.contains("is-covered")) th.classList.add("is-covered");
                     } else {
-                        th.classList.remove("is-covered");
+                        if (th.classList.contains("is-covered")) th.classList.remove("is-covered");
                     }
                 });
             });
+
+            isUpdating = false;
         };
 
-        // MutationObserver to watch for content changes (new tables, deleted rows, etc.)
-        const mutationObserver = new MutationObserver(() => {
-            updateStickyHeaders();
+        // Throttled update to prevent high CPU usage
+        let timeoutId: any = null;
+        const throttledUpdate = () => {
+            if (timeoutId) return;
+            timeoutId = setTimeout(() => {
+                updateStickyHeaders();
+                timeoutId = null;
+            }, 50); // 50ms throttle
+        };
+
+        // MutationObserver to watch for structural content changes (new tables, etc.)
+        const mutationObserver = new MutationObserver((mutations) => {
+            // Ignore text changes (characterData) and anything related to the drag handle
+            const significantChange = mutations.some(m => {
+                if (m.type !== "childList") return false;
+
+                // Check if the added/removed nodes are not just the drag handle
+                const nodes = Array.from(m.addedNodes).concat(Array.from(m.removedNodes)) as HTMLElement[];
+                return nodes.some(node => {
+                    if (!node.classList) return true;
+                    return !node.classList.contains("drag-handle") && !node.closest?.(".drag-handle");
+                });
+            });
+
+            if (significantChange) {
+                scrollParentCache.clear();
+                throttledUpdate();
+            }
         });
 
         mutationObserver.observe(editor.view.dom, {
             childList: true,
             subtree: true,
-            characterData: true
+            characterData: false // Ignore typing to prevent lag
         });
 
         // ResizeObserver to watch for layout changes
-        const resizeObserver = new ResizeObserver(() => {
-            updateStickyHeaders();
+        const resizeObserver = new ResizeObserver((entries) => {
+            const hasRealChange = entries.some(entry => entry.contentRect.width > 0 || entry.contentRect.height > 0);
+            if (hasRealChange) {
+                scrollParentCache.clear();
+                throttledUpdate();
+            }
         });
         resizeObserver.observe(editor.view.dom);
 
@@ -103,15 +148,14 @@ export const useStickyHeader = (editor: Editor | null) => {
             requestAnimationFrame(updateStickyHeaders);
         };
 
-        // Listen for scroll events on window AND capture scroll events from any element (like ScrollArea)
         window.addEventListener("scroll", handleScroll, { passive: true, capture: true });
 
-        // Initial check
         updateStickyHeaders();
 
         return () => {
             mutationObserver.disconnect();
             resizeObserver.disconnect();
+            if (timeoutId) clearTimeout(timeoutId);
             window.removeEventListener("scroll", handleScroll, { capture: true } as any);
         };
     }, [editor]);
