@@ -66,6 +66,7 @@ import { FIVE_MINUTES } from "@/lib/constants.ts";
 import { PageEditMode } from "@/features/user/types/user.types.ts";
 import { jwtDecode } from "jwt-decode";
 import { useEditorScroll } from "./hooks/use-editor-scroll";
+import { useStickyHeader } from "./hooks/use-sticky-header";
 
 interface PageEditorProps {
   pageId: string;
@@ -317,6 +318,8 @@ export default function PageEditor({
     },
     [pageId, editable, remoteProvider],
   );
+
+  useStickyHeader(editor);
 
   const editorIsEditable = useEditorState({
     editor,
