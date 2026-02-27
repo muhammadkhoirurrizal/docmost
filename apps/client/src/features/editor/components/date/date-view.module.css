@@ -1,0 +1,30 @@
+.dateBadge {
+  display: inline-flex;
+  align-items: center;
+  color: var(--mantine-color-gray-7);
+  padding: 0px 6px;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid transparent;
+  line-height: 1.5;
+  vertical-align: middle;
+}
+
+:global(.dark) .dateBadge {
+  background-color: var(--mantine-color-dark-6);
+  color: var(--mantine-color-dark-0);
+}
+
+.dateBadge:hover {
+  background-color: var(--mantine-color-gray-2);
+}
+
+:global(.dark) .dateBadge:hover {
+  background-color: var(--mantine-color-dark-5);
+}
+
+.selected {
+  border-color: var(--mantine-color-blue-filled);
+  box-shadow: 0 0 0 1px var(--mantine-color-blue-filled);
+}

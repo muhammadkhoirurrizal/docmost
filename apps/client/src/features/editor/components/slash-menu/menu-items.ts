@@ -526,7 +526,25 @@ const CommandGroups: SlashMenuGroupedItemsType = {
                 str += ` → ${dayjs(currentValue.end).format(format)}`;
               }
 
-              editor.chain().focus().insertContent(str).run();
+              editor
+                .chain()
+                .focus()
+                .insertContent([
+                  {
+                    type: "tiptapDate",
+                    attrs: {
+                      start: currentValue.start.toISOString(),
+                      end: currentValue.end ? currentValue.end.toISOString() : null,
+                      includeTime: currentValue.includeTime,
+                      format: currentValue.format,
+                    },
+                  },
+                  {
+                    type: "text",
+                    text: " ",
+                  },
+                ])
+                .run();
             },
           }),
         });

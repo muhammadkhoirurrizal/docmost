@@ -7,9 +7,10 @@ import { modals } from '@mantine/modals';
 interface DateSelectionModalProps {
     initialValue: DatePickerValue;
     onConfirm: (value: DatePickerValue) => void;
+    confirmLabel?: string;
 }
 
-export function DateSelectionModal({ initialValue, onConfirm }: DateSelectionModalProps) {
+export function DateSelectionModal({ initialValue, onConfirm, confirmLabel = "Insert" }: DateSelectionModalProps) {
     const [value, setValue] = useState<DatePickerValue>(initialValue);
 
     const handleConfirm = () => {
@@ -39,7 +40,7 @@ export function DateSelectionModal({ initialValue, onConfirm }: DateSelectionMod
                     Cancel
                 </Button>
                 <Button onClick={handleConfirm} disabled={!value.start}>
-                    Insert
+                    {confirmLabel}
                 </Button>
             </Group>
         </Box>

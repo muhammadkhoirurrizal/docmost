@@ -51,6 +51,7 @@ import {
   DataTable,
   KanbanBoard,
   TwineEditor,
+  TiptapDate,
 } from "@docmost/editor-ext";
 import {
   randomElement,
@@ -71,6 +72,7 @@ import TwineView from "@/features/editor/components/twine/twine-view.tsx";
 import SubpagesView from "@/features/editor/components/subpages/subpages-view.tsx";
 import DataTableView from "@/features/editor/components/data-table/data-table-view.tsx";
 import KanbanBoardView from "@/features/editor/components/kanban/kanban-board-view.tsx";
+import DateView from "@/features/editor/components/date/date-view.tsx";
 import { common, createLowlight } from "lowlight";
 import plaintext from "highlight.js/lib/languages/plaintext";
 import powershell from "highlight.js/lib/languages/powershell";
@@ -269,6 +271,9 @@ export const baseExtensions = [
   InsertLink,
   ColumnGroup,
   Column,
+  TiptapDate.configure({
+    view: DateView,
+  }),
 ] as any;
 
 export const mainExtensions = [

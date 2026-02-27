@@ -32,10 +32,13 @@ export function DatePicker({ value, onChange, onClear }: DatePickerProps) {
     }, [value.end]);
 
     const handleDateChange = (dates: any) => {
-        if (Array.isArray(dates)) {
-            onChange({ ...value, start: dates[0], end: dates[1] });
+        if (hasEndDate) {
+            if (Array.isArray(dates)) {
+                const [start, end] = dates;
+                onChange({ ...value, start, end });
+            }
         } else {
-            onChange({ ...value, start: dates });
+            onChange({ ...value, start: dates, end: null });
         }
     };
 
@@ -73,6 +76,7 @@ export function DatePicker({ value, onChange, onClear }: DatePickerProps) {
                 placeholder="Empty"
                 size="xs"
                 variant="filled"
+                mb="xs"
             />
 
             <Box className={classes.calendarWrapper}>
@@ -85,7 +89,7 @@ export function DatePicker({ value, onChange, onClear }: DatePickerProps) {
                 />
             </Box>
 
-            <Divider />
+            <Divider my="xs" />
 
             <Box>
                 <Group justify="space-between" className={classes.optionItem} py={4}>
@@ -97,7 +101,7 @@ export function DatePicker({ value, onChange, onClear }: DatePickerProps) {
                     />
                 </Group>
 
-                <Menu position="right-start" offset={10} width={200}>
+                <Menu position="right-start" offset={10} width={200} withinPortal>
                     <Menu.Target>
                         <UnstyledButton className={classes.optionItem} py={4} style={{ width: '100%' }}>
                             <Group justify="space-between">
@@ -139,7 +143,7 @@ export function DatePicker({ value, onChange, onClear }: DatePickerProps) {
 
             </Box>
 
-            <Divider />
+            <Divider my="xs" />
 
             <Box className={classes.footer}>
                 <UnstyledButton className={classes.clearButton} onClick={onClear}>
