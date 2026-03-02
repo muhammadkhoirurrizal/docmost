@@ -8,10 +8,12 @@ import {
     Divider,
     Menu,
     TextInput,
+    ColorSwatch,
 } from '@mantine/core';
 import { DatePicker as MantineDatePicker, TimeInput } from '@mantine/dates';
 import {
     IconChevronRight,
+    IconCheck,
 } from '@tabler/icons-react';
 import classes from './date-picker.module.css';
 import dayjs from 'dayjs';
@@ -21,10 +23,9 @@ import { DatePickerValue, getFormatLabel, formatSelectedDate } from './utils';
 interface DatePickerProps {
     value: DatePickerValue;
     onChange: (value: DatePickerValue) => void;
-    onClear: () => void;
 }
 
-export function DatePicker({ value, onChange, onClear }: DatePickerProps) {
+export function DatePicker({ value, onChange }: DatePickerProps) {
     const [hasEndDate, setHasEndDate] = useState(!!value.end);
 
     useEffect(() => {
@@ -85,7 +86,6 @@ export function DatePicker({ value, onChange, onClear }: DatePickerProps) {
                     value={hasEndDate ? [value.start, value.end] : value.start}
                     onChange={handleDateChange as any}
                     size="sm"
-                    allowDeselect
                 />
             </Box>
 
@@ -141,14 +141,45 @@ export function DatePicker({ value, onChange, onClear }: DatePickerProps) {
                     </Box>
                 )}
 
-            </Box>
+                <Divider my="xs" />
 
-            <Divider my="xs" />
-
-            <Box className={classes.footer}>
-                <UnstyledButton className={classes.clearButton} onClick={onClear}>
-                    Clear
-                </UnstyledButton>
+                <Box px={8} pb="xs">
+                    <Text size="sm" mb={8} fw={500}>Text color</Text>
+                    <Group gap={8}>
+                        {[
+                            { name: "Default", color: null },
+                            { name: "Gray", color: "#868e96" },
+                            { name: "Red", color: "#fa5252" },
+                            { name: "Pink", color: "#e64980" },
+                            { name: "Grape", color: "#be4bdb" },
+                            { name: "Violet", color: "#7950f2" },
+                            { name: "Indigo", color: "#4c6ef5" },
+                            { name: "Blue", color: "#228be6" },
+                            { name: "Cyan", color: "#15aabf" },
+                            { name: "Teal", color: "#12b886" },
+                            { name: "Green", color: "#40c057" },
+                            { name: "Lime", color: "#82c91e" },
+                            { name: "Yellow", color: "#fab005" },
+                            { name: "Orange", color: "#fd7e14" },
+                        ].map((c) => (
+                            <UnstyledButton
+                                key={c.name}
+                                onClick={() => onChange({ ...value, color: c.color })}
+                                title={c.name}
+                            >
+                                <ColorSwatch
+                                    color={c.color || "#000000"}
+                                    size={20}
+                                    style={{ cursor: 'pointer' }}
+                                >
+                                    {(value.color === c.color || (!value.color && !c.color)) && (
+                                        <IconCheck size={12} color="#fff" />
+                                    )}
+                                </ColorSwatch>
+                            </UnstyledButton>
+                        ))}
+                    </Group>
+                </Box>
             </Box>
         </Box>
     );

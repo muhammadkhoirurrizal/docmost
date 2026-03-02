@@ -24,7 +24,8 @@ export function DateSelectionModal({ initialValue, onConfirm, confirmLabel = "In
             start: null,
             end: null,
             includeTime: false,
-            format: 'full'
+            format: 'full',
+            color: null
         });
     };
 
@@ -33,15 +34,19 @@ export function DateSelectionModal({ initialValue, onConfirm, confirmLabel = "In
             <DatePicker
                 value={value}
                 onChange={setValue}
-                onClear={handleClear}
             />
-            <Group justify="flex-end" mt="md" px="sm" pb="sm">
-                <Button variant="subtle" color="gray" onClick={() => modals.closeAll()}>
-                    Cancel
+            <Group justify="space-between" mt="md" px="sm" pb="sm">
+                <Button variant="subtle" color="red" size="xs" onClick={handleClear}>
+                    Clear
                 </Button>
-                <Button onClick={handleConfirm} disabled={!value.start}>
-                    {confirmLabel}
-                </Button>
+                <Group gap="xs">
+                    <Button variant="subtle" color="gray" size="xs" onClick={() => modals.closeAll()}>
+                        Cancel
+                    </Button>
+                    <Button size="xs" onClick={handleConfirm} disabled={!value.start}>
+                        {confirmLabel}
+                    </Button>
+                </Group>
             </Group>
         </Box>
     );

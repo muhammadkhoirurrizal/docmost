@@ -32,9 +32,8 @@ import {
   IconDeviceGamepad,
 } from "@tabler/icons-react";
 import { modals } from "@mantine/modals";
-import { DatePickerValue, getDateFormat } from "../date-picker/utils";
+import { DatePickerValue } from "../date-picker/utils";
 import { DateSelectionModal } from "../date-picker/date-selection-modal";
-import dayjs from "dayjs";
 import React from "react";
 import {
   CommandProps,
@@ -510,6 +509,7 @@ const CommandGroups: SlashMenuGroupedItemsType = {
           end: null,
           includeTime: false,
           format: "full",
+          color: null,
         };
 
         modals.open({
@@ -519,13 +519,6 @@ const CommandGroups: SlashMenuGroupedItemsType = {
             onConfirm: (currentValue: DatePickerValue) => {
               if (!currentValue.start) return;
 
-              const format = getDateFormat(currentValue.format, currentValue.includeTime);
-              let str = dayjs(currentValue.start).format(format);
-
-              if (currentValue.end) {
-                str += ` → ${dayjs(currentValue.end).format(format)}`;
-              }
-
               editor
                 .chain()
                 .focus()
@@ -533,10 +526,11 @@ const CommandGroups: SlashMenuGroupedItemsType = {
                   {
                     type: "tiptapDate",
                     attrs: {
-                      start: currentValue.start.toISOString(),
-                      end: currentValue.end ? currentValue.end.toISOString() : null,
+                      start: currentValue.start instanceof Date ? currentValue.start.toISOString() : currentValue.start,
+                      end: currentValue.end instanceof Date ? currentValue.end.toISOString() : (currentValue.end || null),
                       includeTime: currentValue.includeTime,
                       format: currentValue.format,
+                      color: currentValue.color || null,
                     },
                   },
                   {

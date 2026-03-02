@@ -44,6 +44,11 @@ export const TiptapDate = Node.create<DateOptions>({
         parseHTML: (element) => element.getAttribute("data-format"),
         renderHTML: (attributes) => ({ "data-format": attributes.format }),
       },
+      color: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("data-color"),
+        renderHTML: (attributes) => ({ "data-color": attributes.color }),
+      },
     };
   },
 

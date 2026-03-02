@@ -22,9 +22,10 @@ const DateView = ({ node, updateAttributes, selected, editor }: NodeViewProps) =
             start: parseDate(start),
             end: parseDate(end),
             includeTime: !!includeTime,
-            format: format || 'full'
+            format: format || 'full',
+            color: node.attrs.color || null
         };
-    }, [start, end, includeTime, format]);
+    }, [start, end, includeTime, format, node.attrs.color]);
 
     const displayValue = useMemo(() => {
         if (!dateValue.start) return "Select date";
@@ -41,7 +42,7 @@ const DateView = ({ node, updateAttributes, selected, editor }: NodeViewProps) =
 
     const handleOpenPicker = (e: React.MouseEvent) => {
         if (!isEditable) return;
-        
+
         e.preventDefault();
         e.stopPropagation();
 
@@ -59,7 +60,8 @@ const DateView = ({ node, updateAttributes, selected, editor }: NodeViewProps) =
                             start: startIso,
                             end: endIso,
                             includeTime: newVal.includeTime,
-                            format: newVal.format
+                            format: newVal.format,
+                            color: newVal.color
                         });
                     }}
                 />
@@ -73,17 +75,18 @@ const DateView = ({ node, updateAttributes, selected, editor }: NodeViewProps) =
                 component="span"
                 onClick={handleOpenPicker}
                 className={`${classes.dateBadge} ${selected ? classes.selected : ''}`}
-                style={{ 
-                    cursor: isEditable ? 'pointer' : 'default', 
-                    display: 'inline-flex' 
+                style={{
+                    cursor: isEditable ? 'pointer' : 'default',
+                    display: 'inline-flex'
                 }}
             >
-                <Text size="sm" span>
+                <Text size="sm" span style={{ color: dateValue.color || 'inherit' }}>
                     {displayValue}
                 </Text>
             </UnstyledButton>
         </NodeViewWrapper>
     );
 };
+
 
 export default DateView;
