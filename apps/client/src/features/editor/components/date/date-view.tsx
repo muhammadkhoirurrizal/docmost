@@ -7,8 +7,9 @@ import { DateSelectionModal } from '../date-picker/date-selection-modal';
 import dayjs from 'dayjs';
 import classes from './date-view.module.css';
 
-const DateView = ({ node, updateAttributes, selected }: NodeViewProps) => {
+const DateView = ({ node, updateAttributes, selected, editor }: NodeViewProps) => {
     const { start, end, includeTime, format } = node.attrs;
+    const isEditable = editor?.isEditable;
 
     const dateValue: DatePickerValue = useMemo(() => {
         const parseDate = (val: any) => {
@@ -39,6 +40,8 @@ const DateView = ({ node, updateAttributes, selected }: NodeViewProps) => {
     }, [dateValue]);
 
     const handleOpenPicker = (e: React.MouseEvent) => {
+        if (!isEditable) return;
+        
         e.preventDefault();
         e.stopPropagation();
 
@@ -70,7 +73,10 @@ const DateView = ({ node, updateAttributes, selected }: NodeViewProps) => {
                 component="span"
                 onClick={handleOpenPicker}
                 className={`${classes.dateBadge} ${selected ? classes.selected : ''}`}
-                style={{ cursor: 'pointer', display: 'inline-flex' }}
+                style={{ 
+                    cursor: isEditable ? 'pointer' : 'default', 
+                    display: 'inline-flex' 
+                }}
             >
                 <Text size="sm" span>
                     {displayValue}
