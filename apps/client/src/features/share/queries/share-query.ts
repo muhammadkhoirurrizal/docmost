@@ -92,13 +92,13 @@ export function useCreateShareMutation() {
 
   return useMutation<any, Error, ICreateShare>({
     mutationFn: (data) => createShare(data),
-    onSuccess: (data) => {
+    onSuccess: (_data) => {
       queryClient.invalidateQueries({
         predicate: (item) =>
           ["share-for-page", "share-list"].includes(item.queryKey[0] as string),
       });
     },
-    onError: (error) => {
+    onError: (_error) => {
       notifications.show({ message: t("Failed to share page"), color: "red" });
     },
   });
@@ -110,13 +110,13 @@ export function useUpdateShareMutation() {
 
   return useMutation<any, Error, IUpdateShare>({
     mutationFn: (data) => updateShare(data),
-    onSuccess: (data) => {
+    onSuccess: (_data) => {
       queryClient.invalidateQueries({
         predicate: (item) =>
           ["share-for-page", "share-list"].includes(item.queryKey[0] as string),
       });
     },
-    onError: (error, params) => {
+    onError: (error, _params) => {
       if (error?.["status"] === 404) {
         queryClient.removeQueries({
           predicate: (item) =>
@@ -144,7 +144,7 @@ export function useDeleteShareMutation() {
 
   return useMutation({
     mutationFn: (shareId: string) => deleteShare(shareId),
-    onSuccess: (data) => {
+    onSuccess: (_data) => {
       queryClient.removeQueries({
         predicate: (item) =>
           ["share-for-page"].includes(item.queryKey[0] as string),

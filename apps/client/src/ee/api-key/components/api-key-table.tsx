@@ -17,7 +17,7 @@ interface ApiKeyTableProps {
 
 export function ApiKeyTable({
   apiKeys,
-  isLoading,
+  isLoading: _isLoading,
   showUserColumn = false,
   onUpdate,
   onRevoke,

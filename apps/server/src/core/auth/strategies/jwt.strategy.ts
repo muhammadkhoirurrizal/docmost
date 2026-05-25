@@ -68,7 +68,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       ApiKeyModule = require('./../../../ee/api-key/api-key.service');
       isApiKeyModuleReady = true;
-    } catch (err) {
+    } catch {
       this.logger.debug(
         'API Key module requested but enterprise module not bundled in this build',
       );

@@ -1,203 +1,213 @@
 import "@/features/editor/styles/index.css";
-import { useEffect } from "react";
-import { EditorContent, useEditor } from "@tiptap/react";
+import classes from "@/features/editor/styles/editor.module.css";
+import React, { useEffect, useMemo } from "react";
+import { EditorContent, useEditor, Mark, mergeAttributes } from "@tiptap/react";
 import { mainExtensions } from "@/features/editor/extensions/extensions";
-import { Title } from "@mantine/core";
-import { Decoration, DecorationSet } from "@tiptap/pm/view";
-import historyClasses from "./css/history.module.css";
-import { recreateTransform } from "@docmost/editor-ext";
-import { DOMSerializer, Node } from "@tiptap/pm/model";
-import { ChangeSet, simplifyChanges } from "@tiptap/pm/changeset";
-import { useAtom } from "jotai";
-import {
-  diffCountsAtom,
-  highlightChangesAtom,
-} from "@/features/page-history/atoms/history-atoms";
+import { Document } from "@tiptap/extension-document";
+import { Heading } from "@tiptap/extension-heading";
+import { Text } from "@tiptap/extension-text";
+import { Placeholder } from "@tiptap/extension-placeholder";
+import { useTranslation } from "react-i18next";
+import { Container } from "@mantine/core";
+import { computeDiff } from "../utils/diff";
+import { generateHTML } from "@tiptap/core";
+import clsx from "clsx";
+
+// Custom mark to handle both additions and deletions with background blocks
+const DiffMark = Mark.create({
+  name: 'diffMark',
+  addAttributes() {
+    return {
+      type: {
+        default: 'none',
+        parseHTML: element => element.getAttribute('data-diff-type'),
+        renderHTML: attributes => ({ 'data-diff-type': attributes.type }),
+      },
+    }
+  },
+  parseHTML() {
+    return [
+      { tag: 'span[data-diff-type]' },
+      { tag: 'ins' },
+      { tag: 'del' },
+    ]
+  },
+  renderHTML({ HTMLAttributes }) {
+    const type = HTMLAttributes['data-diff-type'];
+    let style = "";
+
+    if (type === 'add') {
+      style = 'background-color: #acf2bd !important; color: #1e3a22 !important; padding: 2px 0; border-radius: 2px; text-decoration: none !important; box-decoration-break: clone; -webkit-box-decoration-break: clone;';
+    } else if (type === 'remove') {
+      style = 'background-color: #fdb8c0 !important; color: #4b1113 !important; text-decoration: line-through !important; padding: 2px 0; border-radius: 2px; box-decoration-break: clone; -webkit-box-decoration-break: clone;';
+    }
+
+    return ['span', mergeAttributes(HTMLAttributes, { style }), 0]
+  },
+});
 
 export interface HistoryEditorProps {
   title: string;
   content: any;
+  previousTitle?: string;
   previousContent?: any;
 }
 
 export function HistoryEditor({
   title,
   content,
+  previousTitle,
   previousContent,
 }: HistoryEditorProps) {
-  const [highlightChanges] = useAtom(highlightChangesAtom);
-  const [, setDiffCounts] = useAtom(diffCountsAtom);
+  const { t } = useTranslation();
 
-  const editor = useEditor({
-    extensions: mainExtensions,
+  const historyExtensions = useMemo(() => [
+    ...mainExtensions,
+    DiffMark,
+  ], []);
+
+  const diffTitle = useMemo(() => {
+    const displayTitle = title || t("Untitled");
+    if (!previousTitle || title === previousTitle) return `<h1>${displayTitle}</h1>`;
+
+    const diffs = computeDiff(previousTitle, title);
+    const html = diffs
+      .map((d) => {
+        if (d.type === "add") {
+          return `<span data-diff-type="add">${d.value}</span>`;
+        }
+        if (d.type === "remove") {
+          return `<span data-diff-type="remove">${d.value}</span>`;
+        }
+        return d.value;
+      })
+      .join("");
+    return `<h1>${html}</h1>`;
+  }, [title, previousTitle, t]);
+
+  const diffContent = useMemo(() => {
+    const currentHTML = generateHTML(content, mainExtensions);
+    if (!previousContent) return currentHTML;
+
+    const previousHTML = generateHTML(previousContent, mainExtensions);
+    if (currentHTML === previousHTML) return currentHTML;
+
+    const diffs = computeDiff(previousHTML, currentHTML);
+    return diffs
+      .map((d) => {
+        const isTag = d.value.startsWith('<') && d.value.endsWith('>');
+
+        if (isTag) {
+          if (d.type === 'remove') {
+            // For block tags, if we output both old and new, Prosemirror often ignores the second one.
+            // For now, we omit removed tags to ensure the latest version renders correctly.
+            // Text tokens inside the removed block will still be rendered in red.
+            return '';
+          }
+          return d.value;
+        }
+
+        if (d.type === "add") {
+          return `<span data-diff-type="add">${d.value}</span>`;
+        }
+        if (d.type === "remove") {
+          return `<span data-diff-type="remove">${d.value}</span>`;
+        }
+        return d.value;
+      })
+      .join("");
+  }, [content, previousContent]);
+
+  const titleEditor = useEditor({
+    extensions: [
+      Document.extend({ content: "heading" }),
+      Heading.configure({ levels: [1] }),
+      Text,
+      DiffMark,
+      Placeholder.configure({
+        placeholder: t("Untitled"),
+        showOnlyWhenEditable: false,
+      }),
+    ],
     editable: false,
+    immediatelyRender: false,
+  });
+
+  const contentEditor = useEditor({
+    extensions: historyExtensions,
+    editable: false,
+    immediatelyRender: false,
+    onCreate({ editor: e }) {
+      e.storage.previousContent = previousContent;
+    },
   });
 
   useEffect(() => {
-    if (!editor || !content) return;
-
-    let decorationSet = DecorationSet.empty;
-    let addedCount = 0;
-    let deletedCount = 0;
-
-    if (previousContent) {
-      try {
-        const schema = editor.schema;
-        const oldContent = Node.fromJSON(schema, previousContent);
-        const newContent = Node.fromJSON(schema, content);
-
-        const tr = recreateTransform(oldContent, newContent, {
-          complexSteps: false,
-          wordDiffs: true,
-          simplifyDiff: true,
-        });
-
-        const changeSet = ChangeSet.create(oldContent).addSteps(
-          tr.doc,
-          tr.mapping.maps,
-          [],
-        );
-        const changes = simplifyChanges(changeSet.changes, newContent);
-
-        editor.commands.setContent(content);
-
-        const specialNodeTypes = new Set([
-          "image",
-          "attachment",
-          "video",
-          "excalidraw",
-          "drawio",
-          "mermaid",
-          "mathBlock",
-          "mathInline",
-          "table",
-          "details",
-          "callout",
-        ]);
-
-        const decorations: Decoration[] = [];
-        let changeIndex = 0;
-
-        for (const change of changes) {
-          if (change.toB > change.fromB) {
-            changeIndex++;
-            const currentIndex = changeIndex;
-            let foundSpecialNode: { node: Node; pos: number } | null = null;
-            newContent.nodesBetween(change.fromB, change.toB, (node, pos) => {
-              if (specialNodeTypes.has(node.type.name)) {
-                const nodeEnd = pos + node.nodeSize;
-                if (change.fromB <= pos && change.toB >= nodeEnd) {
-                  foundSpecialNode = { node, pos };
-                  return false;
-                }
-              }
-            });
-
-            if (foundSpecialNode) {
-              const nodeEnd =
-                foundSpecialNode.pos + foundSpecialNode.node.nodeSize;
-              decorations.push(
-                Decoration.node(foundSpecialNode.pos, nodeEnd, {
-                  class: "history-diff-node-added",
-                  "data-diff-index": String(currentIndex),
-                }),
-              );
-            } else {
-              decorations.push(
-                Decoration.inline(change.fromB, change.toB, {
-                  class: "history-diff-added",
-                  "data-diff-index": String(currentIndex),
-                }),
-              );
-            }
-            addedCount += 1;
-          }
-          if (change.toA > change.fromA) {
-            changeIndex++;
-            const currentIndex = changeIndex;
-            let foundDeletedNode: { node: Node; pos: number } | null = null;
-            oldContent.nodesBetween(change.fromA, change.toA, (node, pos) => {
-              if (specialNodeTypes.has(node.type.name)) {
-                const nodeEnd = pos + node.nodeSize;
-                if (change.fromA <= pos && change.toA >= nodeEnd) {
-                  foundDeletedNode = { node, pos };
-                  return false;
-                }
-              }
-            });
-
-            if (foundDeletedNode) {
-              decorations.push(
-                Decoration.widget(change.fromB, () => {
-                  const wrapper = document.createElement("div");
-                  wrapper.className = "history-diff-node-deleted";
-                  wrapper.setAttribute("data-diff-index", String(currentIndex));
-                  const serializer = DOMSerializer.fromSchema(schema);
-                  const dom = serializer.serializeNode(foundDeletedNode!.node);
-                  wrapper.appendChild(dom);
-                  return wrapper;
-                }),
-              );
-            } else {
-              const deletedText = oldContent.textBetween(
-                change.fromA,
-                change.toA,
-                "",
-              );
-              if (deletedText) {
-                decorations.push(
-                  Decoration.widget(change.fromB, () => {
-                    const span = document.createElement("span");
-                    span.className = "history-diff-deleted";
-                    span.setAttribute("data-diff-index", String(currentIndex));
-                    span.textContent = deletedText;
-                    return span;
-                  }),
-                );
-              }
-            }
-            deletedCount += 1;
-          }
-        }
-
-        decorationSet = DecorationSet.create(newContent, decorations);
-      } catch (e) {
-        console.error("History diff failed:", e);
-        editor.commands.setContent(content);
-      }
-    } else {
-      editor.commands.setContent(content);
+    if (contentEditor) {
+      contentEditor.storage.previousContent = previousContent;
     }
+  }, [contentEditor, previousContent]);
 
-    const total = addedCount + deletedCount;
-    // @ts-ignore
-    setDiffCounts({ added: addedCount, deleted: deletedCount, total });
+  useEffect(() => {
+    if (titleEditor) {
+      titleEditor.commands.setContent(diffTitle, false);
+    }
+  }, [diffTitle, titleEditor]);
 
-    editor.setOptions({
-      editorProps: {
-        ...editor.options.editorProps,
-        decorations: () =>
-          highlightChanges ? decorationSet : DecorationSet.empty,
-      },
-    });
-  }, [
-    title,
-    content,
-    editor,
-    previousContent,
-    highlightChanges,
-    setDiffCounts,
-  ]);
+  useEffect(() => {
+    if (contentEditor) {
+      contentEditor.commands.setContent(diffContent, false);
+    }
+  }, [diffContent, contentEditor]);
 
   return (
-    <div>
-      <Title order={1}>{title}</Title>
-      {editor && (
-        <EditorContent
-          editor={editor}
-          className={historyClasses.historyEditor}
-        />
-      )}
-    </div>
+    <Container
+      size={900}
+      className={clsx(classes.editor)}
+      style={{ position: 'relative' }}
+    >
+      {/* Global CSS to ensure Red/Green blocks are always visible */}
+      <style dangerouslySetInnerHTML={{
+        __html: `
+        .tiptap span[data-diff-type="add"] {
+          background-color: #acf2bd !important;
+          color: #1e3a22 !important;
+          padding: 2px 0;
+          border-radius: 2px;
+          text-decoration: none !important;
+          box-decoration-break: clone;
+          -webkit-box-decoration-break: clone;
+        }
+        .tiptap span[data-diff-type="remove"] {
+          background-color: #fdb8c0 !important;
+          color: #4b1113 !important;
+          text-decoration: line-through !important;
+          padding: 2px 0;
+          border-radius: 2px;
+          box-decoration-break: clone;
+          -webkit-box-decoration-break: clone;
+        }
+      `}} />
+
+      <div className={classes.titleEditor}>
+        <EditorContent editor={titleEditor} />
+      </div>
+
+      <div className="editor-container">
+        <div>
+          <EditorContent editor={contentEditor} />
+        </div>
+      </div>
+
+      {/* Overlay to block interaction */}
+      <div style={{
+        position: 'absolute',
+        top: 0, left: 0, right: 0, bottom: 0,
+        zIndex: 100,
+        pointerEvents: 'auto',
+        userSelect: 'none',
+        cursor: 'default'
+      }} />
+    </Container>
   );
 }

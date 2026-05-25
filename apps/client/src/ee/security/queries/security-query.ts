@@ -56,7 +56,7 @@ export function useUpdateSsoProviderMutation() {
 
   return useMutation<any, Error, Partial<IAuthProvider>>({
     mutationFn: (data: Partial<IAuthProvider>) => updateSsoProvider(data),
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, _variables) => {
       notifications.show({ message: "Updated successfully" });
       queryClient.invalidateQueries({
         queryKey: ["sso-providers"],
@@ -74,7 +74,7 @@ export function useDeleteSsoProviderMutation() {
 
   return useMutation({
     mutationFn: (providerId: string) => deleteSsoProvider({ providerId }),
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, _variables) => {
       notifications.show({ message: "Deleted successfully" });
 
       queryClient.invalidateQueries({

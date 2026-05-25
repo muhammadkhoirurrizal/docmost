@@ -15,7 +15,7 @@ export class VersionService {
       if (!response.ok) return;
       const data = await response.json();
       latestVersion = data?.tag_name?.replace('v', '');
-    } catch (err) {
+    } catch {
       /* empty */
     }
 

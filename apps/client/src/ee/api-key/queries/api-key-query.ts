@@ -42,7 +42,7 @@ export function useRevokeApiKeyMutation() {
     }
   >({
     mutationFn: (data) => revokeApiKey(data),
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, _variables) => {
       notifications.show({ message: t("Revoked successfully") });
       queryClient.invalidateQueries({
         predicate: (item) =>
@@ -82,7 +82,7 @@ export function useUpdateApiKeyMutation() {
 
   return useMutation<IApiKey, Error, IUpdateApiKeyRequest>({
     mutationFn: (data) => updateApiKey(data),
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, _variables) => {
       notifications.show({ message: t("Updated successfully") });
       queryClient.invalidateQueries({
         predicate: (item) =>

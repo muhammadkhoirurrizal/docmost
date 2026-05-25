@@ -19,7 +19,7 @@ export const MarkdownClipboard = Extension.create({
       new Plugin({
         key: new PluginKey("markdownClipboard"),
         props: {
-          handlePaste: (view, event, slice) => {
+          handlePaste: (view, event, _slice) => {
             if (!event.clipboardData) {
               return false;
             }

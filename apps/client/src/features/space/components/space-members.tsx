@@ -27,7 +27,6 @@ import { useTranslation } from "react-i18next";
 import Paginate from "@/components/common/paginate.tsx";
 import { SearchInput } from "@/components/common/search-input.tsx";
 import { usePaginateAndSearch } from "@/hooks/use-paginate-and-search.tsx";
-import { AutoTooltipText } from "@/components/ui/auto-tooltip-text.tsx";
 
 type MemberType = "user" | "group";
 
@@ -41,9 +40,9 @@ export default function SpaceMembersList({
   readOnly,
 }: SpaceMembersProps) {
   const { t } = useTranslation();
-  const { search, cursor, goNext, goPrev, handleSearch } = usePaginateAndSearch();
-  const { data, isLoading } = useSpaceMembersQuery(spaceId, {
-    cursor,
+  const { search, page, setPage, handleSearch } = usePaginateAndSearch();
+  const { data } = useSpaceMembersQuery(spaceId, {
+    page,
     limit: 100,
     query: search,
   });
@@ -139,10 +138,10 @@ export default function SpaceMembersList({
 
                       {member.type === "group" && <IconGroupCircle />}
 
-                      <div style={{ minWidth: 0, overflow: "hidden", maxWidth: 260 }}>
-                        <AutoTooltipText fz="sm" fw={500}>
+                      <div>
+                        <Text fz="sm" fw={500} lineClamp={1}>
                           {member?.name}
-                        </AutoTooltipText>
+                        </Text>
                         <Text fz="xs" c="dimmed">
                           {member.type == "user" && member?.email}
 
@@ -206,10 +205,10 @@ export default function SpaceMembersList({
 
       {data?.items.length > 0 && (
         <Paginate
-          hasPrevPage={data?.meta?.hasPrevPage}
-          hasNextPage={data?.meta?.hasNextPage}
-          onNext={() => goNext(data?.meta?.nextCursor)}
-          onPrev={goPrev}
+          currentPage={page}
+          hasPrevPage={data?.meta.hasPrevPage}
+          hasNextPage={data?.meta.hasNextPage}
+          onPageChange={setPage}
         />
       )}
     </>

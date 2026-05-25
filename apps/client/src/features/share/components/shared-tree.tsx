@@ -37,7 +37,7 @@ export default function SharedTree({ sharedPageTree }: SharedTree) {
     TreeApi<SharedPageTreeNode> | null | undefined
   >(null);
   const rootElement = useRef<HTMLDivElement>();
-  const { ref: sizeRef, width, height } = useElementSize();
+  const { ref: sizeRef, width, height: _height } = useElementSize();
   const mergedRef = useMergedRef(rootElement, sizeRef);
   const { pageSlug } = useParams();
   const [openTreeNodes, setOpenTreeNodes] = useAtom<OpenMap>(
@@ -107,7 +107,7 @@ export default function SharedTree({ sharedPageTree }: SharedTree) {
             setOpenTreeNodes(tree?.openState);
           }}
           initialOpenState={openTreeNodes}
-          onClick={(e) => {
+          onClick={(_e) => {
             if (tree && tree.focusedNode) {
               tree.select(tree.focusedNode);
             }
@@ -120,7 +120,7 @@ export default function SharedTree({ sharedPageTree }: SharedTree) {
   );
 }
 
-function Node({ node, style, tree }: NodeRendererProps<any>) {
+function Node({ node, style, tree: _tree }: NodeRendererProps<any>) {
   const { shareId } = useParams();
   const { t } = useTranslation();
   const [, setMobileSidebarState] = useAtom(mobileSidebarAtom);

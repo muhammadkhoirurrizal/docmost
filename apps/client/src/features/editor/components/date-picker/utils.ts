@@ -5,6 +5,7 @@ export interface DatePickerValue {
     end: Date | null;
     includeTime: boolean;
     format: string;
+    color: string | null;
 }
 
 export const getDateFormat = (format: string, includeTime: boolean) => {

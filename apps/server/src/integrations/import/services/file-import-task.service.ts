@@ -111,12 +111,12 @@ export class FileImportTaskService {
       if (fileTask.source === FileImportSource.Confluence) {
         let ConfluenceModule: any;
         try {
-          // eslint-disable-next-line @typescript-eslint/no-require-imports
-          ConfluenceModule = require('./../../../ee/confluence-import/confluence-import.service');
-        } catch (err) {
-          this.logger.error(
-            'Confluence import requested but EE module not bundled in this build',
-          );
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        ConfluenceModule = require('./../../../ee/confluence-import/confluence-import.service');
+      } catch {
+        this.logger.error(
+          'Confluence import requested but EE module not bundled in this build',
+        );
           return;
         }
         const confluenceImportService = this.moduleRef.get(
@@ -135,10 +135,9 @@ export class FileImportTaskService {
         await cleanupTmpDir();
         // delete stored file on success
         await this.storageService.delete(fileTask.filePath);
-      } catch (err) {
+      } catch {
         this.logger.error(
           `Failed to delete import file from storage. Task ID: ${fileTaskId}`,
-          err,
         );
       }
     } catch (err) {
@@ -547,8 +546,8 @@ export class FileImportTaskService {
         .set({ status: status, errorMessage, updatedAt: new Date() })
         .where('id', '=', fileTaskId)
         .execute();
-    } catch (err) {
-      this.logger.error(err);
+    } catch {
+      this.logger.error('failed to update task status');
     }
   }
 }

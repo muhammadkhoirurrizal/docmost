@@ -24,7 +24,7 @@ export function useAiSearch(): UseAiSearchResult {
       setStreamingAnswer("");
       setStreamingSources([]);
 
-      const { contentType, ...apiParams } = params;
+      const { contentType: _contentType, ...apiParams } = params;
 
       return await askAi(apiParams, (chunk) => {
         if (chunk.content) {

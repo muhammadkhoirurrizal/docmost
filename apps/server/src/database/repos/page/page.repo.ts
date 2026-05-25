@@ -8,7 +8,7 @@ import {
   UpdatablePage,
 } from '@docmost/db/types/entity.types';
 import { PaginationOptions } from '@docmost/db/pagination/pagination-options';
-import { executeWithCursorPagination } from '@docmost/db/pagination/cursor-pagination';
+import { executeWithPagination } from '@docmost/db/pagination/pagination';
 import { validate as isValidUUID } from 'uuid';
 import { ExpressionBuilder, sql } from 'kysely';
 import { DB } from '@docmost/db/types/db';
@@ -23,7 +23,7 @@ export class PageRepo {
     @InjectKysely() private readonly db: KyselyDB,
     private spaceMemberRepo: SpaceMemberRepo,
     private eventEmitter: EventEmitter2,
-  ) {}
+  ) { }
 
   private baseFields: Array<keyof Page> = [
     'id',
@@ -41,6 +41,7 @@ export class PageRepo {
     'createdAt',
     'updatedAt',
     'deletedAt',
+    'archivedAt',
     'contributorIds',
   ];
 
@@ -275,27 +276,72 @@ export class PageRepo {
     });
   }
 
+  async archivePage(pageId: string, workspaceId: string): Promise<void> {
+    await this.db
+      .updateTable('pages')
+      .set({ archivedAt: new Date() })
+      .where('id', '=', pageId)
+      .execute();
+
+    this.eventEmitter.emit(EventName.PAGE_UPDATED, {
+      pageIds: [pageId],
+      workspaceId,
+    });
+  }
+
+  async unarchivePage(
+    pageId: string,
+    workspaceId: string,
+    extraData: Partial<UpdatablePage> = {},
+  ): Promise<void> {
+    await this.db
+      .updateTable('pages')
+      .set({ ...extraData, archivedAt: null })
+      .where('id', '=', pageId)
+      .execute();
+
+    this.eventEmitter.emit(EventName.PAGE_UPDATED, {
+      pageIds: [pageId],
+      workspaceId,
+    });
+  }
+
   async getRecentPagesInSpace(spaceId: string, pagination: PaginationOptions) {
     const query = this.db
       .selectFrom('pages')
       .select(this.baseFields)
       .select((eb) => this.withSpace(eb))
       .where('spaceId', '=', spaceId)
-      .where('deletedAt', 'is', null);
+      .where('deletedAt', 'is', null)
+      .where('archivedAt', 'is', null)
+      .where((eb) => eb.or([eb('icon', 'is', null), eb('icon', '!=', '📁')]))
+      .orderBy('updatedAt', 'desc');
 
-    return executeWithCursorPagination(query, {
+    const result = executeWithPagination(query, {
+      page: pagination.page,
       perPage: pagination.limit,
-      cursor: pagination.cursor,
-      beforeCursor: pagination.beforeCursor,
-      fields: [
-        { expression: 'updatedAt', direction: 'desc' },
-        { expression: 'id', direction: 'desc' },
-      ],
-      parseCursor: (cursor) => ({
-        updatedAt: new Date(cursor.updatedAt),
-        id: cursor.id,
-      }),
     });
+
+    return result;
+  }
+
+  async getArchivedPagesInSpace(spaceId: string, pagination: PaginationOptions) {
+    const query = this.db
+      .selectFrom('pages')
+      .select(this.baseFields)
+      .select('content')
+      .select((eb) => this.withSpace(eb))
+      .where('spaceId', '=', spaceId)
+      .where('archivedAt', 'is not', null)
+      .where('deletedAt', 'is', null)
+      .orderBy('archivedAt', 'desc');
+
+    const result = executeWithPagination(query, {
+      page: pagination.page,
+      perPage: pagination.limit,
+    });
+
+    return result;
   }
 
   async getRecentPages(userId: string, pagination: PaginationOptions) {
@@ -304,20 +350,14 @@ export class PageRepo {
       .select(this.baseFields)
       .select((eb) => this.withSpace(eb))
       .where('spaceId', 'in', this.spaceMemberRepo.getUserSpaceIdsQuery(userId))
-      .where('deletedAt', 'is', null);
+      .where('deletedAt', 'is', null)
+      .where('archivedAt', 'is', null)
+      .where((eb) => eb.or([eb('icon', 'is', null), eb('icon', '!=', '📁')]))
+      .orderBy('updatedAt', 'desc');
 
-    return executeWithCursorPagination(query, {
+    return executeWithPagination(query, {
+      page: pagination.page,
       perPage: pagination.limit,
-      cursor: pagination.cursor,
-      beforeCursor: pagination.beforeCursor,
-      fields: [
-        { expression: 'updatedAt', direction: 'desc' },
-        { expression: 'id', direction: 'desc' },
-      ],
-      parseCursor: (cursor) => ({
-        updatedAt: new Date(cursor.updatedAt),
-        id: cursor.id,
-      }),
     });
   }
 
@@ -345,21 +385,15 @@ export class PageRepo {
             ),
           ),
         ]),
-      );
+      )
+      .orderBy('deletedAt', 'desc');
 
-    return executeWithCursorPagination(query, {
+    const result = executeWithPagination(query, {
+      page: pagination.page,
       perPage: pagination.limit,
-      cursor: pagination.cursor,
-      beforeCursor: pagination.beforeCursor,
-      fields: [
-        { expression: 'deletedAt', direction: 'desc' },
-        { expression: 'id', direction: 'desc' },
-      ],
-      parseCursor: (cursor) => ({
-        deletedAt: new Date(cursor.deletedAt),
-        id: cursor.id,
-      }),
     });
+
+    return result;
   }
 
   withSpace(eb: ExpressionBuilder<DB, 'pages'>) {
@@ -442,8 +476,6 @@ export class PageRepo {
             'parentPageId',
             'spaceId',
             'workspaceId',
-            'createdAt',
-            'updatedAt',
           ])
           .$if(opts?.includeContent, (qb) => qb.select('content'))
           .where('id', '=', parentPageId)
@@ -460,8 +492,6 @@ export class PageRepo {
                 'p.parentPageId',
                 'p.spaceId',
                 'p.workspaceId',
-                'p.createdAt',
-                'p.updatedAt',
               ])
               .$if(opts?.includeContent, (qb) => qb.select('p.content'))
               .innerJoin('page_hierarchy as ph', 'p.parentPageId', 'ph.id')

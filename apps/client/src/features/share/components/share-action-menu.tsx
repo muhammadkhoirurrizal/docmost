@@ -18,6 +18,8 @@ import { notifications } from "@mantine/notifications";
 import { useNavigate } from "react-router-dom";
 import { useDeleteShareMutation } from "@/features/share/queries/share-query.ts";
 
+import { getAppUrl } from "@/lib/config.ts";
+
 interface Props {
   share: ISharedItem;
 }
@@ -37,11 +39,13 @@ export default function ShareActionMenu({ share }: Props) {
   };
 
   const copyLink = () => {
-    const shareLink = buildSharedPageUrl({
-      shareId: share.key,
-      pageTitle: share.page.title,
-      pageSlugId: share.page.slugId,
-    });
+    const shareLink =
+      getAppUrl() +
+      buildSharedPageUrl({
+        shareId: share.key,
+        pageTitle: share.page.title,
+        pageSlugId: share.page.slugId,
+      });
 
     clipboard.copy(shareLink);
     notifications.show({ message: t("Link copied") });

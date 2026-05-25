@@ -18,8 +18,8 @@ import { useTranslation } from "react-i18next";
 const CommandList = ({
   items,
   command,
-  editor,
-  range,
+  editor: _editor,
+  range: _range,
 }: {
   items: SlashMenuGroupedItemsType;
   command: any;

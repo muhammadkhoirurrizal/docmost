@@ -1,9 +1,8 @@
 import { Table, Group, Text, Anchor } from "@mantine/core";
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Paginate from "@/components/common/paginate.tsx";
-import { useCursorPaginate } from "@/hooks/use-cursor-paginate";
 import { useGetSharesQuery } from "@/features/share/queries/share-query.ts";
 import { ISharedItem } from "@/features/share/types/share.types.ts";
 import { format } from "date-fns";
@@ -15,8 +14,8 @@ import classes from "./share.module.css";
 
 export default function ShareList() {
   const { t } = useTranslation();
-  const { cursor, goNext, goPrev } = useCursorPaginate();
-  const { data, isLoading } = useGetSharesQuery({ cursor });
+  const [page, setPage] = useState(1);
+  const { data, isLoading: _isLoading } = useGetSharesQuery({ page });
 
   return (
     <>
@@ -87,10 +86,10 @@ export default function ShareList() {
 
       {data?.items.length > 0 && (
         <Paginate
-          hasPrevPage={data?.meta?.hasPrevPage}
-          hasNextPage={data?.meta?.hasNextPage}
-          onNext={() => goNext(data?.meta?.nextCursor)}
-          onPrev={goPrev}
+          currentPage={page}
+          hasPrevPage={data?.meta.hasPrevPage}
+          hasNextPage={data?.meta.hasNextPage}
+          onPageChange={setPage}
         />
       )}
     </>

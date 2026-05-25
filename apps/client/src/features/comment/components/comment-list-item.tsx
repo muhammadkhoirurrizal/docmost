@@ -1,4 +1,4 @@
-import { Group, Text, Box, Badge } from "@mantine/core";
+import { Group, Text, Box } from "@mantine/core";
 import React, { useEffect, useState } from "react";
 import classes from "./comment.module.css";
 import { useAtom, useAtomValue } from "jotai";
@@ -34,7 +34,7 @@ function CommentListItem({
   canComment,
   userSpaceRole,
 }: CommentListItemProps) {
-  const { t } = useTranslation();
+  const { t: _t } = useTranslation();
   const { hovered, ref } = useHover();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);

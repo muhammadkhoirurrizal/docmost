@@ -27,7 +27,7 @@ function CommentDialog({ editor, pageId }: CommentDialogProps) {
   const [comment, setComment] = useState("");
   const [, setShowCommentPopup] = useAtom(showCommentPopupAtom);
   const [, setActiveCommentId] = useAtom(activeCommentIdAtom);
-  const [draftCommentId, setDraftCommentId] = useAtom(draftCommentIdAtom);
+  const [_draftCommentId, setDraftCommentId] = useAtom(draftCommentIdAtom);
   const [currentUser] = useAtom(currentUserAtom);
   const [, setAsideState] = useAtom(asideStateAtom);
   const useClickOutsideRef = useClickOutside(() => {

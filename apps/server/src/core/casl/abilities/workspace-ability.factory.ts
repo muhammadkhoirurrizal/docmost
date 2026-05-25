@@ -14,7 +14,7 @@ import {
 
 @Injectable()
 export default class WorkspaceAbilityFactory {
-  createForUser(user: User, workspace: Workspace) {
+  createForUser(user: User, _workspace: Workspace) {
     const userRole = user.role;
 
     switch (userRole) {

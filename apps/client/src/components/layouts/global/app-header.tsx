@@ -20,7 +20,6 @@ import {
 } from "@/features/search/components/search-control.tsx";
 import {
   searchSpotlight,
-  shareSearchSpotlight,
 } from "@/features/search/constants.ts";
 
 const links = [{ link: APP_ROUTE.HOME, label: "Home" }];

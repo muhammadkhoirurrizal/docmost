@@ -220,6 +220,7 @@ export interface Pages {
   coverPhoto: string | null;
   createdAt: Generated<Timestamp>;
   creatorId: string | null;
+  archivedAt: Timestamp | null;
   deletedAt: Timestamp | null;
   deletedById: string | null;
   icon: string | null;

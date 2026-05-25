@@ -57,7 +57,6 @@ export function PageStateSegmentedControl({
       const editorPageId = pageEditor?.storage?.pageId;
       if (newValue === PageEditMode.Read && hasUnsavedChanges && pageEditor && pageId) {
         if (editorPageId !== pageId) {
-          console.warn("Editor pageId mismatch, skipping auto-save to prevent data leak.");
           const updatedUser = await updateUser({ pageEditMode: newValue });
           setValue(newValue);
           setUser(updatedUser);
@@ -77,7 +76,7 @@ export function PageStateSegmentedControl({
             message: t("Page saved successfully"),
             color: "green",
           });
-        } catch (error) {
+        } catch {
           notifications.show({
             message: t("Failed to save page"),
             color: "red",
@@ -99,7 +98,6 @@ export function PageStateSegmentedControl({
     }
   }, [pageEditMode, value]);
 
-  console.log(hasUnsavedChanges);
   return (
     <SegmentedControl
       size={size}

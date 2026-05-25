@@ -1,4 +1,4 @@
-import { ActionIcon, rem } from "@mantine/core";
+import { ActionIcon } from "@mantine/core";
 import React from "react";
 import { IconUsersGroup } from "@tabler/icons-react";
 

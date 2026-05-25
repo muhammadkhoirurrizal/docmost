@@ -116,7 +116,7 @@ function SearchAndReplaceDialog({ editor, editable = true }: PageFindDialogDialo
     editor.commands.selectCurrentItem();
   }, [searchText]);
 
-  const handleOpenEvent = (e) => {
+  const handleOpenEvent = (_e) => {
     setPageFindState({ isOpen: true });
     const selectedText = editor.state.doc.textBetween(
       editor.state.selection.from,
@@ -129,7 +129,7 @@ function SearchAndReplaceDialog({ editor, editable = true }: PageFindDialogDialo
     inputRef.current?.select();
   };
 
-  const handleCloseEvent = (e) => {
+  const handleCloseEvent = (_e) => {
     closeDialog();
   };
 

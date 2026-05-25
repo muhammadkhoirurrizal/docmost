@@ -101,7 +101,7 @@ export default function useAuth() {
           );
         }
       } else {
-        const res = await setupWorkspace(data);
+        const _res = await setupWorkspace(data);
         setIsLoading(false);
         navigate(APP_ROUTE.HOME);
       }

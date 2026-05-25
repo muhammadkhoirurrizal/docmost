@@ -132,7 +132,7 @@ export default function BillingPlans() {
 
       {/* Plans Grid */}
       <Group justify="center" gap="lg" align="stretch">
-        {plans.map((plan, index) => {
+        {plans.map((plan, _index) => {
           let price;
           let displayPrice;
           const priceId = isAnnual ? plan.yearlyId : plan.monthlyId;

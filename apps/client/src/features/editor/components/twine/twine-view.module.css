@@ -1,0 +1,17 @@
+.twineWrapper {
+  width: 100%;
+  position: relative;
+  background-color: var(--mantine-color-gray-0);
+  border-radius: var(--mantine-radius-md);
+  overflow: hidden;
+}
+
+.twineIframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+[data-mantine-color-scheme="dark"] .twineWrapper {
+  background-color: var(--mantine-color-dark-6);
+}

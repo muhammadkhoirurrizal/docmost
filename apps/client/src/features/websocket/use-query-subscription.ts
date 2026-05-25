@@ -1,9 +1,8 @@
 import React from "react";
 import { socketAtom } from "@/features/websocket/atoms/socket-atom.ts";
 import { useAtom } from "jotai";
-import { InfiniteData, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { WebSocketEvent } from "@/features/websocket/types";
-import { IPage } from "../page/types/page.types";
 import { IPagination } from "@/lib/types";
 import {
   invalidateOnCreatePage,
@@ -12,7 +11,6 @@ import {
   invalidateOnUpdatePage,
 } from "../page/queries/page-query";
 import { RQ_KEY } from "../comment/queries/comment-query";
-import { queryClient } from "@/main.tsx";
 import { IComment } from "@/features/comment/types/comment.types";
 
 export const useQuerySubscription = () => {

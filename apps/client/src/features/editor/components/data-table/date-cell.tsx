@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
-import { UnstyledButton, Popover, Text, Box } from '@mantine/core';
+import { UnstyledButton, Popover, Text } from '@mantine/core';
 import { DatePicker } from '../date-picker/date-picker';
-import { DatePickerValue, getDateFormat, formatSelectedDate } from '../date-picker/utils';
+import { DatePickerValue, getDateFormat } from '../date-picker/utils';
 import classes from './data-table.module.css';
 import dayjs from 'dayjs';
 
@@ -20,7 +20,8 @@ export function DateCell({ value, onChange, isEditable }: DateCellProps) {
                 start: null,
                 end: null,
                 includeTime: false,
-                format: 'full'
+                format: 'full',
+                color: null
             };
         }
         try {
@@ -28,25 +29,22 @@ export function DateCell({ value, onChange, isEditable }: DateCellProps) {
             return {
                 ...parsed,
                 start: parsed.start ? new Date(parsed.start) : null,
-                end: parsed.end ? new Date(parsed.end) : null
+                end: parsed.end ? new Date(parsed.end) : null,
+                color: parsed.color || null
             };
-        } catch (e) {
+        } catch (_e) {
             return {
                 start: null,
                 end: null,
                 includeTime: false,
-                format: 'full'
+                format: 'full',
+                color: null
             };
         }
     }, [value]);
 
     const handleDateChange = (newVal: DatePickerValue) => {
         onChange(JSON.stringify(newVal));
-    };
-
-    const handleClear = () => {
-        onChange('');
-        setOpened(false);
     };
 
     const displayValue = useMemo(() => {
@@ -86,7 +84,7 @@ export function DateCell({ value, onChange, isEditable }: DateCellProps) {
                     }}
                     className={classes.personCellTarget}
                 >
-                    <Text size="sm" c={dateValue.start ? 'inherit' : 'dimmed'}>
+                    <Text size="sm" c={dateValue.start ? 'inherit' : 'dimmed'} style={{ color: dateValue.color || 'inherit' }}>
                         {displayValue}
                     </Text>
                 </UnstyledButton>
@@ -95,7 +93,6 @@ export function DateCell({ value, onChange, isEditable }: DateCellProps) {
                 <DatePicker
                     value={dateValue}
                     onChange={handleDateChange}
-                    onClear={handleClear}
                 />
             </Popover.Dropdown>
         </Popover>

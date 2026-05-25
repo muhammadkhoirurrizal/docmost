@@ -10,7 +10,7 @@ import { isCloud } from "@/lib/config.ts";
 import { LdapLoginModal } from "@/ee/components/ldap-login-modal.tsx";
 
 export default function SsoLogin() {
-  const { data, isLoading } = useWorkspacePublicDataQuery();
+  const { data } = useWorkspacePublicDataQuery();
   const [ldapModalOpened, setLdapModalOpened] = useState(false);
   const [selectedLdapProvider, setSelectedLdapProvider] = useState<IAuthProvider | null>(null);
 

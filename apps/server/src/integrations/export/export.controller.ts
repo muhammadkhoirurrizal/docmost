@@ -22,9 +22,6 @@ import {
 } from '../../core/casl/interfaces/space-ability.type';
 import { FastifyReply } from 'fastify';
 import { sanitize } from 'sanitize-filename-ts';
-import { getExportExtension } from './utils';
-import { getMimeType } from '../../common/helpers';
-import * as path from 'path';
 
 @Controller()
 export class ExportController {

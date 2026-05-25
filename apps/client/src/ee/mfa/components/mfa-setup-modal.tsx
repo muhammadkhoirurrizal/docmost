@@ -62,7 +62,7 @@ export function MfaSetupModal({
   opened,
   onClose,
   onComplete,
-  isRequired = false,
+  isRequired: _isRequired = false,
 }: MfaSetupModalProps) {
   const { t } = useTranslation();
   const [active, setActive] = useState(0);

@@ -1,5 +1,6 @@
 import { ActionIcon, Group, Menu, Text, Tooltip } from "@mantine/core";
 import {
+  IconArchive,
   IconArrowRight,
   IconArrowsHorizontal,
   IconDots,
@@ -7,29 +8,35 @@ import {
   IconHistory,
   IconLink,
   IconList,
-  IconMarkdown,
   IconMessage,
   IconPrinter,
   IconTrash,
   IconWifiOff,
 } from "@tabler/icons-react";
-import React, { useEffect, useRef, useState } from "react";
+import React from "react";
 import useToggleAside from "@/hooks/use-toggle-aside.tsx";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom } from "jotai";
 import { historyAtoms } from "@/features/page-history/atoms/history-atoms.ts";
-import { useClipboard, useDisclosure, useHotkeys } from "@mantine/hooks";
-import { useParams } from "react-router-dom";
-import { usePageQuery } from "@/features/page/queries/page-query.ts";
+import {
+  useClipboard,
+  useDisclosure,
+  useHotkeys,
+} from "@mantine/hooks";
+import { useNavigate, useParams } from "react-router-dom";
+import {
+  usePageQuery,
+  useArchivePageMutation,
+  useUnarchivePageMutation,
+} from "@/features/page/queries/page-query.ts";
 import { buildPageUrl } from "@/features/page/page.utils.ts";
 import { notifications } from "@mantine/notifications";
-import { getAppUrl } from "@/lib/config.ts";
+import { getAppUrl, getSpaceUrl } from "@/lib/config.ts";
 import { extractPageSlugId } from "@/lib";
 import { treeApiAtom } from "@/features/page/tree/atoms/tree-api-atom.ts";
 import { useDeletePageModal } from "@/features/page/hooks/use-delete-page-modal.tsx";
 import { PageWidthToggle } from "@/features/user/components/page-width-pref.tsx";
 import { Trans, useTranslation } from "react-i18next";
 import ExportModal from "@/components/common/export-modal";
-import { htmlToMarkdown } from "@docmost/editor-ext";
 import {
   pageEditorAtom,
   yjsConnectionStatusAtom,
@@ -39,6 +46,8 @@ import { PageStateSegmentedControl } from "@/features/user/components/page-state
 import MovePageModal from "@/features/page/components/move-page-modal.tsx";
 import { useTimeAgo } from "@/hooks/use-time-ago.tsx";
 import ShareModal from "@/features/share/components/share-modal.tsx";
+import { useUserRole } from "@/hooks/use-user-role";
+
 
 interface PageHeaderMenuProps {
   readOnly?: boolean;
@@ -46,6 +55,10 @@ interface PageHeaderMenuProps {
 export default function PageHeaderMenu({ readOnly }: PageHeaderMenuProps) {
   const { t } = useTranslation();
   const toggleAside = useToggleAside();
+  const userRole = useUserRole();
+  const [yjsConnectionStatus] = useAtom(yjsConnectionStatusAtom);
+  const { pageSlug } = useParams();
+  const slugId = extractPageSlugId(pageSlug);
 
   useHotkeys(
     [
@@ -62,19 +75,30 @@ export default function PageHeaderMenu({ readOnly }: PageHeaderMenuProps) {
           const event = new CustomEvent("closeFindDialogFromEditor", {});
           document.dispatchEvent(event);
         },
-        { preventDefault: false },
       ],
     ],
-    [],
+    []
   );
 
   return (
     <>
-      <ConnectionWarning />
-
-      {!readOnly && <PageStateSegmentedControl size="xs" />}
-
-      <ShareModal readOnly={readOnly} />
+      {yjsConnectionStatus === "disconnected" && (
+        <Tooltip
+          label={t("Real-time editor connection lost. Retrying...")}
+          openDelay={250}
+          withArrow
+        >
+          <ActionIcon variant="default" c="red" style={{ border: "none" }}>
+            <IconWifiOff size={20} stroke={2} />
+          </ActionIcon>
+        </Tooltip>
+      )}
+      {!userRole.isVisitor && !readOnly && (
+        <>
+          <PageStateSegmentedControl size="xs" pageId={slugId} />
+          <ShareModal readOnly={readOnly} />
+        </>
+      )}
 
       <Tooltip label={t("Comments")} openDelay={250} withArrow>
         <ActionIcon
@@ -95,7 +119,6 @@ export default function PageHeaderMenu({ readOnly }: PageHeaderMenuProps) {
           <IconList size={20} stroke={2} />
         </ActionIcon>
       </Tooltip>
-
       <PageActionMenu readOnly={readOnly} />
     </>
   );
@@ -109,10 +132,25 @@ function PageActionMenu({ readOnly }: PageActionMenuProps) {
   const [, setHistoryModalOpen] = useAtom(historyAtoms);
   const clipboard = useClipboard({ timeout: 500 });
   const { pageSlug, spaceSlug } = useParams();
-  const { data: page, isLoading } = usePageQuery({
+  const navigate = useNavigate();
+  const { data: page, isLoading: _isLoading } = usePageQuery({
     pageId: extractPageSlugId(pageSlug),
   });
   const { openDeleteModal } = useDeletePageModal();
+  const archivePageMutation = useArchivePageMutation();
+  const unarchivePageMutation = useUnarchivePageMutation();
+
+  const handleArchive = async () => {
+    await archivePageMutation.mutateAsync(page.id);
+    navigate(getSpaceUrl(spaceSlug));
+  };
+
+  const handleUnarchive = async () => {
+    await unarchivePageMutation.mutateAsync(page.id);
+    // Optional: could redirect or stay, but if archived page was being viewed (e.g. from Archive list),
+    // redirecting to space home might be safer to refresh sidebar
+    navigate(getSpaceUrl(spaceSlug));
+  };
   const [tree] = useAtom(treeApiAtom);
   const [exportOpened, { open: openExportModal, close: closeExportModal }] =
     useDisclosure(false);
@@ -122,6 +160,7 @@ function PageActionMenu({ readOnly }: PageActionMenuProps) {
   ] = useDisclosure(false);
   const [pageEditor] = useAtom(pageEditorAtom);
   const pageUpdatedAt = useTimeAgo(page?.updatedAt);
+  const userRole = useUserRole();
 
   const handleCopyLink = () => {
     const pageUrl =
@@ -129,15 +168,6 @@ function PageActionMenu({ readOnly }: PageActionMenuProps) {
 
     clipboard.copy(pageUrl);
     notifications.show({ message: t("Link copied") });
-  };
-
-  const handleCopyAsMarkdown = () => {
-    if (!pageEditor) return;
-    const html = pageEditor.getHTML();
-    const markdown = htmlToMarkdown(html);
-    const title = page?.title ? `# ${page.title}\n\n` : "";
-    clipboard.copy(`${title}${markdown}`);
-    notifications.show({ message: t("Copied") });
   };
 
   const handlePrint = () => {
@@ -177,13 +207,6 @@ function PageActionMenu({ readOnly }: PageActionMenuProps) {
           >
             {t("Copy link")}
           </Menu.Item>
-
-          <Menu.Item
-            leftSection={<IconMarkdown size={16} />}
-            onClick={handleCopyAsMarkdown}
-          >
-            {t("Copy as Markdown")}
-          </Menu.Item>
           <Menu.Divider />
 
           <Menu.Item leftSection={<IconArrowsHorizontal size={16} />}>
@@ -191,51 +214,70 @@ function PageActionMenu({ readOnly }: PageActionMenuProps) {
               <PageWidthToggle label={t("Full width")} />
             </Group>
           </Menu.Item>
-
-          <Menu.Item
-            leftSection={<IconHistory size={16} />}
-            onClick={openHistoryModal}
-          >
-            {t("Page history")}
-          </Menu.Item>
-
-          <Menu.Divider />
-
-          {!readOnly && (
-            <Menu.Item
-              leftSection={<IconArrowRight size={16} />}
-              onClick={openMovePageModal}
-            >
-              {t("Move")}
-            </Menu.Item>
-          )}
-
-          <Menu.Item
-            leftSection={<IconFileExport size={16} />}
-            onClick={openExportModal}
-          >
-            {t("Export")}
-          </Menu.Item>
-
-          <Menu.Item
-            leftSection={<IconPrinter size={16} />}
-            onClick={handlePrint}
-          >
-            {t("Print PDF")}
-          </Menu.Item>
-
-          {!readOnly && (
+          {!userRole.isVisitor && (
             <>
-              <Menu.Divider />
               <Menu.Item
-                color={"red"}
-                leftSection={<IconTrash size={16} />}
-                onClick={handleDeletePage}
+                leftSection={<IconHistory size={16} />}
+                onClick={openHistoryModal}
               >
-                {t("Move to trash")}
+                {t("Page history")}
               </Menu.Item>
+
+              <Menu.Divider />
+
+              {!readOnly && (
+                <Menu.Item
+                  leftSection={<IconArrowRight size={16} />}
+                  onClick={openMovePageModal}
+                >
+                  {t("Move")}
+                </Menu.Item>
+              )}
+
+              <Menu.Item
+                leftSection={<IconFileExport size={16} />}
+                onClick={openExportModal}
+              >
+                {t("Export")}
+              </Menu.Item>
+
+              <Menu.Item
+                leftSection={<IconPrinter size={16} />}
+                onClick={handlePrint}
+              >
+                {t("Print PDF")}
+              </Menu.Item>
+
+              {!readOnly && (
+                <>
+                  {page.archivedAt ? (
+                    <Menu.Item
+                      leftSection={<IconArchive size={16} />}
+                      onClick={handleUnarchive}
+                    >
+                      {t("Unarchive")}
+                    </Menu.Item>
+                  ) : (
+                    <Menu.Item
+                      leftSection={<IconArchive size={16} />}
+                      onClick={handleArchive}
+                    >
+                      {t("Archive")}
+                    </Menu.Item>
+                  )}
+                  <Menu.Divider />
+                  <Menu.Item
+                    color={"red"}
+                    leftSection={<IconTrash size={16} />}
+                    onClick={handleDeletePage}
+                  >
+                    {t("Move to trash")}
+                  </Menu.Item>
+                </>
+              )}
             </>
           )}
+
 
           <Menu.Divider />
 
@@ -289,53 +331,5 @@ function PageActionMenu({ readOnly }: PageActionMenuProps) {
         open={movePageModalOpened}
       />
     </>
-  );
-}
-
-function ConnectionWarning() {
-  const { t } = useTranslation();
-  const yjsConnectionStatus = useAtomValue(yjsConnectionStatusAtom);
-  const [showWarning, setShowWarning] = useState(false);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    const isDisconnected = ["disconnected", "connecting"].includes(
-      yjsConnectionStatus,
-    );
-
-    if (isDisconnected) {
-      if (!timeoutRef.current) {
-        timeoutRef.current = setTimeout(() => setShowWarning(true), 5000);
-      }
-    } else {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-        timeoutRef.current = null;
-      }
-      setShowWarning(false);
-    }
-  }, [yjsConnectionStatus]);
-
-  // Cleanup only on unmount
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
-
-  if (!showWarning) return null;
-
-  return (
-    <Tooltip
-      label={t("Real-time editor connection lost. Retrying...")}
-      openDelay={250}
-      withArrow
-    >
-      <ActionIcon variant="default" c="red" style={{ border: "none" }}>
-        <IconWifiOff size={20} stroke={2} />
-      </ActionIcon>
-    </Tooltip>
   );
 }

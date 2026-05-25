@@ -17,7 +17,7 @@ export function UserProvider({ children }: React.PropsWithChildren) {
   const { i18n } = useTranslation();
   const [, setSocket] = useAtom(socketAtom);
   // fetch collab token on load
-  const { data: collab } = useCollabToken();
+  const { data: _collab } = useCollabToken();
 
   useEffect(() => {
     if (isLoading || isError) {
@@ -32,12 +32,7 @@ export function UserProvider({ children }: React.PropsWithChildren) {
     // @ts-ignore
     setSocket(newSocket);
 
-    newSocket.on("connect", () => {
-      console.log("ws connected");
-    });
-
     return () => {
-      console.log("ws disconnected");
       newSocket.disconnect();
     };
   }, [isError, isLoading]);

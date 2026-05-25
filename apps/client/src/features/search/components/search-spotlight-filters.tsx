@@ -139,7 +139,7 @@ export function SearchSpotlightFilters({
         >
           <Switch
             checked={isAiMode}
-            onChange={(event) => onAskClick()}
+            onChange={(_event) => onAskClick()}
             label={t("Ask AI")}
             size="sm"
             color="blue"

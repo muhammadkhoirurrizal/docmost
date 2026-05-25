@@ -51,7 +51,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
         workspaceIds = req.cookies.joinedWorkspaces
           ? JSON.parse(req.cookies.joinedWorkspaces)
           : [];
-      } catch (err) {
+      } catch {
         /* empty */
       }
 

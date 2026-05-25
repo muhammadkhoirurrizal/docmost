@@ -1,44 +1,32 @@
 import { usePageHistoryQuery } from "@/features/page-history/queries/page-history-query";
 import { HistoryEditor } from "@/features/page-history/components/history-editor";
 import { useTranslation } from "react-i18next";
-import { useAtomValue } from "jotai";
-import {
-  activeHistoryIdAtom,
-  activeHistoryPrevIdAtom,
-} from "@/features/page-history/atoms/history-atoms";
 
-function HistoryView() {
+interface HistoryProps {
+  historyId: string;
+  previousHistoryId?: string;
+}
+
+function HistoryView({ historyId, previousHistoryId }: HistoryProps) {
   const { t } = useTranslation();
-  const historyId = useAtomValue(activeHistoryIdAtom);
-  const prevHistoryId = useAtomValue(activeHistoryPrevIdAtom);
+  const { data, isLoading, isError } = usePageHistoryQuery(historyId);
+  const { data: previousData, isLoading: isPrevLoading } = usePageHistoryQuery(previousHistoryId || "");
 
-  const {
-    data,
-    isLoading: isLoadingCurrent,
-    isError: isErrorCurrent,
-  } = usePageHistoryQuery(historyId);
-  const {
-    data: prevData,
-    isLoading: isLoadingPrev,
-    isError: isErrorPrev,
-  } = usePageHistoryQuery(prevHistoryId);
-
-  if (isLoadingCurrent || isLoadingPrev) {
+  if (isLoading || (previousHistoryId && isPrevLoading)) {
     return <></>;
   }
 
-  if (isErrorCurrent || !data) {
+  if (isError || !data) {
     return <div>{t("Error fetching page data.")}</div>;
   }
 
   return (
-    <div>
-      <HistoryEditor
-        content={data.content}
-        title={data.title}
-        previousContent={!isErrorPrev ? prevData?.content : undefined}
-      />
-    </div>
+    <HistoryEditor
+      content={data.content}
+      title={data.title}
+      previousContent={previousData?.content}
+      previousTitle={previousData?.title}
+    />
   );
 }
 

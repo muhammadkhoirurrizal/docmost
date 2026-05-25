@@ -26,7 +26,7 @@ export class InternalLogFilter extends ConsoleLogger {
     return this.allowedLogLevels.includes(level);
   }
 
-  log(_: any, context?: string): void {
+  log(_message: any, context?: string): void {
     if (
       this.isLogLevelAllowed('log') &&
       (process.env.NODE_ENV !== 'production' ||
@@ -36,25 +36,25 @@ export class InternalLogFilter extends ConsoleLogger {
     }
   }
 
-  warn(_: any, context?: string): void {
+  warn(_message: any, _context?: string): void {
     if (this.isLogLevelAllowed('warn')) {
       super.warn.apply(this, arguments);
     }
   }
 
-  error(_: any, stack?: string, context?: string): void {
+  error(_message: any, _stack?: string, _context?: string): void {
     if (this.isLogLevelAllowed('error')) {
       super.error.apply(this, arguments);
     }
   }
 
-  debug(_: any, context?: string): void {
+  debug(_message: any, _context?: string): void {
     if (this.isLogLevelAllowed('debug')) {
       super.debug.apply(this, arguments);
     }
   }
 
-  verbose(_: any, context?: string): void {
+  verbose(_message: any, _context?: string): void {
     if (this.isLogLevelAllowed('verbose')) {
       super.verbose.apply(this, arguments);
     }

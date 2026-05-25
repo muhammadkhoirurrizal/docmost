@@ -8,27 +8,24 @@ import {
     Divider,
     Menu,
     TextInput,
-    ActionIcon
+    ColorSwatch,
 } from '@mantine/core';
 import { DatePicker as MantineDatePicker, TimeInput } from '@mantine/dates';
 import {
     IconChevronRight,
-    IconHelpCircle,
-    IconChevronLeft,
-    IconChevronRight as IconNext
+    IconCheck,
 } from '@tabler/icons-react';
 import classes from './date-picker.module.css';
 import dayjs from 'dayjs';
-import { DatePickerValue, getDateFormat, getFormatLabel, formatSelectedDate } from './utils';
+import { DatePickerValue, getFormatLabel, formatSelectedDate } from './utils';
 
 
 interface DatePickerProps {
     value: DatePickerValue;
     onChange: (value: DatePickerValue) => void;
-    onClear: () => void;
 }
 
-export function DatePicker({ value, onChange, onClear }: DatePickerProps) {
+export function DatePicker({ value, onChange }: DatePickerProps) {
     const [hasEndDate, setHasEndDate] = useState(!!value.end);
 
     useEffect(() => {
@@ -36,10 +33,13 @@ export function DatePicker({ value, onChange, onClear }: DatePickerProps) {
     }, [value.end]);
 
     const handleDateChange = (dates: any) => {
-        if (Array.isArray(dates)) {
-            onChange({ ...value, start: dates[0], end: dates[1] });
+        if (hasEndDate) {
+            if (Array.isArray(dates)) {
+                const [start, end] = dates;
+                onChange({ ...value, start, end });
+            }
         } else {
-            onChange({ ...value, start: dates });
+            onChange({ ...value, start: dates, end: null });
         }
     };
 
@@ -77,6 +77,7 @@ export function DatePicker({ value, onChange, onClear }: DatePickerProps) {
                 placeholder="Empty"
                 size="xs"
                 variant="filled"
+                mb="xs"
             />
 
             <Box className={classes.calendarWrapper}>
@@ -85,11 +86,10 @@ export function DatePicker({ value, onChange, onClear }: DatePickerProps) {
                     value={hasEndDate ? [value.start, value.end] : value.start}
                     onChange={handleDateChange as any}
                     size="sm"
-                    allowDeselect
                 />
             </Box>
 
-            <Divider />
+            <Divider my="xs" />
 
             <Box>
                 <Group justify="space-between" className={classes.optionItem} py={4}>
@@ -101,7 +101,7 @@ export function DatePicker({ value, onChange, onClear }: DatePickerProps) {
                     />
                 </Group>
 
-                <Menu position="right-start" offset={10} width={200}>
+                <Menu position="right-start" offset={10} width={200} withinPortal>
                     <Menu.Target>
                         <UnstyledButton className={classes.optionItem} py={4} style={{ width: '100%' }}>
                             <Group justify="space-between">
@@ -141,14 +141,45 @@ export function DatePicker({ value, onChange, onClear }: DatePickerProps) {
                     </Box>
                 )}
 
-            </Box>
+                <Divider my="xs" />
 
-            <Divider />
-
-            <Box className={classes.footer}>
-                <UnstyledButton className={classes.clearButton} onClick={onClear}>
-                    Clear
-                </UnstyledButton>
+                <Box px={8} pb="xs">
+                    <Text size="sm" mb={8} fw={500}>Text color</Text>
+                    <Group gap={8}>
+                        {[
+                            { name: "Default", color: null },
+                            { name: "Gray", color: "#868e96" },
+                            { name: "Red", color: "#fa5252" },
+                            { name: "Pink", color: "#e64980" },
+                            { name: "Grape", color: "#be4bdb" },
+                            { name: "Violet", color: "#7950f2" },
+                            { name: "Indigo", color: "#4c6ef5" },
+                            { name: "Blue", color: "#228be6" },
+                            { name: "Cyan", color: "#15aabf" },
+                            { name: "Teal", color: "#12b886" },
+                            { name: "Green", color: "#40c057" },
+                            { name: "Lime", color: "#82c91e" },
+                            { name: "Yellow", color: "#fab005" },
+                            { name: "Orange", color: "#fd7e14" },
+                        ].map((c) => (
+                            <UnstyledButton
+                                key={c.name}
+                                onClick={() => onChange({ ...value, color: c.color })}
+                                title={c.name}
+                            >
+                                <ColorSwatch
+                                    color={c.color || "#000000"}
+                                    size={20}
+                                    style={{ cursor: 'pointer' }}
+                                >
+                                    {(value.color === c.color || (!value.color && !c.color)) && (
+                                        <IconCheck size={12} color="#fff" />
+                                    )}
+                                </ColorSwatch>
+                            </UnstyledButton>
+                        ))}
+                    </Group>
+                </Box>
             </Box>
         </Box>
     );

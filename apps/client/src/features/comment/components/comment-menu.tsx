@@ -30,7 +30,7 @@ function CommentMenu({
 }: CommentMenuProps) {
   const { t } = useTranslation();
   const isCloudEE = useIsCloudEE();
-  const { isVisitor } = useUserRole();
+  const { isVisitor: _isVisitor } = useUserRole();
 
   //@ts-ignore
   const openDeleteModal = () =>

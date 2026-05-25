@@ -69,7 +69,7 @@ export const createMentionAction = handleInternalLink({
       throw err;
     }
   },
-  validateFn: (url: string, view: EditorView) => {
+  validateFn: (_url: string, _view: EditorView) => {
     // validation is already done on the paste handler
     return true;
   },

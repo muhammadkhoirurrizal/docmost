@@ -1,5 +1,5 @@
 import WorkspaceInviteModal from "@/features/workspace/components/members/components/workspace-invite-modal";
-import { Group, SegmentedControl, Space, Text } from "@mantine/core";
+import { Group, SegmentedControl, Space } from "@mantine/core";
 import WorkspaceMembersTable from "@/features/workspace/components/members/components/workspace-members-table";
 import SettingsTitle from "@/components/settings/settings-title.tsx";
 import { useEffect, useState } from "react";

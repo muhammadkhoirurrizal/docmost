@@ -1,20 +1,67 @@
 @media print {
+  @page {
+    margin: 20mm;
+    size: auto;
+  }
+
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
   }
 
   .mantine-AppShell-header,
   .mantine-AppShell-navbar,
   .mantine-AppShell-aside,
   .print-hide,
-  .drag-handle {
+  .drag-handle,
+  .link-btn,
+  .actionIconGroup,
+  .mantine-Breadcrumbs-root,
+  .mantine-Menu-root,
+  .mantine-Group-root:has(.mantine-ActionIcon-root):not(
+      [class*="tableofcontent"]
+    ):not([class*="tocHeader"]):not(:has([class*="link"])) {
     display: none !important;
   }
 
   .mantine-AppShell-main {
-    padding-top: 0 !important;
+    padding: 0 !important;
     min-height: auto !important;
+    margin: 0 !important;
+  }
+
+  .ProseMirror {
+    padding: 0 !important;
+    font-size: 12pt !important;
+    line-height: 1.5 !important;
+    color: black !important;
+    background: transparent !important;
+  }
+
+  .ProseMirror h1,
+  .ProseMirror h2,
+  .ProseMirror h3,
+  .ProseMirror h4,
+  .ProseMirror h5,
+  .ProseMirror h6 {
+    page-break-after: avoid;
+    page-break-inside: avoid;
+    color: #000 !important;
+    margin-top: 0.75em !important;
+    margin-bottom: 0.25em !important;
+  }
+
+  .ProseMirror p,
+  .ProseMirror ul,
+  .ProseMirror ol {
+    orphans: 1;
+    widows: 1;
   }
 
   .ProseMirror-selectednode {
@@ -25,18 +72,221 @@
   .tableWrapper {
     overflow: visible !important;
     max-height: none !important;
+    margin: 1em 0 !important;
   }
 
   table {
     page-break-inside: auto;
+    width: 100% !important;
+    border-collapse: collapse !important;
   }
 
   tr {
-    page-break-inside: avoid;
+    page-break-inside: auto;
     page-break-after: auto;
   }
 
   thead {
     display: table-header-group;
+  }
+
+  td,
+  th {
+    border: 1px solid #aaa !important;
+    padding: 8px !important;
+  }
+
+  blockquote {
+    border-left: 4px solid #aaa !important;
+    padding-left: 1em !important;
+    color: #444 !important;
+    font-style: italic !important;
+    page-break-inside: auto;
+  }
+
+  pre,
+  code {
+    background-color: #f8f8f8 !important;
+    color: #333 !important;
+    border: 1px solid #bbb !important;
+    border-radius: 4px;
+    font-size: 10pt !important;
+  }
+
+  pre {
+    padding: 1em !important;
+    white-space: pre-wrap !important;
+    word-wrap: break-word !important;
+    page-break-inside: auto;
+  }
+
+  img {
+    max-width: 100% !important;
+    height: auto !important;
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+
+  a {
+    text-decoration: underline !important;
+    color: #00e !important;
+    pointer-events: auto !important;
+  }
+
+  /* Table of Contents Minimalist Design */
+  [class*="tableofcontent"] {
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    padding: 0.5em 0 !important;
+    margin: 0 !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: transparent !important;
+    border: none !important;
+  }
+
+  [class*="tableofcontent"] [class*="tocHeader"] {
+    cursor: default !important;
+    margin-bottom: 0.5em !important;
+    padding: 0 !important;
+    background: transparent !important;
+    display: block !important;
+  }
+
+  /* Heading Title Styling */
+  [class*="tableofcontent"] [class*="tocHeader"] .mantine-Text-root {
+    font-size: 14pt !important;
+    font-weight: 700 !important;
+    color: #000 !important;
+  }
+
+  /* Force Expansion */
+  [class*="tableofcontent"] .mantine-Collapse-root,
+  [class*="tableofcontent"] [role="region"] {
+    display: block !important;
+    height: auto !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    overflow: visible !important;
+    transform: none !important;
+  }
+
+  /* Clean List Items */
+  [class*="tableofcontent"] [class*="link"] {
+    display: flex !important;
+    align-items: center !important;
+    background: none !important;
+    border: none !important;
+    padding: 4px 0 !important;
+    margin: 0 !important;
+    color: #333 !important;
+    text-decoration: none !important;
+    width: 100% !important;
+    box-shadow: none !important;
+    text-align: left !important;
+  }
+
+  [class*="tableofcontent"] [class*="link"] .mantine-Text-root {
+    font-weight: 400 !important;
+    font-size: 11pt !important;
+    color: #333 !important;
+    white-space: normal !important;
+  }
+
+  /* Ensure TOC links don't inherit global link styles in print - Ultra Aggressive */
+  [class*="tableofcontent"] a[class*="link"],
+  [class*="tableofcontent"] a[class*="link"]:link,
+  [class*="tableofcontent"] a[class*="link"]:visited,
+  [class*="tableofcontent"] a[class*="link"]:hover,
+  [class*="tableofcontent"] a[class*="link"] *,
+  [class*="tableofcontent"] [class*="link"] {
+    text-decoration: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+    color: inherit !important;
+  }
+
+  /* Indentation Levels */
+  [class*="tableofcontent"] [class*="link"][style*="padding-left: calc(1"] {
+    padding-left: 0 !important;
+  }
+  [class*="tableofcontent"] [class*="link"][style*="padding-left: calc(2"] {
+    padding-left: 1.5em !important;
+  }
+  [class*="tableofcontent"] [class*="link"][style*="padding-left: calc(3"] {
+    padding-left: 3em !important;
+  }
+  [class*="tableofcontent"] [class*="link"][style*="padding-left: calc(4"] {
+    padding-left: 4.5em !important;
+  }
+  [class*="tableofcontent"] [class*="link"][style*="padding-left: calc(5"] {
+    padding-left: 6em !important;
+  }
+  [class*="tableofcontent"] [class*="link"][style*="padding-left: calc(6"] {
+    padding-left: 7.5em !important;
+  }
+
+  /* UI Cleanup: Hide Icons and Extra Spacing */
+  [class*="tableofcontent"] .mantine-ActionIcon-root,
+  [class*="tableofcontent"] .mantine-Space-root {
+    display: none !important;
+  }
+
+  [class*="tableofcontent"] .mantine-Divider-root {
+    border-top-color: #eee !important;
+    margin-top: 0.25em !important;
+    margin-bottom: 0.5em !important;
+    display: block !important;
+  }
+
+  h1 {
+    page-break-before: auto !important;
+  }
+
+  h1:first-of-type {
+    page-break-before: auto !important;
+  }
+
+  /* Force page overflow visibility */
+  .mantine-AppShell-root,
+  .mantine-AppShell-main,
+  .mantine-Container-root,
+  .editor-container,
+  .ProseMirror,
+  .tableWrapper {
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+    min-height: auto !important;
+    display: block !important;
+  }
+
+  /* Specific table adjustments to prevent clipping and alignment issues */
+  .tableWrapper {
+    width: 100% !important;
+    margin: 1em 0 !important;
+  }
+
+  table {
+    page-break-inside: auto;
+    width: 100% !important;
+    border-collapse: collapse !important;
+    table-layout: fixed !important; /* Keep column widths consistent across pages */
+  }
+
+  tr {
+    page-break-inside: auto;
+    page-break-after: auto;
+  }
+
+  /* Global removal of box-shadow in print as it often renders as lines */
+  * {
+    box-shadow: none !important;
+    overflow: visible !important; /* Ensure no hidden content */
   }
 }

@@ -19,7 +19,10 @@ import {
   getRecentChanges,
   getAllSidebarPages,
   getDeletedPages,
+  getArchivedPages,
   restorePage,
+  archivePage,
+  unarchivePage,
 } from "@/features/page/services/page-service";
 import {
   IMovePage,
@@ -73,7 +76,7 @@ export function useCreatePageMutation() {
     onSuccess: (data) => {
       invalidateOnCreatePage(data);
     },
-    onError: (error) => {
+    onError: (_error) => {
       notifications.show({ message: t("Failed to create page"), color: "red" });
     },
   });
@@ -110,9 +113,10 @@ export function useUpdateTitlePageMutation() {
 }
 
 export function useUpdatePageMutation() {
+  const { t } = useTranslation();
   return useMutation<IPage, Error, Partial<IPageInput>>({
     mutationFn: (data) => updatePage(data),
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
       updatePageData(data);
 
       invalidateOnUpdatePage(
@@ -122,6 +126,12 @@ export function useUpdatePageMutation() {
         data.title,
         data.icon,
       );
+
+      if (variables.forceHistorySave) {
+        notifications.show({
+          message: t("Page saved"),
+        });
+      }
     },
   });
 }
@@ -137,7 +147,7 @@ export function useRemovePageMutation() {
           ["trash-list"].includes(item.queryKey[0] as string),
       });
     },
-    onError: (error) => {
+    onError: (_error) => {
       notifications.show({ message: "Failed to delete page", color: "red" });
     },
   });
@@ -147,7 +157,7 @@ export function useDeletePageMutation() {
   const { t } = useTranslation();
   return useMutation({
     mutationFn: (pageId: string) => deletePage(pageId, true),
-    onSuccess: (data, pageId) => {
+    onSuccess: (_data, pageId) => {
       notifications.show({ message: t("Page deleted successfully") });
       invalidateOnDeletePage(pageId);
 
@@ -157,8 +167,68 @@ export function useDeletePageMutation() {
           ["trash-list"].includes(item.queryKey[0] as string),
       });
     },
-    onError: (error) => {
+    onError: (_error) => {
       notifications.show({ message: t("Failed to delete page"), color: "red" });
+    },
+  });
+}
+
+export function useArchivePageMutation() {
+  const [treeData, setTreeData] = useAtom(treeDataAtom);
+  const emit = useQueryEmit();
+
+  return useMutation({
+    mutationFn: (pageId: string) => archivePage(pageId),
+    onSuccess: (_, pageId) => {
+      notifications.show({ message: "Page archived" });
+
+      const treeApi = new SimpleTree<SpaceTreeNode>(treeData);
+      const node = treeApi.find(pageId);
+
+      if (node) {
+        treeApi.drop({ id: pageId });
+        setTreeData(treeApi.data);
+
+        // Emit websocket event to sync with other users
+        setTimeout(() => {
+          emit({
+            operation: "deleteTreeNode",
+            spaceId: node.data.spaceId,
+            payload: { node: node.data },
+          });
+        }, 50);
+      }
+
+      invalidateOnDeletePage(pageId);
+
+      // Invalidate to refresh archive lists
+      queryClient.invalidateQueries({
+        predicate: (item) =>
+          ["archive-list"].includes(item.queryKey[0] as string),
+      });
+    },
+    onError: (_error) => {
+      notifications.show({ message: "Failed to archive page", color: "red" });
+    },
+  });
+}
+
+export function useUnarchivePageMutation() {
+  return useMutation({
+    mutationFn: (pageId: string) => unarchivePage(pageId),
+    onSuccess: () => {
+      notifications.show({ message: "Page unarchived" });
+      queryClient.invalidateQueries({ queryKey: ["root-sidebar-pages"] });
+      queryClient.invalidateQueries({ queryKey: ["sidebar-pages"] });
+
+      // Invalidate to refresh archive lists
+      queryClient.invalidateQueries({
+        predicate: (item) =>
+          ["archive-list"].includes(item.queryKey[0] as string),
+      });
+    },
+    onError: (_error) => {
+      notifications.show({ message: "Failed to unarchive page", color: "red" });
     },
   });
 }
@@ -241,7 +311,7 @@ export function useRestorePageMutation() {
         queryKey: ["trash-list", restoredPage.spaceId],
       });
     },
-    onError: (error) => {
+    onError: (_error) => {
       notifications.show({ message: "Failed to restore page", color: "red" });
     },
   });
@@ -327,6 +397,23 @@ export function useDeletedPagesQuery(
   });
 }
 
+export function useArchivedPagesQuery(
+  spaceId: string,
+  params?: QueryParams,
+): UseQueryResult<IPagination<IPage>, Error> {
+  return useQuery({
+    queryKey: ["archive-list", spaceId, params],
+    queryFn: async () => {
+      const data = await getArchivedPages(spaceId, params);
+      return data ?? null;
+    },
+    enabled: !!spaceId,
+    placeholderData: keepPreviousData,
+    refetchOnMount: true,
+    staleTime: 0,
+  });
+}
+
 export function invalidateOnCreatePage(data: Partial<IPage>) {
   const newPage: Partial<IPage> = {
     creatorId: data.creatorId,
@@ -378,7 +465,7 @@ export function invalidateOnCreatePage(data: Partial<IPage>) {
       exact: false,
     });
 
-    subSideBarMatches.forEach(([key, d]) => {
+    subSideBarMatches.forEach(([key, _d]) => {
       queryClient.setQueryData<InfiniteData<IPagination<IPage>>>(key, (old) => {
         if (!old) return old;
         return {
@@ -401,7 +488,7 @@ export function invalidateOnCreatePage(data: Partial<IPage>) {
       exact: false,
     });
 
-    rootSideBarMatches.forEach(([key, d]) => {
+    rootSideBarMatches.forEach(([key, _d]) => {
       queryClient.setQueryData<InfiniteData<IPagination<IPage>>>(key, (old) => {
         if (!old) return old;
         return {
@@ -594,7 +681,7 @@ export function invalidateOnDeletePage(pageId: string) {
       query.queryKey[0] === "sidebar-pages",
   });
 
-  allSideBarMatches.forEach(([key, d]) => {
+  allSideBarMatches.forEach(([key, _d]) => {
     queryClient.setQueryData<InfiniteData<IPagination<IPage>>>(key, (old) => {
       if (!old) return old;
       return {

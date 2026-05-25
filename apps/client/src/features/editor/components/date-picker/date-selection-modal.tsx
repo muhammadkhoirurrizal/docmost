@@ -3,14 +3,14 @@ import { DatePicker } from './date-picker';
 import { DatePickerValue } from './utils';
 import { Box, Button, Group } from '@mantine/core';
 import { modals } from '@mantine/modals';
-import dayjs from 'dayjs';
 
 interface DateSelectionModalProps {
     initialValue: DatePickerValue;
     onConfirm: (value: DatePickerValue) => void;
+    confirmLabel?: string;
 }
 
-export function DateSelectionModal({ initialValue, onConfirm }: DateSelectionModalProps) {
+export function DateSelectionModal({ initialValue, onConfirm, confirmLabel = "Insert" }: DateSelectionModalProps) {
     const [value, setValue] = useState<DatePickerValue>(initialValue);
 
     const handleConfirm = () => {
@@ -24,7 +24,8 @@ export function DateSelectionModal({ initialValue, onConfirm }: DateSelectionMod
             start: null,
             end: null,
             includeTime: false,
-            format: 'full'
+            format: 'full',
+            color: null
         });
     };
 
@@ -33,15 +34,19 @@ export function DateSelectionModal({ initialValue, onConfirm }: DateSelectionMod
             <DatePicker
                 value={value}
                 onChange={setValue}
-                onClear={handleClear}
             />
-            <Group justify="flex-end" mt="md" px="sm" pb="sm">
-                <Button variant="subtle" color="gray" onClick={() => modals.closeAll()}>
-                    Cancel
+            <Group justify="space-between" mt="md" px="sm" pb="sm">
+                <Button variant="subtle" color="red" size="xs" onClick={handleClear}>
+                    Clear
                 </Button>
-                <Button onClick={handleConfirm} disabled={!value.start}>
-                    Insert
-                </Button>
+                <Group gap="xs">
+                    <Button variant="subtle" color="gray" size="xs" onClick={() => modals.closeAll()}>
+                        Cancel
+                    </Button>
+                    <Button size="xs" onClick={handleConfirm} disabled={!value.start}>
+                        {confirmLabel}
+                    </Button>
+                </Group>
             </Group>
         </Box>
     );

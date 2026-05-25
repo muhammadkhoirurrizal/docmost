@@ -257,7 +257,7 @@ export class ShareService {
         .where('found', '=', true)
         .limit(1)
         .executeTakeFirst();
-    } catch (err) {
+    } catch {
       // empty
     }
 

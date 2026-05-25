@@ -31,7 +31,7 @@ export function useUnifiedSearch(
     queryKey: ["unified-search", searchType, params],
     queryFn: async () => {
       // Remove contentType from backend params since it's only used for frontend routing
-      const { contentType, ...backendParams } = params;
+      const { contentType: _contentType, ...backendParams } = params;
 
       if (isAttachmentSearch) {
         return await searchAttachments(backendParams);

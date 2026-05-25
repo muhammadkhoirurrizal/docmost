@@ -23,7 +23,7 @@ export default function SpaceSettingsModal({
   onClose,
 }: SpaceSettingsModalProps) {
   const { t } = useTranslation();
-  const { data: space, isLoading } = useSpaceQuery(spaceId);
+  const { data: space, isLoading: _isLoading } = useSpaceQuery(spaceId);
 
   const spaceRules = space?.membership?.permissions;
   const spaceAbility = useSpaceAbility(spaceRules);

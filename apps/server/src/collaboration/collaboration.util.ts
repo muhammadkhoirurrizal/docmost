@@ -35,6 +35,9 @@ import {
   UniqueID,
   addUniqueIdsToDoc,
   DataTable,
+  Column,
+  ColumnGroup,
+  KanbanBoard,
 } from '@docmost/editor-ext';
 import { generateText, getSchema, JSONContent } from '@tiptap/core';
 import { generateHTML, generateJSON } from '../common/helpers/prosemirror/html';
@@ -91,6 +94,9 @@ export const tiptapExtensions = [
   Mention,
   Subpages,
   DataTable,
+  Column,
+  ColumnGroup,
+  KanbanBoard,
 ] as any;
 
 export function jsonToHtml(tiptapJson: any) {
@@ -126,6 +132,48 @@ export function jsonToNode(tiptapJson: JSONContent) {
       return Node.fromJSON(schema, cleanedJson);
     }
     throw error;
+  }
+}
+
+export function normalizeTiptapJson(tiptapJson: any) {
+  if (!tiptapJson) return tiptapJson;
+
+  const clean = (obj: any): any => {
+    if (!obj || typeof obj !== "object") return obj;
+
+    if (Array.isArray(obj)) {
+      return obj.map(clean).filter((v) => v !== undefined && v !== null);
+    }
+
+    const newObj: any = {};
+    let hasKeys = false;
+    for (const [key, value] of Object.entries(obj)) {
+      const cleanedValue = clean(value);
+
+      if (cleanedValue === null || cleanedValue === undefined) {
+        continue;
+      }
+
+      if (
+        (key === "attrs" || key === "content") &&
+        typeof cleanedValue === "object" &&
+        Object.keys(cleanedValue).length === 0
+      ) {
+        continue;
+      }
+
+      newObj[key] = cleanedValue;
+      hasKeys = true;
+    }
+
+    return hasKeys ? newObj : undefined;
+  };
+
+  try {
+    const node = jsonToNode(tiptapJson);
+    return clean(node.toJSON());
+  } catch {
+    return clean(tiptapJson);
   }
 }
 

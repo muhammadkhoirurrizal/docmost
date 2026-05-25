@@ -80,7 +80,7 @@ export class TelemetryService {
         },
         body: JSON.stringify(data),
       });
-    } catch (err) {
+    } catch {
       /* empty */
     }
   }

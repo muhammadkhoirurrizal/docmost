@@ -177,10 +177,12 @@ export class PageService {
 
     // Emit event for forced history creation if forceHistorySave is true
     if (updatePageDto.forceHistorySave) {
+      const finalContent = updatePageDto.content || updatedPage.content;
+
       this.eventEmitter.emit('collab.page.updated', {
         page: {
           ...updatedPage,
-          content: updatePageDto.content || updatedPage.content,
+          content: finalContent,
         },
         forceHistory: true,
       });
@@ -209,6 +211,7 @@ export class PageService {
       ])
       .select((eb) => this.pageRepo.withHasChildren(eb))
       .where('deletedAt', 'is', null)
+      .where('archivedAt', 'is', null)
       .where('spaceId', '=', spaceId);
 
     if (pageId) {
@@ -503,7 +506,7 @@ export class PageService {
     // validate position value by attempting to generate a key
     try {
       generateJitteredKeyBetween(dto.position, null);
-    } catch (err) {
+    } catch {
       throw new BadRequestException('Invalid move position');
     }
 
@@ -611,6 +614,13 @@ export class PageService {
     return this.pageRepo.getDeletedPagesInSpace(spaceId, pagination);
   }
 
+  async getArchivedSpacePages(
+    spaceId: string,
+    pagination: PaginationOptions,
+  ): Promise<PaginationResult<Page>> {
+    return await this.pageRepo.getArchivedPagesInSpace(spaceId, pagination);
+  }
+
   async forceDelete(pageId: string, workspaceId: string): Promise<void> {
     // Get all descendant IDs (including the page itself) using recursive CTE
     const descendants = await this.db
@@ -665,5 +675,50 @@ export class PageService {
     workspaceId: string,
   ): Promise<void> {
     await this.pageRepo.removePage(pageId, userId, workspaceId);
+  }
+
+  async archive(pageId: string, workspaceId: string): Promise<void> {
+    const page = await this.pageRepo.findById(pageId);
+    if (!page) {
+      throw new NotFoundException('Page not found');
+    }
+    await this.pageRepo.archivePage(page.id, workspaceId);
+  }
+
+  async unarchive(pageId: string, workspaceId: string): Promise<void> {
+    const page = await this.pageRepo.findById(pageId);
+    if (!page) {
+      throw new NotFoundException('Page not found');
+    }
+
+    let parentPageId = page.parentPageId;
+    let position = page.position;
+
+    if (parentPageId) {
+      const parent = await this.pageRepo.findById(parentPageId);
+
+      // If parent missing, deleted, or archived, move to root top
+      if (!parent || parent.deletedAt || parent.archivedAt) {
+        parentPageId = null;
+
+        const firstPage = await this.db
+          .selectFrom('pages')
+          .select(['position'])
+          .where('spaceId', '=', page.spaceId)
+          .where('parentPageId', 'is', null)
+          .where('deletedAt', 'is', null)
+          .where('archivedAt', 'is', null)
+          .orderBy('position', (ob) => ob.collate('C').asc())
+          .limit(1)
+          .executeTakeFirst();
+
+        position = generateJitteredKeyBetween(null, firstPage?.position || null);
+      }
+    }
+
+    await this.pageRepo.unarchivePage(page.id, workspaceId, {
+      parentPageId,
+      position,
+    });
   }
 }

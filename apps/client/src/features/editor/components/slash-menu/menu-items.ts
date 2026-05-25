@@ -29,12 +29,11 @@ import {
   IconLayoutColumns,
   IconRectangle,
   IconAt,
+  IconDeviceGamepad,
 } from "@tabler/icons-react";
 import { modals } from "@mantine/modals";
-import { DatePicker } from "../date-picker/date-picker";
-import { DatePickerValue, getDateFormat } from "../date-picker/utils";
+import { DatePickerValue } from "../date-picker/utils";
 import { DateSelectionModal } from "../date-picker/date-selection-modal";
-import dayjs from "dayjs";
 import React from "react";
 import {
   CommandProps,
@@ -53,7 +52,9 @@ import {
   GoogleDriveIcon,
   GoogleDocsIcon,
   GoogleSheetsIcon,
+  GoogleSlidesIcon,
   LoomIcon,
+
   MiroIcon,
   TypeformIcon,
   VimeoIcon,
@@ -496,6 +497,17 @@ const CommandGroups: SlashMenuGroupedItemsType = {
         editor.chain().focus().deleteRange(range).setDrawio().run(),
     },
     {
+      title: "Twinery",
+      description: "Embed Twine story data and auto-play in read mode.",
+      searchTerms: ["twine", "twinery", "game", "story"],
+      icon: IconDeviceGamepad,
+      command: ({ editor, range }: CommandProps) =>
+        (editor.chain().focus() as any)
+          .deleteRange(range)
+          .insertTwineEditor()
+          .run(),
+    },
+    {
       title: "Excalidraw diagram",
       description: "Draw and sketch excalidraw diagrams",
       searchTerms: ["diagrams", "draw", "sketch", "whiteboard"],
@@ -516,6 +528,7 @@ const CommandGroups: SlashMenuGroupedItemsType = {
           end: null,
           includeTime: false,
           format: "full",
+          color: null,
         };
 
         modals.open({
@@ -525,14 +538,26 @@ const CommandGroups: SlashMenuGroupedItemsType = {
             onConfirm: (currentValue: DatePickerValue) => {
               if (!currentValue.start) return;
 
-              const format = getDateFormat(currentValue.format, currentValue.includeTime);
-              let str = dayjs(currentValue.start).format(format);
-
-              if (currentValue.end) {
-                str += ` → ${dayjs(currentValue.end).format(format)}`;
-              }
-
-              editor.chain().focus().insertContent(str).run();
+              editor
+                .chain()
+                .focus()
+                .insertContent([
+                  {
+                    type: "tiptapDate",
+                    attrs: {
+                      start: currentValue.start instanceof Date ? currentValue.start.toISOString() : currentValue.start,
+                      end: currentValue.end instanceof Date ? currentValue.end.toISOString() : (currentValue.end || null),
+                      includeTime: currentValue.includeTime,
+                      format: currentValue.format,
+                      color: currentValue.color || null,
+                    },
+                  },
+                  {
+                    type: "text",
+                    text: " ",
+                  },
+                ])
+                .run();
             },
           }),
         });
@@ -738,6 +763,21 @@ const CommandGroups: SlashMenuGroupedItemsType = {
           .run();
       },
     },
+    {
+      title: "Google Slides",
+      description: "Embed Google Slides content",
+      searchTerms: ["google slides", "gslides", "ppt", "presentation"],
+      icon: GoogleSlidesIcon,
+      command: ({ editor, range }: CommandProps) => {
+        editor
+          .chain()
+          .focus()
+          .deleteRange(range)
+          .setEmbed({ provider: "gslides" })
+          .run();
+      },
+    },
+
   ],
 };
 

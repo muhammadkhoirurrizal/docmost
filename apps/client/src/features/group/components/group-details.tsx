@@ -7,12 +7,11 @@ import { useDisclosure } from "@mantine/hooks";
 import EditGroupModal from "@/features/group/components/edit-group-modal.tsx";
 import GroupActionMenu from "@/features/group/components/group-action-menu.tsx";
 import useUserRole from "@/hooks/use-user-role.tsx";
-import { useTranslation } from "react-i18next";
 
 export default function GroupDetails() {
   const { groupId } = useParams();
-  const { data: group, isLoading } = useGroupQuery(groupId);
-  const [opened, { open, close }] = useDisclosure(false);
+  const { data: group } = useGroupQuery(groupId);
+  const [opened, { close }] = useDisclosure(false);
   const { isAdmin } = useUserRole();
 
   return (

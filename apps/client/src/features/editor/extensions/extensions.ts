@@ -1,7 +1,11 @@
 import { StarterKit } from "@tiptap/starter-kit";
+import { Placeholder } from "@tiptap/extension-placeholder";
 import { TextAlign } from "@tiptap/extension-text-align";
-import { TaskList, TaskItem } from "@tiptap/extension-list";
-import { Placeholder, CharacterCount } from "@tiptap/extensions";
+import { CharacterCount } from "@tiptap/extension-character-count";
+import { TaskList } from "@tiptap/extension-task-list";
+import { ListKeymap } from "@tiptap/extension-list-keymap";
+import { TaskItem } from "@tiptap/extension-task-item";
+import { Underline } from "@tiptap/extension-underline";
 import { Superscript } from "@tiptap/extension-superscript";
 import SubScript from "@tiptap/extension-subscript";
 import { Typography } from "@tiptap/extension-typography";
@@ -11,7 +15,7 @@ import GlobalDragHandle from "tiptap-extension-global-drag-handle";
 import { Youtube } from "@tiptap/extension-youtube";
 import SlashCommand from "@/features/editor/extensions/slash-command";
 import { Collaboration, isChangeOrigin } from "@tiptap/extension-collaboration";
-import { CollaborationCaret } from "@tiptap/extension-collaboration-caret";
+import { CollaborationCursor } from "@tiptap/extension-collaboration-cursor";
 import { HocuspocusProvider } from "@hocuspocus/provider";
 import {
   Comment,
@@ -37,12 +41,17 @@ import {
   Embed,
   SearchAndReplace,
   Mention,
-  TableDndExtension,
   Subpages,
+  TableDndExtension,
   Heading,
   Highlight,
   UniqueID,
-  SharedStorage,
+  Column,
+  ColumnGroup,
+  DataTable,
+  KanbanBoard,
+  TwineEditor,
+  TiptapDate,
 } from "@docmost/editor-ext";
 import {
   randomElement,
@@ -59,7 +68,11 @@ import CodeBlockView from "@/features/editor/components/code-block/code-block-vi
 import DrawioView from "../components/drawio/drawio-view";
 import ExcalidrawView from "@/features/editor/components/excalidraw/excalidraw-view.tsx";
 import EmbedView from "@/features/editor/components/embed/embed-view.tsx";
+import TwineView from "@/features/editor/components/twine/twine-view.tsx";
 import SubpagesView from "@/features/editor/components/subpages/subpages-view.tsx";
+import DataTableView from "@/features/editor/components/data-table/data-table-view.tsx";
+import KanbanBoardView from "@/features/editor/components/kanban/kanban-board-view.tsx";
+import DateView from "@/features/editor/components/date/date-view.tsx";
 import { common, createLowlight } from "lowlight";
 import plaintext from "highlight.js/lib/languages/plaintext";
 import powershell from "highlight.js/lib/languages/powershell";
@@ -78,6 +91,7 @@ import i18n from "@/i18n.ts";
 import { MarkdownClipboard } from "@/features/editor/extensions/markdown-clipboard.ts";
 import EmojiCommand from "./emoji-command";
 import { countWords } from "alfaaz";
+import InsertLink from "@/features/editor/extensions/link";
 
 const lowlight = createLowlight(common);
 lowlight.register("mermaid", plaintext);
@@ -91,12 +105,10 @@ lowlight.register("fortran", fortran);
 lowlight.register("haskell", haskell);
 lowlight.register("scala", scala);
 
-export const mainExtensions = [
+export const baseExtensions = [
   StarterKit.configure({
     heading: false,
-    undoRedo: false,
-    link: false,
-    trailingNode: false,
+    history: false,
     dropcursor: {
       width: 3,
       color: "#70CFF8",
@@ -108,10 +120,9 @@ export const mainExtensions = [
       },
     },
   }),
-  SharedStorage,
   Heading,
   UniqueID.configure({
-    types: ["heading", "paragraph"],
+    types: ["heading", "paragraph", "dataTable", "kanbanBoard"],
     filterTransaction: (transaction) => !isChangeOrigin(transaction),
   }),
   Placeholder.configure({
@@ -134,6 +145,8 @@ export const mainExtensions = [
   TaskItem.configure({
     nested: true,
   }),
+  ListKeymap,
+  Underline,
   LinkExtension.configure({
     openOnClick: false,
   }),
@@ -144,7 +157,10 @@ export const mainExtensions = [
   }),
   Typography,
   TrailingNode,
-  GlobalDragHandle,
+  GlobalDragHandle.configure({
+    dragHandleWidth: 20,
+    scrollTreshold: 100,
+  }),
   TextStyle,
   Color,
   SlashCommand,
@@ -168,16 +184,13 @@ export const mainExtensions = [
     },
   }).extend({
     addNodeView() {
-      // Force the react node view to render immediately using flush sync (https://github.com/ueberdosis/tiptap/blob/b4db352f839e1d82f9add6ee7fb45561336286d8/packages/react/src/ReactRenderer.tsx#L183-L191)
-      this.editor.isInitialized = true;
-
       return ReactNodeViewRenderer(MentionView);
     },
   }),
   CustomTable.configure({
     resizable: true,
     lastColumnResizable: true,
-    allowTableNodeSelection: true,
+    allowTableNodeSelection: false,
   }),
   TableRow,
   TableCell,
@@ -209,7 +222,6 @@ export const mainExtensions = [
   }),
   CustomCodeBlock.configure({
     view: CodeBlockView,
-    //@ts-ignore
     lowlight,
     HTMLAttributes: {
       spellcheck: false,
@@ -231,6 +243,9 @@ export const mainExtensions = [
   Subpages.configure({
     view: SubpagesView,
   }),
+  TwineEditor.configure({
+    view: TwineView,
+  }),
   MarkdownClipboard.configure({
     transformPastedText: true,
   }),
@@ -248,11 +263,29 @@ export const mainExtensions = [
         Escape: () => {
           const event = new CustomEvent("closeFindDialogFromEditor", {});
           document.dispatchEvent(event);
-          return false;
+          return true;
         },
       };
     },
   }).configure(),
+  InsertLink,
+  ColumnGroup,
+  Column,
+  TiptapDate.configure({
+    view: DateView,
+  }),
+] as any;
+
+export const mainExtensions = [
+  ...baseExtensions,
+  DataTable.configure({
+    // @ts-ignore
+    view: DataTableView,
+  }),
+  KanbanBoard.configure({
+    // @ts-ignore
+    view: KanbanBoardView,
+  }),
 ] as any;
 
 type CollabExtensions = (provider: HocuspocusProvider, user: IUser) => any[];
@@ -260,9 +293,8 @@ type CollabExtensions = (provider: HocuspocusProvider, user: IUser) => any[];
 export const collabExtensions: CollabExtensions = (provider, user) => [
   Collaboration.configure({
     document: provider.document,
-    provider,
   }),
-  CollaborationCaret.configure({
+  CollaborationCursor.configure({
     provider,
     user: {
       name: user.name,

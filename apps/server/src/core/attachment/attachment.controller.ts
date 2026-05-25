@@ -52,7 +52,7 @@ import { EnvironmentService } from '../../integrations/environment/environment.s
 import { TokenService } from '../auth/services/token.service';
 import { JwtAttachmentPayload, JwtType } from '../auth/dto/jwt-payload';
 import * as path from 'path';
-import { RemoveIconDto } from './dto/attachment.dto';
+import { DeleteAttachmentDto, RemoveIconDto } from './dto/attachment.dto';
 
 @Controller()
 export class AttachmentController {
@@ -67,7 +67,7 @@ export class AttachmentController {
     private readonly attachmentRepo: AttachmentRepo,
     private readonly environmentService: EnvironmentService,
     private readonly tokenService: TokenService,
-  ) {}
+  ) { }
 
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
@@ -149,13 +149,45 @@ export class AttachmentController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @Post('files/delete')
+  async deleteFile(
+    @Body() dto: DeleteAttachmentDto,
+    @AuthUser() user: User,
+  ) {
+    const attachment = await this.attachmentRepo.findById(dto.attachmentId);
+
+    if (!attachment) {
+      throw new NotFoundException('Attachment not found');
+    }
+
+    const page = await this.pageRepo.findById(attachment.pageId);
+    if (!page) {
+      throw new NotFoundException('Page not found');
+    }
+
+    const spaceAbility = await this.spaceAbility.createForUser(
+      user,
+      page.spaceId,
+    );
+
+    if (spaceAbility.cannot(SpaceCaslAction.Manage, SpaceCaslSubject.Page)) {
+      throw new ForbiddenException();
+    }
+
+    await this.attachmentService.deleteAttachmentById(dto.attachmentId);
+
+    return { success: true };
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get('/files/:fileId/:fileName')
   async getFile(
     @Res() res: FastifyReply,
     @AuthUser() user: User,
     @AuthWorkspace() workspace: Workspace,
     @Param('fileId') fileId: string,
-    @Param('fileName') fileName?: string,
+    @Param('fileName') _fileName?: string,
   ) {
     if (!isValidUUID(fileId)) {
       throw new NotFoundException('Invalid file id');
@@ -181,9 +213,7 @@ export class AttachmentController {
     }
 
     try {
-      const fileStream = await this.storageService.readStream(
-        attachment.filePath,
-      );
+      const fileStream = await this.storageService.read(attachment.filePath);
       res.headers({
         'Content-Type': attachment.mimeType,
         'Cache-Control': 'private, max-age=3600',
@@ -217,7 +247,7 @@ export class AttachmentController {
         jwtToken,
         JwtType.ATTACHMENT,
       );
-    } catch (err) {
+    } catch {
       throw new BadRequestException(
         'Expired or invalid attachment access token',
       );
@@ -243,9 +273,7 @@ export class AttachmentController {
     }
 
     try {
-      const fileStream = await this.storageService.readStream(
-        attachment.filePath,
-      );
+      const fileStream = await this.storageService.read(attachment.filePath);
       res.headers({
         'Content-Type': attachment.mimeType,
         'Cache-Control': 'public, max-age=3600',
@@ -371,13 +399,13 @@ export class AttachmentController {
     const filePath = `${getAttachmentFolderPath(attachmentType, workspace.id)}/${fileName}`;
 
     try {
-      const fileStream = await this.storageService.readStream(filePath);
+      const fileStream = await this.storageService.read(filePath);
       res.headers({
         'Content-Type': getMimeType(filePath),
         'Cache-Control': 'private, max-age=86400',
       });
       return res.send(fileStream);
-    } catch (err) {
+    } catch {
       // this.logger.error(err);
       throw new NotFoundException('File not found');
     }

@@ -33,7 +33,7 @@ export function MultiGroupSelect({
   const { t } = useTranslation();
   const [searchValue, setSearchValue] = useState("");
   const [debouncedQuery] = useDebouncedValue(searchValue, 500);
-  const { data: groups, isLoading } = useGetGroupsQuery({
+  const { data: groups } = useGetGroupsQuery({
     query: debouncedQuery,
     limit: 25,
   });

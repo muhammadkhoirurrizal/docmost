@@ -1,15 +1,12 @@
 import {
   useMutation,
   UseMutationResult,
-  useQuery,
-  UseQueryResult,
 } from "@tanstack/react-query";
 import {
   generateAiContent,
   generateAiContentStream,
 } from "@/ee/ai/services/ai-service.ts";
 import {
-  AiConfigResponse,
   AiContentResponse,
   AiGenerateDto,
   AiStreamChunk,

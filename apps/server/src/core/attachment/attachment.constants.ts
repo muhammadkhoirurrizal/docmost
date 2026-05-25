@@ -15,4 +15,5 @@ export const inlineFileExtensions = [
   '.pdf',
   '.mp4',
   '.mov',
+  '.html',
 ];

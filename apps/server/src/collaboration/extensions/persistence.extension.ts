@@ -130,7 +130,7 @@ export class PersistenceExtension implements Extension {
             new Set([...existingContributors, ...newContributors]),
           );
           this.contributors.delete(documentName);
-        } catch (err) {
+        } catch {
           //this.logger.debug('Contributors error:' + err?.['message']);
         }
 

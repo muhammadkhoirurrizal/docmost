@@ -46,6 +46,13 @@ export const KanbanBoard = Node.create<KanbanBoardOptions>({
 
   addAttributes() {
     return {
+      id: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("data-id"),
+        renderHTML: (attributes) => ({
+          "data-id": attributes.id,
+        }),
+      },
       columns: {
         default: [
           { id: "todo", title: "To Do" },

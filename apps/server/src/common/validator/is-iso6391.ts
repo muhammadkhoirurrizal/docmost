@@ -21,7 +21,7 @@ export function IsISO6391(
     {
       name: IS_ISO6391,
       validator: {
-        validate: (value, args): boolean => isISO6391(value),
+        validate: (value): boolean => isISO6391(value),
         defaultMessage: buildMessage(
           (eachPrefix) =>
             eachPrefix + '$property must be a valid ISO 639-1 language code',

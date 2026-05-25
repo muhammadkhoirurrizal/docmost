@@ -18,7 +18,7 @@ import { useTranslation } from "react-i18next";
 export default function ChangeEmail() {
   const { t } = useTranslation();
   const [currentUser] = useAtom(currentUserAtom);
-  const [opened, { open, close }] = useDisclosure(false);
+  const [opened, { open: _open, close }] = useDisclosure(false);
 
   return (
     <Group justify="space-between" wrap="nowrap" gap="xl">
@@ -68,7 +68,7 @@ function ChangeEmailForm() {
     },
   });
 
-  function handleSubmit(data: FormValues) {
+  function handleSubmit(_data: FormValues) {
     setIsLoading(true);
   }
 

@@ -37,7 +37,7 @@ export function MultiMemberSelect({ onChange }: MultiMemberSelectProps) {
   const { t } = useTranslation();
   const [searchValue, setSearchValue] = useState("");
   const [debouncedQuery] = useDebouncedValue(searchValue, 500);
-  const { data: suggestion, isLoading } = useSearchSuggestionsQuery({
+  const { data: suggestion, isLoading: _isLoading } = useSearchSuggestionsQuery({
     query: debouncedQuery,
     includeUsers: true,
     includeGroups: true,

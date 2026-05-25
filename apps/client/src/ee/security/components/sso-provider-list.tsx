@@ -28,9 +28,6 @@ import { useTranslation } from "react-i18next";
 import SsoProviderModal from "@/ee/security/components/sso-provider-modal.tsx";
 import { SSO_PROVIDER } from "@/ee/security/contants.ts";
 import { GoogleIcon } from "@/components/icons/google-icon.tsx";
-import { CustomAvatar } from "@/components/ui/custom-avatar.tsx";
-import RoleSelectMenu from "@/components/ui/role-select-menu.tsx";
-import { getUserRoleLabel } from "@/features/workspace/types/user-role-data.ts";
 
 export default function SsoProviderList() {
   const { t } = useTranslation();

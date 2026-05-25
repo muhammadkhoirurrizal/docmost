@@ -81,7 +81,7 @@ export function TitleEditor({
         setActivePageId(pageId);
       }
     },
-    onUpdate({ editor }) {
+    onUpdate({ editor: _editor }) {
       debounceUpdate();
     },
     editable: editable,

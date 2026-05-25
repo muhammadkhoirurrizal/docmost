@@ -25,6 +25,12 @@ export interface DataTableFilter {
   value: any;
 }
 
+export interface DataTableSort {
+  id: string;
+  columnId: string;
+  direction: 'asc' | 'desc';
+}
+
 export interface DataTableOptions {
   HTMLAttributes: Record<string, any>;
   view: any;
@@ -55,6 +61,13 @@ export const DataTable = Node.create<DataTableOptions>({
 
   addAttributes() {
     return {
+      id: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("data-id"),
+        renderHTML: (attributes) => ({
+          "data-id": attributes.id,
+        }),
+      },
       columns: {
         default: [
           { id: "name", name: "Name", type: "text", width: 250 },
@@ -92,6 +105,18 @@ export const DataTable = Node.create<DataTableOptions>({
         renderHTML: (attributes) => {
           return {
             "data-filters": JSON.stringify(attributes.filters || []),
+          };
+        },
+      },
+      sorts: {
+        default: [],
+        parseHTML: (element) => {
+          const sorts = element.getAttribute("data-sorts");
+          return sorts ? JSON.parse(sorts) : [];
+        },
+        renderHTML: (attributes) => {
+          return {
+            "data-sorts": JSON.stringify(attributes.sorts || []),
           };
         },
       },

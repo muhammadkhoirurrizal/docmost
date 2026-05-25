@@ -127,7 +127,7 @@ export function FilterDropdown({ columns, filters, onFiltersChange }: FilterDrop
                                 const operators = column ? FILTER_OPERATORS[column.type] || FILTER_OPERATORS.text : FILTER_OPERATORS.text;
 
                                 return (
-                                    <Group key={filter.id} mb="xs" wrap="nowrap" align="flex-start">
+                                    <Group key={filter.id} mb="xs" wrap="nowrap" align="center">
                                         <Select
                                             size="xs"
                                             value={filter.columnId}

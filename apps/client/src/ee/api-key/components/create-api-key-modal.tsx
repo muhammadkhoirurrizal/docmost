@@ -90,7 +90,7 @@ export function CreateApiKeyModal({
       onSuccess(createdKey);
       form.reset();
       onClose();
-    } catch (err) {
+    } catch {
       //
     }
   };

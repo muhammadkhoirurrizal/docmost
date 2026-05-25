@@ -31,7 +31,6 @@ export function LdapLoginModal({
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const form = useForm({
     validate: zodResolver(formSchema),
@@ -46,7 +45,6 @@ export function LdapLoginModal({
     password: string;
   }) => {
     setIsLoading(true);
-    setError(null);
 
     try {
       const response = await ldapLogin({
@@ -71,7 +69,6 @@ export function LdapLoginModal({
       setIsLoading(false);
       const errorMessage =
         err.response?.data?.message || "Authentication failed";
-      setError(errorMessage);
 
       notifications.show({
         message: errorMessage,
@@ -82,7 +79,6 @@ export function LdapLoginModal({
 
   const handleClose = () => {
     form.reset();
-    setError(null);
     onClose();
   };
 

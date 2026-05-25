@@ -527,7 +527,7 @@ export class WorkspaceService {
 
     try {
       await this.attachmentQueue.add(QueueJob.DELETE_USER_AVATARS, user);
-    } catch (err) {
+    } catch {
       // empty
     }
   }

@@ -24,7 +24,7 @@ export default function WorkspaceIcon() {
       if (workspace) {
         setWorkspace({ ...workspace, logo: result.fileName });
       }
-    } catch (error) {
+    } catch (_error) {
       //
     } finally {
       setIsLoading(false);
@@ -38,7 +38,7 @@ export default function WorkspaceIcon() {
       if (workspace) {
         setWorkspace({ ...workspace, logo: null });
       }
-    } catch (error) {
+    } catch (_error) {
       //
     } finally {
       setIsLoading(false);

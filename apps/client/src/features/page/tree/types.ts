@@ -6,6 +6,7 @@ export type SpaceTreeNode = {
   position: string;
   spaceId: string;
   parentPageId: string;
+  archivedAt?: Date;
   hasChildren: boolean;
   children: SpaceTreeNode[];
 };

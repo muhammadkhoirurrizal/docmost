@@ -49,14 +49,6 @@ export function LinkMenu({ editor, appendTo }: EditorMenuProps) {
     return null;
   }, [editor]);
 
-  const onShowEdit = useCallback(() => {
-    setShowEdit(true);
-  }, []);
-
-  const onHideEdit = useCallback(() => {
-    setShowEdit(false);
-  }, []);
-
   return (
     <BaseBubbleMenu
       editor={editor}

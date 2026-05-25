@@ -5,17 +5,18 @@ import classes from "./table-of-contents.module.css";
 import clsx from "clsx";
 import { ActionIcon, Box, Group, Text, Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { IconLink } from "@tabler/icons-react";
+import { IconChevronDown, IconChevronRight, IconLink } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import { useParams } from "react-router-dom";
 import { buildPageUrl } from "@/features/page/page.utils";
 import { getAppUrl } from "@/lib/config";
-import { usePageQuery } from "@/features/page/queries/page-query.ts";
 import { extractPageSlugId } from "@/lib";
 import { copyToClipboard } from "@/features/editor/utils/clipboard";
-import { Divider, Space } from "@mantine/core";
+import { usePageQuery } from "@/features/page/queries/page-query.ts";
+import { Collapse, Divider } from "@mantine/core";
 import { useAtom } from "jotai";
 import { pageEditorAtom } from "../../atoms/editor-atoms";
+import { useDisclosure } from "@mantine/hooks";
 
 type TableOfContentsProps = {
   editor: ReturnType<typeof useEditor>;
@@ -189,9 +190,13 @@ export const TableOfContents: FC<TableOfContentsProps> = (props) => {
       )}
       <div className={props.isShare ? classes.leftBorder : ""}>
         {links.map((item, idx) => (
-          <Box<"button">
-            component="button"
-            onClick={() => handleScrollToHeading(item.position)}
+          <Box<"a">
+            component="a"
+            href={`#${item.id}`}
+            onClick={(e) => {
+              e.preventDefault();
+              handleScrollToHeading(item.position);
+            }}
             key={idx}
             className={clsx(classes.link, {
               [classes.linkActive]: item.element === activeElement,
@@ -228,7 +233,7 @@ export const TableOfContentsOnPage = () => {
   const { t } = useTranslation();
   const [links, setLinks] = useState<HeadingLink[]>([]);
   const [headingDOMNodes, setHeadingDOMNodes] = useState<HTMLElement[]>([]);
-  const [activeElement, setActiveElement] = useState<HTMLElement | null>(null);
+  const [_activeElement, setActiveElement] = useState<HTMLElement | null>(null);
   const headerPaddingRef = useRef<HTMLDivElement | null>(null);
   const { pageSlug, spaceSlug } = useParams();
   const { data: page } = usePageQuery({
@@ -333,46 +338,63 @@ export const TableOfContentsOnPage = () => {
     }
   }, [headingDOMNodes, pageEditor]);
 
+  const [opened, { toggle }] = useDisclosure(false);
+
   if (!pageEditor) return null;
   if (!links.length) return null;
   return (
     <>
       <div className={clsx(classes.tableofcontent, 'tiptap')} style={{ position: "relative" }}>
-        <Text mb="xs" fw={500}>
-          {t("Table of contents")}
-        </Text>
-        {links.map((item, idx) => (
-          <Box<"button">
-            component="button"
-            onClick={() => handleScrollToHeading(item.position)}
-            key={idx}
-            className={clsx(classes.link, 'p0 mt0', {
-              [classes.linkActive]: item.element === activeElement,
-            })}
-            style={{
-              paddingLeft: `calc(${item.level} * var(--mantine-spacing-md))`,
-            }}
-          >
-            <Group justify="space-between" wrap="nowrap" gap={4}>
-              <Text truncate fw={500} size="sm" style={{ flex: 1 }}>
-                {item.label}
-                <Tooltip label={t("Copy link")}>
-                  <ActionIcon
-                    size="xs"
-                    variant="subtle"
-                    color="gray"
-                    onClick={(e) => handleCopyLink(e, item.id)}
-                    className={classes.linkBtn}
-                  >
-                    <IconLink size={12} />
-                  </ActionIcon>
-                </Tooltip>
-              </Text>
-            </Group>
-          </Box>
-        ))}
+        <Group
+          justify="space-between"
+          mb="xs"
+          className={classes.tocHeader}
+          onClick={toggle}
+          style={{ cursor: 'pointer' }}
+        >
+          <Text fw={500}>
+            {t("Table of contents")}
+          </Text>
+          <ActionIcon variant="subtle" color="gray" size="sm">
+            {opened ? <IconChevronDown size={16} /> : <IconChevronRight size={16} />}
+          </ActionIcon>
+        </Group>
+
+        <Collapse in={opened}>
+          {links.map((item, idx) => (
+            <Box<"a">
+              component="a"
+              href={`#${item.id}`}
+              onClick={(e) => {
+                e.preventDefault();
+                handleScrollToHeading(item.position);
+              }}
+              key={idx}
+              className={clsx(classes.link, 'p0 mt0')}
+              style={{
+                paddingLeft: item.level > 1 ? `calc(${item.level - 1} * var(--mantine-spacing-md))` : 0,
+              }}
+            >
+              <Group ml={4} justify="space-between" wrap="nowrap" gap={4}>
+                <Text truncate fw={500} size="sm" style={{ flex: 1 }}>
+                  {item.label}
+                  <Tooltip label={t("Copy link")}>
+                    <ActionIcon
+                      size="xs"
+                      variant="subtle"
+                      color="gray"
+                      onClick={(e) => handleCopyLink(e, item.id)}
+                      className={classes.linkBtn}
+                    >
+                      <IconLink size={12} />
+                    </ActionIcon>
+                  </Tooltip>
+                </Text>
+              </Group>
+            </Box>
+          ))}
+        </Collapse>
         <Divider my="xs" />
-        <Space h="sm" />
       </div>
       <div ref={headerPaddingRef} className={classes.headerPadding} />
     </>
