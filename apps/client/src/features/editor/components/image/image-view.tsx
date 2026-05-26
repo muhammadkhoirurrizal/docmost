@@ -143,6 +143,7 @@ export default function ImageView(props: NodeViewProps) {
           content: {
             backgroundColor: "transparent",
             boxShadow: "none",
+            overflow: "visible",
           },
           body: {
             padding: 0,
@@ -153,15 +154,15 @@ export default function ImageView(props: NodeViewProps) {
           }
         }}
       >
-        <div style={{ position: "relative", display: "inline-block" }}>
+        <div style={{ position: "relative", display: "inline-block", padding: 40 }}>
           <ActionIcon
             variant="filled"
             color="dark"
             onClick={close}
             style={{
               position: "absolute",
-              top: -16,
-              right: -16,
+              top: 8,
+              right: 8,
               zIndex: 1000,
               borderRadius: "50%",
             }}
@@ -172,8 +173,8 @@ export default function ImageView(props: NodeViewProps) {
             src={getFileUrl(src)}
             alt={title}
             style={{
-              maxWidth: "90vw",
-              maxHeight: "90vh",
+              maxWidth: "calc(90vw - 80px)",
+              maxHeight: "calc(90vh - 80px)",
               display: "block",
               borderRadius: "var(--mantine-radius-md)",
               boxShadow: "var(--mantine-shadow-xl)",
