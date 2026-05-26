@@ -80,7 +80,7 @@ export default function MentionView(props: NodeViewProps) {
           )}
 
           <span className={classes.pageMentionText}>
-            {page?.title || label}
+            {anchorId ? label : page?.title || label}
           </span>
         </Anchor>
       )}

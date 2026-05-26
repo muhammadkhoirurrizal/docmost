@@ -17,6 +17,41 @@ export interface InternalLinkOptions {
   onResolveLink: (linkedPageId: string, creatorId: string) => Promise<any>;
 }
 
+function extractHeadingTextFromContent(
+  content: any,
+  anchorId: string,
+): string | null {
+  if (!content) return null;
+
+  const doc = typeof content === "string" ? JSON.parse(content) : content;
+
+  function findHeadingText(node: any): string | null {
+    if (node.type === "heading" && node.attrs?.id === anchorId) {
+      return extractTextFromNode(node);
+    }
+    if (node.content && Array.isArray(node.content)) {
+      for (const child of node.content) {
+        const text = findHeadingText(child);
+        if (text) return text;
+      }
+    }
+    return null;
+  }
+
+  function extractTextFromNode(node: any): string {
+    if (!node.content || !Array.isArray(node.content)) return "";
+    return node.content
+      .map((child: any) => {
+        if (child.type === "text") return child.text || "";
+        if (child.content) return extractTextFromNode(child);
+        return "";
+      })
+      .join("");
+  }
+
+  return findHeadingText(doc);
+}
+
 export const handleInternalLink =
   ({ validateFn, onResolveLink }: InternalLinkOptions): LinkFn =>
   async (url: string, view, pos, creatorId, anchorId) => {
@@ -29,9 +64,21 @@ export const handleInternalLink =
       (page: IPage) => {
         const { schema } = view.state;
 
+        let label = page.title || "Untitled";
+
+        if (anchorId) {
+          const headingText = extractHeadingTextFromContent(
+            page.content,
+            anchorId,
+          );
+          if (headingText) {
+            label = `${label} - ${headingText}`;
+          }
+        }
+
         const node = schema.nodes.mention.create({
           id: v7(),
-          label: page.title || "Untitled",
+          label,
           entityType: "page",
           entityId: page.id,
           slugId: page.slugId,
