@@ -1,0 +1,24 @@
+apps/client/src/features/editor/components/image/image-view.tsx
+  s_2292a144b98d10::t_2c56800e3826eb 140,150-152,156,163-164,166,179
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "b5882816e551b00a1a6000c0747232885a708145",
+  "prompts": {},
+  "humans": {
+    "h_0612cf7e255131": {
+      "author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  },
+  "sessions": {
+    "s_2292a144b98d10": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_19c92c497ffejGohWXLw30gFvL",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  }
+}
