@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   SlashMenuGroupedItemsType,
   SlashMenuItemType,
@@ -15,17 +23,17 @@ import classes from "./slash-menu.module.css";
 import clsx from "clsx";
 import { useTranslation } from "react-i18next";
 
-const CommandList = ({
-  items,
-  command,
-  editor: _editor,
-  range: _range,
-}: {
+const CommandList = forwardRef<any, {
   items: SlashMenuGroupedItemsType;
   command: any;
   editor: any;
   range: any;
-}) => {
+}>(({
+  items,
+  command,
+  editor: _editor,
+  range: _range,
+}, ref) => {
   const { t } = useTranslation();
   const [selectedIndex, setSelectedIndex] = useState(0);
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -44,36 +52,38 @@ const CommandList = ({
     [command, flatItems],
   );
 
-  useEffect(() => {
-    const navigationKeys = ["ArrowUp", "ArrowDown", "Enter"];
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (navigationKeys.includes(e.key)) {
-        e.preventDefault();
+  const upHandler = useCallback(() => {
+    setSelectedIndex((prev) => (prev + flatItems.length - 1) % flatItems.length);
+  }, [flatItems.length]);
 
-        if (e.key === "ArrowUp") {
-          setSelectedIndex(
-            (selectedIndex + flatItems.length - 1) % flatItems.length,
-          );
-          return true;
-        }
+  const downHandler = useCallback(() => {
+    setSelectedIndex((prev) => (prev + 1) % flatItems.length);
+  }, [flatItems.length]);
 
-        if (e.key === "ArrowDown") {
-          setSelectedIndex((selectedIndex + 1) % flatItems.length);
-          return true;
-        }
+  const enterHandler = useCallback(() => {
+    selectItem(selectedIndex);
+  }, [selectItem, selectedIndex]);
 
-        if (e.key === "Enter") {
-          selectItem(selectedIndex);
-          return true;
-        }
-        return false;
+  useImperativeHandle(ref, () => ({
+    onKeyDown: ({ event }: { event: KeyboardEvent }) => {
+      if (event.key === "ArrowUp") {
+        upHandler();
+        return true;
       }
-    };
-    document.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.removeEventListener("keydown", onKeyDown);
-    };
-  }, [flatItems, selectedIndex, setSelectedIndex, selectItem]);
+
+      if (event.key === "ArrowDown") {
+        downHandler();
+        return true;
+      }
+
+      if (event.key === "Enter") {
+        enterHandler();
+        return true;
+      }
+
+      return false;
+    },
+  }));
 
   useEffect(() => {
     setSelectedIndex(0);
@@ -127,6 +137,6 @@ const CommandList = ({
       </ScrollArea>
     </Paper>
   ) : null;
-};
+});
 
 export default CommandList;
