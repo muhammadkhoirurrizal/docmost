@@ -27,12 +27,14 @@ export const LinkExtension = TiptapLink.extend({
   },
 
   renderHTML({ HTMLAttributes }) {
-    if (HTMLAttributes.href?.toLowerCase().startsWith("javascript:")) {
+    const attrs: Record<string, any> = { ...HTMLAttributes, target: "_self" };
+
+    if (attrs.href?.toLowerCase().startsWith("javascript:")) {
       return [
         "a",
         mergeAttributes(
           this.options.HTMLAttributes,
-          { ...HTMLAttributes, href: "" },
+          { ...attrs, href: "" },
           { class: "link" },
         ),
         0,
@@ -41,7 +43,7 @@ export const LinkExtension = TiptapLink.extend({
 
     return [
       "a",
-      mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
+      mergeAttributes(this.options.HTMLAttributes, attrs, {
         class: "link",
       }),
       0,
