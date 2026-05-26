@@ -137,6 +137,7 @@ export default function ImageView(props: NodeViewProps) {
         size="auto"
         centered
         withCloseButton={false}
+        closeOnClickOutside={true}
         padding={0}
         styles={{
           content: {
@@ -146,20 +147,23 @@ export default function ImageView(props: NodeViewProps) {
           body: {
             padding: 0,
             position: "relative",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
           }
         }}
       >
-        <div style={{ position: "relative" }}>
+        <div style={{ position: "relative", display: "inline-block" }}>
           <ActionIcon
             variant="filled"
             color="dark"
             onClick={close}
             style={{
               position: "absolute",
-              top: 10,
-              right: 10,
+              top: -16,
+              right: -16,
               zIndex: 1000,
-              borderRadius: "50%"
+              borderRadius: "50%",
             }}
           >
             <IconX size={18} />
@@ -172,7 +176,7 @@ export default function ImageView(props: NodeViewProps) {
               maxHeight: "90vh",
               display: "block",
               borderRadius: "var(--mantine-radius-md)",
-              boxShadow: "var(--mantine-shadow-xl)"
+              boxShadow: "var(--mantine-shadow-xl)",
             }}
           />
         </div>
