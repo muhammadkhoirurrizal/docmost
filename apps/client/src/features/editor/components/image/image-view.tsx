@@ -1,6 +1,6 @@
 import { NodeViewProps, NodeViewWrapper } from "@tiptap/react";
-import { useEffect, useRef, useState } from "react";
-import { ActionIcon, Modal, TextInput } from "@mantine/core";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ActionIcon, Modal, Slider, TextInput } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { getFileUrl } from "@/lib/config.ts";
 import clsx from "clsx";
@@ -14,6 +14,18 @@ export default function ImageView(props: NodeViewProps) {
   const [resizing, setResizing] = useState(false);
   const [currentWidth, setCurrentWidth] = useState<number | string>(width || "100%");
   const [opened, { open, close }] = useDisclosure(false);
+
+  // Zoom & pan state for lightbox
+  const imageRef = useRef<HTMLImageElement>(null);
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const [fitScale, setFitScale] = useState(1);
+  const panStartRef = useRef({ x: 0, y: 0, panX: 0, panY: 0 });
+  const mouseDownPos = useRef({ x: 0, y: 0 });
+  const hasMoved = useRef(false);
+  const isZoomedIn = zoomLevel > fitScale + 0.01;
+  const [imageError, setImageError] = useState(false);
 
   const resizeRef = useRef<{
     startX: number;
@@ -30,6 +42,28 @@ export default function ImageView(props: NodeViewProps) {
   useEffect(() => {
     setCurrentWidth(width || "100%");
   }, [width]);
+
+  // Slider state for width control in edit mode
+  const [sliderValue, setSliderValue] = useState(100);
+
+  useEffect(() => {
+    if (typeof width === "string" && width.endsWith("%")) {
+      setSliderValue(parseInt(width));
+    } else if (typeof width === "string" && width.endsWith("px")) {
+      const parentWidth =
+        containerRef.current?.parentElement?.clientWidth || 800;
+      setSliderValue(Math.round((parseInt(width) / parentWidth) * 100));
+    } else {
+      setSliderValue(100);
+    }
+  }, [width]);
+
+  const handleSliderChangeEnd = useCallback(
+    (value: number) => {
+      updateAttributes({ width: `${value}%` });
+    },
+    [updateAttributes],
+  );
 
   const onMouseDown = (
     e: React.MouseEvent,
@@ -98,6 +132,115 @@ export default function ImageView(props: NodeViewProps) {
     };
   }, [resizing, currentWidth, updateAttributes]);
 
+  // -- Zoom & pan handlers --
+
+  const handleImageLoad = useCallback(() => {
+    if (!imageRef.current) return;
+    const { naturalWidth, naturalHeight } = imageRef.current;
+    if (!naturalWidth || !naturalHeight) return;
+
+    const maxW = window.innerWidth * 0.9 - 80;
+    const maxH = window.innerHeight * 0.9 - 80;
+
+    const scale = Math.min(maxW / naturalWidth, maxH / naturalHeight, 1);
+    setFitScale(scale);
+    setZoomLevel(scale);
+    setPanOffset({ x: 0, y: 0 });
+  }, []);
+
+  const handleClose = useCallback(() => {
+    setIsPanning(false);
+    setZoomLevel(fitScale);
+    setPanOffset({ x: 0, y: 0 });
+    close();
+  }, [fitScale, close]);
+
+  const toggleZoom = useCallback(() => {
+    if (isZoomedIn) {
+      setZoomLevel(fitScale);
+      setPanOffset({ x: 0, y: 0 });
+    } else {
+      const target = Math.min(Math.max(fitScale * 2, 1), 5);
+      setZoomLevel(target);
+      setPanOffset({ x: 0, y: 0 });
+    }
+  }, [isZoomedIn, fitScale]);
+
+  const handleWheel = useCallback(
+    (e: React.WheelEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setZoomLevel((prev) => {
+        const delta = e.deltaY > 0 ? -0.2 : 0.2;
+        const next = Math.max(0.3, Math.min(5, prev + delta));
+        if (next <= fitScale + 0.01) {
+          setPanOffset({ x: 0, y: 0 });
+        }
+        return next;
+      });
+    },
+    [fitScale],
+  );
+
+  const handleViewportMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      mouseDownPos.current = { x: e.clientX, y: e.clientY };
+      hasMoved.current = false;
+
+      if (isZoomedIn) {
+        e.preventDefault();
+        setIsPanning(true);
+        panStartRef.current = {
+          x: e.clientX,
+          y: e.clientY,
+          panX: panOffset.x,
+          panY: panOffset.y,
+        };
+      }
+    },
+    [isZoomedIn, panOffset],
+  );
+
+  // Panning move/up listeners on document
+  useEffect(() => {
+    if (!isPanning) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const dx = e.clientX - mouseDownPos.current.x;
+      const dy = e.clientY - mouseDownPos.current.y;
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+        hasMoved.current = true;
+      }
+
+      setPanOffset({
+        x: panStartRef.current.panX + e.clientX - panStartRef.current.x,
+        y: panStartRef.current.panY + e.clientY - panStartRef.current.y,
+      });
+    };
+
+    const handleMouseUp = () => {
+      setIsPanning(false);
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isPanning]);
+
+  // Reset zoom when modal opens
+  useEffect(() => {
+    if (opened) {
+      setZoomLevel(fitScale);
+      setPanOffset({ x: 0, y: 0 });
+    }
+  }, [opened, fitScale]);
+
+  // -- End zoom & pan --
+
   return (
     <NodeViewWrapper
       as="span"
@@ -133,7 +276,7 @@ export default function ImageView(props: NodeViewProps) {
 
       <Modal
         opened={opened}
-        onClose={close}
+        onClose={handleClose}
         size="auto"
         centered
         withCloseButton={false}
@@ -158,7 +301,7 @@ export default function ImageView(props: NodeViewProps) {
           <ActionIcon
             variant="filled"
             color="dark"
-            onClick={close}
+            onClick={handleClose}
             style={{
               position: "absolute",
               top: 8,
@@ -169,17 +312,62 @@ export default function ImageView(props: NodeViewProps) {
           >
             <IconX size={18} />
           </ActionIcon>
-          <img
-            src={getFileUrl(src)}
-            alt={title}
+          <div
             style={{
-              maxWidth: "calc(90vw - 80px)",
-              maxHeight: "calc(90vh - 80px)",
-              display: "block",
-              borderRadius: "var(--mantine-radius-md)",
-              boxShadow: "var(--mantine-shadow-xl)",
+              overflow: "hidden",
+              width: "calc(90vw - 80px)",
+              height: "calc(90vh - 80px)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: isZoomedIn ? (isPanning ? "grabbing" : "grab") : "zoom-in",
             }}
-          />
+            onWheel={handleWheel}
+            onMouseDown={handleViewportMouseDown}
+            onMouseUp={(e) => {
+              if ((e.target as HTMLElement).closest("button")) return;
+              if (!hasMoved.current) {
+                toggleZoom();
+              }
+            }}
+          >
+            <img
+              ref={imageRef}
+              src={getFileUrl(src)}
+              alt={title}
+              onLoad={() => {
+                setImageError(false);
+                handleImageLoad();
+              }}
+              onError={() => setImageError(true)}
+              draggable={false}
+              style={{
+                transform: `scale(${zoomLevel}) translate(${panOffset.x / zoomLevel}px, ${panOffset.y / zoomLevel}px)`,
+                transformOrigin: "center center",
+                transition: isPanning ? "none" : "transform 0.15s ease-out",
+                display: imageError ? "none" : "block",
+                borderRadius: "var(--mantine-radius-md)",
+                boxShadow: "var(--mantine-shadow-xl)",
+                maxWidth: "100%",
+                maxHeight: "100%",
+                userSelect: "none",
+                pointerEvents: "none",
+                willChange: isPanning ? "transform" : "auto",
+              }}
+            />
+            {imageError && (
+              <div
+                style={{
+                  position: "absolute",
+                  color: "var(--mantine-color-dimmed)",
+                  fontSize: "var(--mantine-font-size-sm)",
+                  textAlign: "center",
+                }}
+              >
+                Failed to load image
+              </div>
+            )}
+          </div>
         </div>
       </Modal>
 
@@ -203,6 +391,33 @@ export default function ImageView(props: NodeViewProps) {
             onMouseDown={(e) => onMouseDown(e, 1)}
           />
         </>
+      )}
+
+      {/* Width slider (edit mode) */}
+      {isEditable && selected && (
+        <Slider
+          value={sliderValue}
+          onChange={setSliderValue}
+          onChangeEnd={handleSliderChangeEnd}
+          min={25}
+          max={100}
+          step={5}
+          label={(value) => `${value}%`}
+          size="sm"
+          mt="xs"
+          styles={{
+            root: { width: "100%" },
+            label: { fontSize: "var(--mantine-font-size-xs)" },
+            thumb: {
+              borderColor: "var(--mantine-color-blue-5)",
+              width: 14,
+              height: 14,
+            },
+            track: {
+              cursor: "pointer",
+            },
+          }}
+        />
       )}
 
       {/* Caption Input */}
