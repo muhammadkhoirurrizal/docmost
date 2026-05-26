@@ -1,0 +1,37 @@
+apps/client/src/features/editor/components/image/image-view.tsx
+  s_122ada268eaece::t_15116d3e7707e7 135-151,153-172,181,183-241,243
+  s_122ada268eaece::t_69b520c0605e70 18-27,29
+  s_122ada268eaece::t_9e0e354349adb8 28
+  s_122ada268eaece::t_d271ab2bde5ba1 173-180,182
+  s_122ada268eaece::t_52730bac589fef 46-67
+  s_122ada268eaece::t_985c98bae7739f 242
+  s_122ada268eaece::t_0a15b7fb9240a6 358-369
+  s_122ada268eaece::t_d78192db6a2a91 3
+  s_122ada268eaece::t_6af27fd4f216b9 2
+  s_122ada268eaece::t_efd83f688fc5b3 327-328
+  s_122ada268eaece::t_ca9fac90618680 338-342,348,355
+  s_122ada268eaece::t_3db5635d83070e 396-422
+  s_122ada268eaece::t_71c61202b1ebe2 152
+  s_122ada268eaece::t_954b339f70f3a5 279,304,315,317-323,325-326,329-337,343-347,349-354,356-357,370
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "4a401a727ee3f8ac787061cf0c8c39248656c550",
+  "prompts": {},
+  "humans": {
+    "h_0612cf7e255131": {
+      "author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  },
+  "sessions": {
+    "s_122ada268eaece": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_19c3db26fffeYZaifE8id8yskb",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  }
+}
