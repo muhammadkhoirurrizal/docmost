@@ -342,6 +342,40 @@ export const TableOfContentsOnPage = () => {
 
   if (!pageEditor) return null;
   if (!links.length) return null;
+
+  const tocLinks = links.map((item, idx) => (
+    <Box<"a">
+      component="a"
+      href={`#${item.id}`}
+      onClick={(e) => {
+        e.preventDefault();
+        handleScrollToHeading(item.position);
+      }}
+      key={idx}
+      className={clsx(classes.link, 'p0 mt0')}
+      style={{
+        paddingLeft: item.level > 1 ? `calc(${item.level - 1} * var(--mantine-spacing-md))` : 0,
+      }}
+    >
+      <Group ml={4} justify="space-between" wrap="nowrap" gap={4}>
+        <Text truncate fw={500} size="sm" style={{ flex: 1 }}>
+          {item.label}
+          <Tooltip label={t("Copy link")}>
+            <ActionIcon
+              size="xs"
+              variant="subtle"
+              color="gray"
+              onClick={(e) => handleCopyLink(e, item.id)}
+              className={classes.linkBtn}
+            >
+              <IconLink size={12} />
+            </ActionIcon>
+          </Tooltip>
+        </Text>
+      </Group>
+    </Box>
+  ));
+
   return (
     <>
       <div className={clsx(classes.tableofcontent, 'tiptap')} style={{ position: "relative" }}>
@@ -361,39 +395,28 @@ export const TableOfContentsOnPage = () => {
         </Group>
 
         <Collapse in={opened}>
-          {links.map((item, idx) => (
-            <Box<"a">
-              component="a"
-              href={`#${item.id}`}
-              onClick={(e) => {
-                e.preventDefault();
-                handleScrollToHeading(item.position);
-              }}
-              key={idx}
-              className={clsx(classes.link, 'p0 mt0')}
-              style={{
-                paddingLeft: item.level > 1 ? `calc(${item.level - 1} * var(--mantine-spacing-md))` : 0,
-              }}
-            >
-              <Group ml={4} justify="space-between" wrap="nowrap" gap={4}>
-                <Text truncate fw={500} size="sm" style={{ flex: 1 }}>
-                  {item.label}
-                  <Tooltip label={t("Copy link")}>
-                    <ActionIcon
-                      size="xs"
-                      variant="subtle"
-                      color="gray"
-                      onClick={(e) => handleCopyLink(e, item.id)}
-                      className={classes.linkBtn}
-                    >
-                      <IconLink size={12} />
-                    </ActionIcon>
-                  </Tooltip>
-                </Text>
-              </Group>
-            </Box>
-          ))}
+          {tocLinks}
         </Collapse>
+
+        {/* Print-only TOC: always visible, no interactivity */}
+        <div className={classes.printToc} aria-hidden="true">
+          <Text fw={500} mb="xs">{t("Table of contents")}</Text>
+          <div className={classes.printTocList}>
+            {links.map((item, idx) => (
+              <a
+                key={`print-${idx}`}
+                href={`#${item.id}`}
+                className={classes.printTocLink}
+                style={{
+                  paddingLeft: item.level > 1 ? `${(item.level - 1) * 1.5}em` : 0,
+                }}
+              >
+                {item.label}
+              </a>
+            ))}
+          </div>
+        </div>
+
         <Divider my="xs" />
       </div>
       <div ref={headerPaddingRef} className={classes.headerPadding} />

@@ -93,3 +93,38 @@
     );
   }
 }
+
+/* Print-only TOC: hidden on screen, visible in print */
+.printToc {
+  display: none;
+}
+
+@media print {
+  .printToc {
+    display: block !important;
+    padding: 0.5em 0;
+    margin-bottom: 1em;
+  }
+
+  .printTocList {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .printTocLink {
+    display: block;
+    color: #333 !important;
+    text-decoration: none !important;
+    font-size: 11pt;
+    line-height: 1.4;
+    padding: 2px 0;
+    word-break: break-word;
+  }
+
+  /* Hide the interactive TOC header and collapse in print */
+  .tocHeader,
+  .tableofcontent :global(.mantine-Collapse-root) {
+    display: none !important;
+  }
+}
