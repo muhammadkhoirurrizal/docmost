@@ -66,8 +66,8 @@ export async function exportSpace(data: IExportSpaceParams): Promise<void> {
   });
 
   const fileName = req?.headers["content-disposition"]
-    .split("filename=")[1]
-    .replace(/"/g, "");
+    ?.split("filename=")[1]
+    ?.replace(/"/g, "");
 
-  saveAs(req.data, decodeURIComponent(fileName));
+  saveAs(req.data, decodeURIComponent(fileName || "export.zip"));
 }

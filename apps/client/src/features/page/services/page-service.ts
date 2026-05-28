@@ -131,10 +131,10 @@ export async function exportPage(data: IExportPageParams): Promise<void> {
   });
 
   const fileName = req?.headers["content-disposition"]
-    .split("filename=")[1]
-    .replace(/"/g, "");
+    ?.split("filename=")[1]
+    ?.replace(/"/g, "");
 
-  saveAs(req.data, decodeURIComponent(fileName));
+  saveAs(req.data, decodeURIComponent(fileName || "export.zip"));
 }
 
 export async function importPage(file: File, spaceId: string) {

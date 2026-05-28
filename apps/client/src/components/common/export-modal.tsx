@@ -46,9 +46,21 @@ export default function ExportModal({
         await exportSpace({ spaceId: id, format, includeAttachments });
       }
       onClose();
-    } catch (err) {
+    } catch (err: any) {
+      let msg = err.response?.data?.message || err.message;
+
+      if (err.response?.data instanceof Blob) {
+        try {
+          const text = await err.response.data.text();
+          const parsed = JSON.parse(text);
+          msg = parsed.message || text;
+        } catch {
+          msg = "Export failed";
+        }
+      }
+
       notifications.show({
-        message: "Export failed:" + err.response?.data.message,
+        message: "Export failed: " + msg,
         color: "red",
       });
       console.error("export error", err);
@@ -156,6 +168,7 @@ function ExportFormatSelection({ format, onChange }: ExportFormatSelection) {
       data={[
         { value: "markdown", label: "Markdown" },
         { value: "html", label: "HTML" },
+        { value: "pdf", label: "PDF" },
       ]}
       defaultValue={format}
       onChange={onChange}
