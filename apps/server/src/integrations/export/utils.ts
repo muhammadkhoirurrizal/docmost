@@ -4,6 +4,8 @@ import { Node } from '@tiptap/pm/model';
 import * as path from 'path';
 import { Page } from '@docmost/db/types/entity.types';
 import { isAttachmentNode } from '../../common/helpers/prosemirror/utils';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+import slugify = require('@sindresorhus/slugify');
 
 export type PageExportTree = Record<string, Page[]>;
 
@@ -17,6 +19,10 @@ export function getExportExtension(format: string) {
 
   if (format === ExportFormat.Markdown) {
     return '.md';
+  }
+
+  if (format === ExportFormat.PDF) {
+    return '.pdf';
   }
   return;
 }
@@ -151,8 +157,9 @@ export function computeLocalPath(
   const children = tree[parentPageId] || [];
 
   for (const page of children) {
-    const title = encodeURIComponent(getPageTitle(page.title));
-    const localPath = `${currentPath}${title}`;
+    const title = getPageTitle(page.title);
+    const safeTitle = slugify(title);
+    const localPath = `${currentPath}${safeTitle}`;
     slugIdToPath[page.slugId] = `${localPath}${getExportExtension(format)}`;
 
     computeLocalPath(tree, format, page.id, `${localPath}/`, slugIdToPath);
