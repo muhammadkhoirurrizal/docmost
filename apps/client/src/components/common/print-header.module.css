@@ -12,7 +12,27 @@
 
   .topRow {
     display: flex;
-    justify-content: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 9pt;
+    color: #666;
+  }
+
+  .title {
+    font-weight: 600;
+    font-size: 10pt;
+    color: #333;
+  }
+
+  .date {
+    font-size: 8pt;
+    color: #999;
   }
 
   .url {
@@ -20,6 +40,12 @@
     color: #0000ee !important;
     text-decoration: underline !important;
     pointer-events: auto !important;
+    font-size: 8pt;
+  }
+
+  .divider {
+    border-bottom: 1px solid #ddd;
+    margin-top: 3mm;
   }
 }
 
