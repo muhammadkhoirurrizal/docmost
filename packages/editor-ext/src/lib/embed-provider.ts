@@ -115,8 +115,8 @@ export const embedProviders: IEmbedProvider[] = [
     regex:
       /^((?:https?:)?\/\/)?((?:www|m)\.)?(docs\.google\.com)\/document\/d\/(?:e\/)?([a-zA-Z0-9_-]+)(?:\/.*)?$/,
     getEmbedUrl: (match, url: string) => {
-      // Use preview mode with embedded=true for a cleaner, scrollable view
-      return `https://docs.google.com/document/d/${match[4]}/preview?usp=sharing&embedded=true`;
+      // embedded=true + chrome=false removes the title/tab bar for a cleaner view
+      return `https://docs.google.com/document/d/${match[4]}/preview?usp=sharing&embedded=true&chrome=false`;
     },
   },
   {
