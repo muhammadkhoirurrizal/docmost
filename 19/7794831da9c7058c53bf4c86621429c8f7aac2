@@ -1,0 +1,34 @@
+apps/server/src/integrations/export/utils.ts
+  s_9a997b0547e44b::t_0657d996fa54d0 7-8
+  s_82f30eea7ac3c4::t_6337b88906e424 24-26
+  s_9a997b0547e44b::t_363e70afc4e6d2 160-162
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "197794831da9c7058c53bf4c86621429c8f7aac2",
+  "prompts": {},
+  "humans": {
+    "h_0612cf7e255131": {
+      "author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  },
+  "sessions": {
+    "s_82f30eea7ac3c4": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_1922e99c4ffeXvJ9D6His71BpC",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    },
+    "s_9a997b0547e44b": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_1938932c5ffeiuLZdV092jL6zT",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  }
+}
