@@ -1,0 +1,26 @@
+apps/client/src/features/editor/components/embed/embed-view.tsx
+  s_3f8e56481477b0::t_1a90e1a58b7d1b 225-240
+  s_3f8e56481477b0::t_d8fbd46313b09c 244,248-250,262
+  s_3f8e56481477b0::t_6377523a814a94 194
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "ab22cba8f71ca3174b18e7dc19a13013d0ec18b6",
+  "prompts": {},
+  "humans": {
+    "h_0612cf7e255131": {
+      "author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  },
+  "sessions": {
+    "s_3f8e56481477b0": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_192338627ffeBaJGuyWxDuKk8B",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  }
+}
