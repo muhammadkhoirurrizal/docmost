@@ -13,7 +13,14 @@ import {
   Modal,
   Tooltip,
 } from "@mantine/core";
-import { IconEdit, IconExternalLink, IconMaximize } from "@tabler/icons-react";
+import {
+  IconEdit,
+  IconExternalLink,
+  IconFileText,
+  IconMaximize,
+  IconPresentation,
+  IconTable,
+} from "@tabler/icons-react";
 import { z } from "zod";
 import { useForm } from "@mantine/form";
 import { zodResolver } from "mantine-form-zod-resolver";
@@ -139,6 +146,7 @@ export default function EmbedView(props: NodeViewProps) {
   const isDoc = provider === "gdoc" || provider === "google docs";
   const isSheets = provider === "gsheets" || provider === "google sheets";
   const isFigma = provider === "figma";
+  const isGoogleDoc = isDoc || isSheets || isSlides;
 
   // Use taller defaults for document-heavy embeds
   const defaultHeight = useMemo(() => {
@@ -146,6 +154,13 @@ export default function EmbedView(props: NodeViewProps) {
     if (isFigma) return 640;
     return 480;
   }, [isDoc, isSheets, isFigma]);
+
+  const docPreviewIcon = useMemo(() => {
+    if (isDoc) return <IconFileText size={40} color="#4285F4" />;
+    if (isSheets) return <IconTable size={40} color="#0F9D58" />;
+    if (isSlides) return <IconPresentation size={40} color="#F4B400" />;
+    return null;
+  }, [isDoc, isSheets, isSlides]);
 
   const buttonLabel = useMemo(() => {
     if (isSlides || isDrive) {
@@ -165,81 +180,119 @@ export default function EmbedView(props: NodeViewProps) {
     <NodeViewWrapper contentEditable={false} className="docmost-embed-node">
       {embedUrl ? (
         <>
-          <ResizableWrapper
-            initialHeight={nodeHeight || defaultHeight}
-            minHeight={200}
-            maxHeight={1200}
-            onResize={handleResize}
-            isEditable={editor.isEditable}
-            className={clsx(classes.embedWrapper, {
-              "ProseMirror-selectednode": selected,
-            })}
-          >
-            <div 
-              className={classes.iframeWrapper} 
-              style={{ width: '100%', height: '100%', position: 'relative' }}
+          {isGoogleDoc ? (
+            <Card
+              withBorder
+              radius="md"
+              p="lg"
+              className={clsx(classes.docPreviewCard, {
+                "ProseMirror-selectednode": selected,
+              })}
+              onMouseDown={handleMouseDown}
+              style={{ cursor: "pointer" }}
             >
-              <iframe
-                ref={iframeRef}
-                className={classes.embedIframe}
-                src={sanitizeUrl(embedUrl)}
-                allow="encrypted-media"
-                sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
-                allowFullScreen
-                style={{
-                  display: "block",
-                  width: "100%",
-                  height: "100%",
-                  border: 0,
-                  pointerEvents: selected && editor.isEditable ? "auto" : "none",
-                }}
-              />
-              
-              {selected && (
-                <div
-                  style={{
-                    position: "absolute",
-                    top: 10,
-                    right: 10,
-                    zIndex: 20,
-                    pointerEvents: "auto"
-                  }}
-                >
-                  <Button 
-                    leftSection={<IconMaximize size={18} />}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      open();
-                    }}
-                    variant="filled"
-                    color="blue"
-                    radius="xl"
-                    size="compact-sm"
-                  >
-                    {buttonLabel}
-                  </Button>
+              <Group gap="md" align="center">
+                {docPreviewIcon}
+                <div>
+                  <Text fw={600} size="md">
+                    {providerName}
+                  </Text>
+                  <Text size="sm" c="dimmed">
+                    {t("Click to preview")}
+                  </Text>
                 </div>
-              )}
-
-              {/* Selection shield: Only blocks clicks when not selected (editable mode) */}
-              {(!selected || !editor.isEditable) && (
-                <div
-                  onMouseDown={handleMouseDown}
+                <Button
+                  ml="auto"
+                  leftSection={<IconMaximize size={16} />}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    open();
+                  }}
+                  variant="light"
+                  size="compact-sm"
+                >
+                  {t("Preview")}
+                </Button>
+              </Group>
+            </Card>
+          ) : (
+            <ResizableWrapper
+              initialHeight={nodeHeight || defaultHeight}
+              minHeight={200}
+              maxHeight={1200}
+              onResize={handleResize}
+              isEditable={editor.isEditable}
+              className={clsx(classes.embedWrapper, {
+                "ProseMirror-selectednode": selected,
+              })}
+            >
+              <div
+                className={classes.iframeWrapper}
+                style={{ width: '100%', height: '100%', position: 'relative' }}
+              >
+                <iframe
+                  ref={iframeRef}
+                  className={classes.embedIframe}
+                  src={sanitizeUrl(embedUrl)}
+                  allow="encrypted-media"
+                  sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+                  allowFullScreen
                   style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 20, // Leave space for resize handle
-                    zIndex: 10,
-                    cursor: "default",
-                    background: "transparent"
+                    display: "block",
+                    width: "100%",
+                    height: "100%",
+                    border: 0,
+                    pointerEvents: selected && editor.isEditable ? "auto" : "none",
                   }}
                 />
-              )}
-            </div>
-          </ResizableWrapper>
+
+                {selected && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: 10,
+                      right: 10,
+                      zIndex: 20,
+                      pointerEvents: "auto"
+                    }}
+                  >
+                    <Button
+                      leftSection={<IconMaximize size={18} />}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        open();
+                      }}
+                      variant="filled"
+                      color="blue"
+                      radius="xl"
+                      size="compact-sm"
+                    >
+                      {buttonLabel}
+                    </Button>
+                  </div>
+                )}
+
+                {/* Selection shield: Only blocks clicks when not selected (editable mode) */}
+                {(!selected || !editor.isEditable) && (
+                  <div
+                    onMouseDown={handleMouseDown}
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 20, // Leave space for resize handle
+                      zIndex: 10,
+                      cursor: "default",
+                      background: "transparent"
+                    }}
+                  />
+                )}
+              </div>
+            </ResizableWrapper>
+          )}
 
           {/* Modal for preview */}
           <Modal
