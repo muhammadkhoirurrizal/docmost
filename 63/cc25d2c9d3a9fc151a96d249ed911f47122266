@@ -1,0 +1,36 @@
+apps/client/src/features/editor/utils/sanitize-pasted-html.ts
+  s_9a997b0547e44b::t_fa4da2663f5d89 1-80
+apps/client/src/features/editor/page-editor.tsx
+  s_9a997b0547e44b::t_2c78aaeb4ca0d7 53
+  s_9a997b0547e44b::t_656a1671a29d29 269
+apps/client/src/features/editor/components/common/editor-paste-handler.tsx
+  s_9a997b0547e44b::t_860e6a10e03443 2,8,11-15,17-19,50-51,53-54,56,59,120,187,190,193,196,207-208
+  s_9a997b0547e44b::t_c243adf635abf6 136
+  s_9a997b0547e44b::t_23e8c888d5f170 128-135,137-145
+  s_9a997b0547e44b::t_abbcd5f199932a 194
+  s_9a997b0547e44b::t_2e99e4b37b785b 9,26-27
+  s_9a997b0547e44b::t_ee3547660ff0c0 16,20-24,34-47,52,57-58,60-97,99-109,113-119,176,188-189,191-192,197,201-203,212-231
+  s_9a997b0547e44b::t_508a02bcaf3c56 25,28-33,48-49,98,110-112,168-171,195,198-200,204-206
+  s_9a997b0547e44b::t_ae83ece0c7b23d 55
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "63cc25d2c9d3a9fc151a96d249ed911f47122266",
+  "prompts": {},
+  "humans": {
+    "h_0612cf7e255131": {
+      "author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  },
+  "sessions": {
+    "s_9a997b0547e44b": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_1938932c5ffeiuLZdV092jL6zT",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  }
+}
