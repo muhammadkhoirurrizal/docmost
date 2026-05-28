@@ -325,22 +325,9 @@ const CommandGroups: SlashMenuGroupedItemsType = {
           .run(),
     },
     {
-      title: "1 Column",
-      description: "Insert a single column block.",
-      searchTerms: ["columns", "layout", "one column", "full width"],
-      icon: IconRectangle,
-      command: ({ editor, range }: CommandProps) =>
-        editor
-          .chain()
-          .focus()
-          .deleteRange(range)
-          .insertColumns({ widths: [100] })
-          .run(),
-    },
-    {
-      title: "2 Columns",
-      description: "Insert two side-by-side columns.",
-      searchTerms: ["columns", "layout", "two columns", "side by side"],
+      title: "Side Paragraphs (2)",
+      description: "Place two blocks side by side.",
+      searchTerms: ["side paragraphs", "columns", "layout", "two columns", "side by side", "split"],
       icon: IconLayoutColumns,
       command: ({ editor, range }: CommandProps) =>
         editor
@@ -351,9 +338,9 @@ const CommandGroups: SlashMenuGroupedItemsType = {
           .run(),
     },
     {
-      title: "3 Columns",
-      description: "Insert three equal columns.",
-      searchTerms: ["columns", "layout", "three columns"],
+      title: "Side Paragraphs (3)",
+      description: "Place three blocks side by side.",
+      searchTerms: ["side paragraphs", "columns", "layout", "three columns", "side by side", "split"],
       icon: IconColumns,
       command: ({ editor, range }: CommandProps) =>
         editor
@@ -364,9 +351,9 @@ const CommandGroups: SlashMenuGroupedItemsType = {
           .run(),
     },
     {
-      title: "4 Columns",
-      description: "Insert four equal columns.",
-      searchTerms: ["columns", "layout", "four columns"],
+      title: "Side Paragraphs (4)",
+      description: "Place four blocks side by side.",
+      searchTerms: ["side paragraphs", "columns", "layout", "four columns", "side by side", "split"],
       icon: IconColumns,
       command: ({ editor, range }: CommandProps) =>
         editor
@@ -377,9 +364,9 @@ const CommandGroups: SlashMenuGroupedItemsType = {
           .run(),
     },
     {
-      title: "5 Columns",
-      description: "Insert five equal columns.",
-      searchTerms: ["columns", "layout", "five columns"],
+      title: "Side Paragraphs (5)",
+      description: "Place five blocks side by side.",
+      searchTerms: ["side paragraphs", "columns", "layout", "five columns", "side by side", "split"],
       icon: IconColumns,
       command: ({ editor, range }: CommandProps) =>
         editor
@@ -387,6 +374,30 @@ const CommandGroups: SlashMenuGroupedItemsType = {
           .focus()
           .deleteRange(range)
           .insertColumns({ widths: [20, 20, 20, 20, 20] })
+          .run(),
+    },
+    {
+      title: "Full-width Block",
+      description: "Insert a single full-width column block.",
+      searchTerms: ["columns", "layout", "one column", "full width", "full"],
+      icon: IconRectangle,
+      command: ({ editor, range }: CommandProps) =>
+        editor
+          .chain()
+          .focus()
+          .deleteRange(range)
+          .insertColumns({ widths: [100] })
+          .run(),
+    },
+    {
+      title: "Convert to Side Paragraphs",
+      description: "Turn the current block into a side-by-side layout.",
+      searchTerms: ["convert", "side paragraphs", "columns", "wrap", "split"],
+      icon: IconLayoutColumns,
+      command: ({ editor, range }: CommandProps) =>
+        (editor.chain().focus() as any)
+          .deleteRange(range)
+          .convertToColumns({ columnCount: 2, widths: [50, 50] })
           .run(),
     },
     {
