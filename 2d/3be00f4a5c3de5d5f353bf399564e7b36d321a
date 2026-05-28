@@ -1,0 +1,25 @@
+packages/editor-ext/src/lib/columns/column-group.ts
+  s_9a997b0547e44b::t_8652abbb0e8b4a 200-257
+  s_9a997b0547e44b::t_cab245a6ebb6dd 10,197-198
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "2d3be00f4a5c3de5d5f353bf399564e7b36d321a",
+  "prompts": {},
+  "humans": {
+    "h_0612cf7e255131": {
+      "author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  },
+  "sessions": {
+    "s_9a997b0547e44b": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_1938932c5ffeiuLZdV092jL6zT",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  }
+}
