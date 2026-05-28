@@ -1,0 +1,24 @@
+apps/client/src/features/page/types/page.types.ts
+  s_5e68e0645f6621::t_91348fa84c2f40 91
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "0e480d51210ed05c4b0a0b0bf9e7eea73efd2de9",
+  "prompts": {},
+  "humans": {
+    "h_0612cf7e255131": {
+      "author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  },
+  "sessions": {
+    "s_5e68e0645f6621": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_1922e8541ffe8tja6k00iz7XEi",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  }
+}
