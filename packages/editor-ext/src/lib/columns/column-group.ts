@@ -7,6 +7,7 @@ declare module "@tiptap/core" {
       updateColumnLayout: (widths: number[]) => ReturnType;
       setColumnCount: (count: number) => ReturnType;
       deleteColumnGroup: () => ReturnType;
+      convertToColumns: (attributes?: { columnCount?: number; widths?: number[] }) => ReturnType;
     };
   }
 }
@@ -189,6 +190,68 @@ export const ColumnGroup = Node.create({
             tr.delete(
               columnGroupPos,
               columnGroupPos + columnGroupNode.nodeSize,
+            );
+            dispatch(tr);
+          }
+
+          return true;
+        },
+
+      convertToColumns:
+        (attributes?: { columnCount?: number; widths?: number[] }) =>
+        ({ state, dispatch }) => {
+          const { selection } = state;
+          const { $from } = selection;
+
+          // Find the depth of the current block (paragraph, heading, etc.)
+          let blockDepth = $from.depth;
+          while (blockDepth > 0 && $from.node(blockDepth).isInline) {
+            blockDepth--;
+          }
+
+          const blockStart = $from.start(blockDepth);
+          const blockEnd = $from.end(blockDepth);
+          const blockNode = $from.node(blockDepth);
+
+          if (!blockNode || blockNode.type.name === "columnGroup") {
+            return false;
+          }
+
+          const columnCount = attributes?.columnCount || 2;
+          const widths =
+            attributes?.widths ||
+            Array(columnCount).fill(100 / columnCount);
+
+          const columns = [];
+
+          // First column gets the existing block content
+          columns.push(
+            state.schema.nodes.column.create(
+              { width: widths[0] },
+              blockNode.copy(blockNode.content),
+            ),
+          );
+
+          // Remaining columns get empty paragraphs
+          for (let i = 1; i < columnCount; i++) {
+            columns.push(
+              state.schema.nodes.column.create(
+                { width: widths[i] },
+                state.schema.nodes.paragraph.create(),
+              ),
+            );
+          }
+
+          const columnGroup = state.schema.nodes.columnGroup.create(
+            null,
+            columns,
+          );
+
+          if (dispatch) {
+            const tr = state.tr.replaceWith(
+              blockStart - 1,
+              blockEnd + 1,
+              columnGroup,
             );
             dispatch(tr);
           }
