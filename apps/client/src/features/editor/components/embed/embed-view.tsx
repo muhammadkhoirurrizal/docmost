@@ -191,7 +191,7 @@ export default function EmbedView(props: NodeViewProps) {
                   width: "100%",
                   height: "100%",
                   border: 0,
-                  pointerEvents: "none" // Disable all interaction with the iframe view
+                  pointerEvents: selected && editor.isEditable ? "auto" : "none",
                 }}
               />
               
@@ -222,29 +222,32 @@ export default function EmbedView(props: NodeViewProps) {
                 </div>
               )}
 
-              {/* Selection shield: Always catch clicks to select the node, never let them reach the iframe */}
-              <div
-                onMouseDown={handleMouseDown}
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 20, // Leave space for resize handle
-                  zIndex: 10,
-                  cursor: "default",
-                  background: "transparent"
-                }}
-              />
+              {/* Selection shield: Only blocks clicks when not selected (editable mode) */}
+              {(!selected || !editor.isEditable) && (
+                <div
+                  onMouseDown={handleMouseDown}
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 20, // Leave space for resize handle
+                    zIndex: 10,
+                    cursor: "default",
+                    background: "transparent"
+                  }}
+                />
+              )}
             </div>
           </ResizableWrapper>
 
-          {/* Modal for Jump-Free Editing/Viewing */}
+          {/* Modal for preview */}
           <Modal
             opened={opened}
             onClose={close}
-            size="100%"
-            fullScreen={true}
+            size="90%"
+            fullScreen={false}
+            centered
             title={
               <Group gap="xs">
                 <Text fw={600}>{modalTitle}</Text>
@@ -256,7 +259,7 @@ export default function EmbedView(props: NodeViewProps) {
               </Group>
             }
             styles={{
-              body: { height: 'calc(100vh - 60px)', padding: 0 },
+              body: { height: '80vh', padding: 0 },
               content: { overflow: 'hidden' }
             }}
           >
