@@ -1,0 +1,25 @@
+apps/server/src/integrations/export/dto/export-dto.ts
+  s_9a997b0547e44b::t_2dcd24ec1c0938 12
+  s_9a997b0547e44b::t_20dd21ab4804b4 21,39
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "96cbed7338bd476f917b5dfa02ccddadbccb8de4",
+  "prompts": {},
+  "humans": {
+    "h_0612cf7e255131": {
+      "author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  },
+  "sessions": {
+    "s_9a997b0547e44b": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_1938932c5ffeiuLZdV092jL6zT",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  }
+}
