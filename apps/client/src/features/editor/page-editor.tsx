@@ -43,6 +43,7 @@ import TableCellMenu from "@/features/editor/components/table/table-cell-menu.ts
 import TableMenu from "@/features/editor/components/table/table-menu.tsx";
 import CalloutMenu from "@/features/editor/components/callout/callout-menu.tsx";
 import VideoMenu from "@/features/editor/components/video/video-menu.tsx";
+import ImageMenu from "@/features/editor/components/image/image-menu.tsx";
 import SubpagesMenu from "@/features/editor/components/subpages/subpages-menu.tsx";
 import ColumnMenu from "@/features/editor/components/columns/column-menu.tsx";
 import {
@@ -566,6 +567,7 @@ export default function PageEditor({
             <TableMenu editor={editor} />
             <TableCellMenu editor={editor} appendTo={menuContainerRef} />
             <VideoMenu editor={editor} />
+            <ImageMenu editor={editor} />
             <CalloutMenu editor={editor} />
             <SubpagesMenu editor={editor} />
             <ColumnMenu editor={editor} />

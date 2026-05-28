@@ -1,6 +1,6 @@
 import { NodeViewProps, NodeViewWrapper } from "@tiptap/react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ActionIcon, Modal, Slider, TextInput } from "@mantine/core";
+import { ActionIcon, Modal, TextInput } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { getFileUrl } from "@/lib/config.ts";
 import clsx from "clsx";
@@ -9,7 +9,7 @@ import { IconX } from "@tabler/icons-react";
 
 export default function ImageView(props: NodeViewProps) {
   const { node, selected, updateAttributes, editor } = props;
-  const { src, width, title, caption } = node.attrs;
+  const { src, width, title, caption, align } = node.attrs;
   const [hovered, setHovered] = useState(false);
   const [resizing, setResizing] = useState(false);
   const [currentWidth, setCurrentWidth] = useState<number | string>(width || "100%");
@@ -42,28 +42,6 @@ export default function ImageView(props: NodeViewProps) {
   useEffect(() => {
     setCurrentWidth(width || "100%");
   }, [width]);
-
-  // Slider state for width control in edit mode
-  const [sliderValue, setSliderValue] = useState(100);
-
-  useEffect(() => {
-    if (typeof width === "string" && width.endsWith("%")) {
-      setSliderValue(parseInt(width));
-    } else if (typeof width === "string" && width.endsWith("px")) {
-      const parentWidth =
-        containerRef.current?.parentElement?.clientWidth || 800;
-      setSliderValue(Math.round((parseInt(width) / parentWidth) * 100));
-    } else {
-      setSliderValue(100);
-    }
-  }, [width]);
-
-  const handleSliderChangeEnd = useCallback(
-    (value: number) => {
-      updateAttributes({ width: `${value}%` });
-    },
-    [updateAttributes],
-  );
 
   const onMouseDown = (
     e: React.MouseEvent,
@@ -246,14 +224,18 @@ export default function ImageView(props: NodeViewProps) {
       as="span"
       className={clsx(classes.imageWrapper, {
         [classes.selected]: selected && isEditable,
-        "ProseMirror-selectednode": selected && isEditable // Keep this for tiptap selection styles
+        "ProseMirror-selectednode": selected && isEditable,
+        alignLeft: align === "left",
+        alignCenter: align === "center",
+        alignRight: align === "right",
       })}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
         width: currentWidth,
-        display: "inline-block",
-        verticalAlign: "top"
+        display: "block",
+        marginLeft: align === "left" ? 0 : "auto",
+        marginRight: align === "right" ? 0 : "auto",
       }}
       ref={containerRef}
     >
@@ -391,33 +373,6 @@ export default function ImageView(props: NodeViewProps) {
             onMouseDown={(e) => onMouseDown(e, 1)}
           />
         </>
-      )}
-
-      {/* Width slider (edit mode) */}
-      {isEditable && selected && (
-        <Slider
-          value={sliderValue}
-          onChange={setSliderValue}
-          onChangeEnd={handleSliderChangeEnd}
-          min={25}
-          max={100}
-          step={5}
-          label={(value) => `${value}%`}
-          size="sm"
-          mt="xs"
-          styles={{
-            root: { width: "100%" },
-            label: { fontSize: "var(--mantine-font-size-xs)" },
-            thumb: {
-              borderColor: "var(--mantine-color-blue-5)",
-              width: 14,
-              height: 14,
-            },
-            track: {
-              cursor: "pointer",
-            },
-          }}
-        />
       )}
 
       {/* Caption Input */}
