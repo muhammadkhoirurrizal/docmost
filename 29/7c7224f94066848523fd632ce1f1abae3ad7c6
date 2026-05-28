@@ -1,0 +1,26 @@
+apps/client/src/features/editor/components/table-of-contents/table-of-contents.module.css
+  s_9a997b0547e44b::t_149ac0fa6e2455 97-130
+apps/client/src/features/editor/components/table-of-contents/table-of-contents.tsx
+  s_9a997b0547e44b::t_1495663e407509 346-378,398,400-418
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "297c7224f94066848523fd632ce1f1abae3ad7c6",
+  "prompts": {},
+  "humans": {
+    "h_0612cf7e255131": {
+      "author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  },
+  "sessions": {
+    "s_9a997b0547e44b": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_1938932c5ffeiuLZdV092jL6zT",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  }
+}
