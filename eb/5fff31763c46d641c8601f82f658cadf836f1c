@@ -1,0 +1,34 @@
+apps/client/src/features/editor/components/kanban/kanban-board-view.tsx
+  s_9a997b0547e44b::t_ad47b1c0493db6 545
+  s_9a997b0547e44b::t_d8f78afc55547a 35
+apps/client/src/features/editor/components/data-table/data-table-view.tsx
+  s_9a997b0547e44b::t_f535f731bbdb05 58
+  s_9a997b0547e44b::t_95c186a4081f7f 845
+apps/client/src/features/editor/components/image/image-view.tsx
+  s_9a997b0547e44b::t_ffff7348379793 3
+  s_9a997b0547e44b::t_e6edb0877fdc25 227-230
+  s_9a997b0547e44b::t_5179250378335d 236
+  s_9a997b0547e44b::t_001501c32e1b16 237-238
+  s_9a997b0547e44b::t_e3a3e519026da4 12
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "eb5fff31763c46d641c8601f82f658cadf836f1c",
+  "prompts": {},
+  "humans": {
+    "h_0612cf7e255131": {
+      "author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  },
+  "sessions": {
+    "s_9a997b0547e44b": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_1938932c5ffeiuLZdV092jL6zT",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  }
+}
