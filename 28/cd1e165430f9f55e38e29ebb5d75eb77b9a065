@@ -1,0 +1,26 @@
+apps/client/src/features/editor/components/slash-menu/menu-items.ts
+  s_9a997b0547e44b::t_16ef5ddb9c0796 393-397,399-400
+  s_9a997b0547e44b::t_2698c7f132c201 398
+  s_9a997b0547e44b::t_0b29601ec8b7d1 328-331,337,341-344,350,354-356,363,367-369,376,380-383,389-392
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "28cd1e165430f9f55e38e29ebb5d75eb77b9a065",
+  "prompts": {},
+  "humans": {
+    "h_0612cf7e255131": {
+      "author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  },
+  "sessions": {
+    "s_9a997b0547e44b": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_1938932c5ffeiuLZdV092jL6zT",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  }
+}
