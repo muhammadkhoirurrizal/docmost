@@ -1,0 +1,28 @@
+apps/client/src/features/editor/components/embed/embed-view.tsx
+  s_3f8e56481477b0::t_832b20c88a6b89 149,158-163
+  s_3f8e56481477b0::t_0ba21e363955ba 183-192,194-210,212-213,215-240,242-246,249-295
+  s_3f8e56481477b0::t_d6b4732aeab7af 16-23,164
+apps/client/src/features/editor/components/embed/embed-view.module.css
+  s_3f8e56481477b0::t_81cf286f1fa011 16-41
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "c0a793a6faaeda90d7d6a93ac04b729281e483c5",
+  "prompts": {},
+  "humans": {
+    "h_0612cf7e255131": {
+      "author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  },
+  "sessions": {
+    "s_3f8e56481477b0": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_192338627ffeBaJGuyWxDuKk8B",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  }
+}
