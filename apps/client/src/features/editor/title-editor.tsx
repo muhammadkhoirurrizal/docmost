@@ -3,8 +3,8 @@ import "@/features/editor/styles/index.css";
 import React, { useCallback, useEffect, useState } from "react";
 import { EditorContent, useEditor } from "@tiptap/react";
 import { Document } from "@tiptap/extension-document";
-import { Heading } from "@tiptap/extension-heading";
 import { Text } from "@tiptap/extension-text";
+import { Heading, UniqueID } from "@docmost/editor-ext";
 import { Placeholder } from "@tiptap/extension-placeholder";
 import { useAtomValue } from "jotai";
 import {
@@ -63,6 +63,9 @@ export function TitleEditor({
       }),
       Heading.configure({
         levels: [1],
+      }),
+      UniqueID.configure({
+        types: ["heading"],
       }),
       Text,
       Placeholder.configure({
