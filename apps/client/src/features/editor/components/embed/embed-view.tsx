@@ -191,7 +191,9 @@ export default function EmbedView(props: NodeViewProps) {
                   width: "100%",
                   height: "100%",
                   border: 0,
-                  pointerEvents: selected && editor.isEditable ? "auto" : "none",
+                  // In read mode: always interactive.
+                  // In edit mode: interactive only when selected.
+                  pointerEvents: !editor.isEditable || selected ? "auto" : "none",
                 }}
               />
               
@@ -222,8 +224,8 @@ export default function EmbedView(props: NodeViewProps) {
                 </div>
               )}
 
-              {/* Selection shield: Only blocks clicks when not selected (editable mode) */}
-              {(!selected || !editor.isEditable) && (
+              {/* Selection shield: only in edit mode when node is not selected */}
+              {editor.isEditable && !selected && (
                 <div
                   onMouseDown={handleMouseDown}
                   style={{
