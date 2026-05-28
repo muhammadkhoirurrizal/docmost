@@ -1,0 +1,24 @@
+apps/server/package.json
+  s_9a997b0547e44b::t_6c1ab9a5943745 42-43,64-81,113,124-126
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "24a2d6e0d648dcd73ea025af55356af994f2e092",
+  "prompts": {},
+  "humans": {
+    "h_0612cf7e255131": {
+      "author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  },
+  "sessions": {
+    "s_9a997b0547e44b": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_1938932c5ffeiuLZdV092jL6zT",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  }
+}
