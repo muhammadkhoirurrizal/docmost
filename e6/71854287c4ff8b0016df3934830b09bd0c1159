@@ -1,0 +1,25 @@
+apps/client/src/features/editor/title-editor.tsx
+  s_8aee31fcdafbee::t_72827d6b721a4d 7
+  s_8aee31fcdafbee::t_0c9d3eb68ea996 67-69
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "e671854287c4ff8b0016df3934830b09bd0c1159",
+  "prompts": {},
+  "humans": {
+    "h_0612cf7e255131": {
+      "author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  },
+  "sessions": {
+    "s_8aee31fcdafbee": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_1924fb650fferYkX2GU5AZblac",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  }
+}
