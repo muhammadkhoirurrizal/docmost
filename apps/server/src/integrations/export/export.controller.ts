@@ -10,7 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ExportService } from './export.service';
-import { ExportPageDto, ExportSpaceDto } from './dto/export-dto';
+import { ExportPageDto, ExportSpaceDto, ExportFormat } from './dto/export-dto';
 import { AuthUser } from '../../common/decorators/auth-user.decorator';
 import { User } from '@docmost/db/types/entity.types';
 import SpaceAbilityFactory from '../../core/casl/abilities/space-ability.factory';
@@ -50,6 +50,17 @@ export class ExportController {
     const ability = await this.spaceAbility.createForUser(user, page.spaceId);
     if (ability.cannot(SpaceCaslAction.Read, SpaceCaslSubject.Page)) {
       throw new ForbiddenException();
+    }
+
+    if (dto.format === ExportFormat.PDF && !dto.includeChildren) {
+      const pdfBuffer = await this.exportService.exportPage(dto.format, page, true);
+      const fileName = sanitize(page.title || 'untitled') + '.pdf';
+      res.headers({
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': 'attachment; filename="' + encodeURIComponent(fileName) + '"',
+      });
+      res.send(pdfBuffer);
+      return;
     }
 
     const zipFileBuffer = await this.exportService.exportPages(

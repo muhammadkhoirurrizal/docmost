@@ -12,6 +12,7 @@ import { InjectKysely } from 'nestjs-kysely';
 import { KyselyDB } from '@docmost/db/types/kysely.types';
 import * as JSZip from 'jszip';
 import { StorageService } from '../storage/storage.service';
+import { PdfExportService } from './pdf-export.service';
 import {
   buildTree,
   computeLocalPath,
@@ -41,9 +42,10 @@ export class ExportService {
     @InjectKysely() private readonly db: KyselyDB,
     private readonly storageService: StorageService,
     private readonly environmentService: EnvironmentService,
+    private readonly pdfExportService: PdfExportService,
   ) {}
 
-  async exportPage(format: string, page: Page, singlePage?: boolean) {
+  async exportPage(format: string, page: Page, singlePage?: boolean): Promise<string | Buffer> {
     const titleNode = {
       type: 'heading',
       attrs: { level: 1 },
@@ -84,6 +86,10 @@ export class ExportService {
         '',
       );
       return turndown(newPageHtml);
+    }
+
+    if (format === ExportFormat.PDF) {
+      return this.pdfExportService.exportHtmlToPdf(pageHtml, getPageTitle(page.title));
     }
 
     return;
@@ -223,17 +229,18 @@ export class ExportService {
         }
 
         const pageTitle = getPageTitle(page.title);
+        const safeTitle = slugify(pageTitle);
         const pageExportContent = await this.exportPage(format, {
           ...page,
           content: updatedJsonContent,
         });
 
         folder.file(
-          `${pageTitle}${getExportExtension(format)}`,
+          `${safeTitle}${getExportExtension(format)}`,
           pageExportContent,
         );
         if (childPages.length > 0) {
-          const pageFolder = folder.folder(pageTitle);
+          const pageFolder = folder.folder(safeTitle);
           stack.push({ folder: pageFolder, parentPageId: page.id });
         }
       }
