@@ -1,0 +1,26 @@
+apps/client/src/components/common/print-header.module.css
+  s_9a997b0547e44b::t_7c5e5b0113b678 15-35,43-48
+apps/client/src/components/common/print-header.tsx
+  s_9a997b0547e44b::t_02486f2327f02e 6-7,12-15,18
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "eb6cf6f89171afb4907b0fd8f02bb9db403496e5",
+  "prompts": {},
+  "humans": {
+    "h_0612cf7e255131": {
+      "author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  },
+  "sessions": {
+    "s_9a997b0547e44b": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_1938932c5ffeiuLZdV092jL6zT",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  }
+}
