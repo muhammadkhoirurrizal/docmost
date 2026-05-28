@@ -140,9 +140,9 @@ export default function EmbedView(props: NodeViewProps) {
   const isSheets = provider === "gsheets" || provider === "google sheets";
   const isFigma = provider === "figma";
 
-  // Default heights: Google Docs ~1 page (US Letter ≈ 816px content + chrome)
+  // Default heights: Google Docs ~1 page (US Letter 1056px + 150px chrome)
   const defaultHeight = useMemo(() => {
-    if (isDoc) return 850;
+    if (isDoc) return 1200;
     if (isSheets) return 720;
     if (isFigma) return 640;
     return 480;
