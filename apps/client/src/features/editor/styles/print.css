@@ -133,6 +133,13 @@
     pointer-events: auto !important;
   }
 
+  /* Print header URL as clickable link */
+  .print-header-url {
+    color: #0000ee !important;
+    text-decoration: underline !important;
+    word-break: break-all;
+  }
+
   /* Table of Contents Minimalist Design */
   [class*="tableofcontent"] {
     display: block !important;
@@ -288,5 +295,97 @@
   * {
     box-shadow: none !important;
     overflow: visible !important; /* Ensure no hidden content */
+  }
+
+  /* Data Table Print Styles */
+  .dataTableWrapper,
+  [class*="dataTableWrapper"] {
+    overflow: visible !important;
+    max-height: none !important;
+    height: auto !important;
+  }
+
+  .dataTableWrapper :global(.mantine-ScrollArea-root),
+  .dataTableWrapper :global(.mantine-ScrollArea-viewport) {
+    overflow: visible !important;
+    max-height: none !important;
+  }
+
+  .dataTableWrapper table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    table-layout: auto !important;
+  }
+
+  .dataTableWrapper th,
+  .dataTableWrapper td {
+    border: 1px solid #aaa !important;
+    padding: 6px 8px !important;
+    font-size: 10pt !important;
+    word-wrap: break-word !important;
+    white-space: normal !important;
+  }
+
+  .dataTableWrapper th {
+    background-color: #f5f5f5 !important;
+    font-weight: 600 !important;
+    color: #000 !important;
+  }
+
+  .dataTableWrapper td {
+    color: #000 !important;
+    background-color: #fff !important;
+  }
+
+  /* Hide interactive data table elements in print */
+  .dataTableWrapper :global(.mantine-ActionIcon-root),
+  .dataTableWrapper :global([data-drag-handle]),
+  .dataTableWrapper :global(.mantine-Button-root),
+  .dataTableWrapper :global(.mantine-UnstyledButton-root):has([data-drag-handle]),
+  .dataTableWrapper :global(.mantine-Menu-dropdown),
+  .dataTableWrapper :global(.mantine-Popover-dropdown),
+  .dataTableWrapper :global(.mantine-Combobox-dropdown),
+  .dataTableWrapper :global(.mantine-ScrollArea-scrollbar) {
+    display: none !important;
+  }
+
+  /* Hide filter/sort inputs in data table cells */
+  .dataTableWrapper :global(.mantine-TextInput-root),
+  .dataTableWrapper :global(.mantine-Textarea-root),
+  .dataTableWrapper :global(.mantine-Select-root),
+  .dataTableWrapper :global(.mantine-NumberInput-root) {
+    border: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+  }
+
+  .dataTableWrapper :global(.mantine-TextInput-input),
+  .dataTableWrapper :global(.mantine-Textarea-input) {
+    border: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    font-size: 10pt !important;
+    color: #000 !important;
+  }
+
+  /* Ensure data table rows don't split awkwardly */
+  .dataTableWrapper tr {
+    page-break-inside: avoid;
+  }
+
+  /* Print header/footer enhancements */
+  @page {
+    margin: 20mm;
+    size: auto;
+    @top-center {
+      content: string(doctitle);
+      font-size: 9pt;
+      color: #666;
+    }
+    @bottom-center {
+      content: counter(page);
+      font-size: 9pt;
+      color: #666;
+    }
   }
 }
