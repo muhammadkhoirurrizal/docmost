@@ -50,6 +50,7 @@ import {
   handleFileDrop,
   handlePaste,
 } from "@/features/editor/components/common/editor-paste-handler.tsx";
+import { sanitizePastedHtml } from "@/features/editor/utils/sanitize-pasted-html.ts";
 import LinkMenu from "@/features/editor/components/link/link-menu.tsx";
 import ExcalidrawMenu from "./components/excalidraw/excalidraw-menu";
 import DrawioMenu from "./components/drawio/drawio-menu";
@@ -265,35 +266,7 @@ export default function PageEditor({
         handleDrop: (view, event, _slice, moved) =>
           handleFileDrop(view, event, moved, pageId),
         transformPastedHTML: (html) => {
-          const parser = new window.DOMParser();
-          const doc = parser.parseFromString(html, "text/html");
-
-          const elementsWithStyle = doc.querySelectorAll("[style], font[color]");
-
-          elementsWithStyle.forEach((el) => {
-            if (el.hasAttribute("style")) {
-              const style = el.getAttribute("style") || "";
-              // Remove color if it's roughly black or white
-              const newStyle = style
-                .replace(/color\s*:\s*(#000000|#000|rgb\(0,\s*0,\s*0\));?/gi, "")
-                .replace(/color\s*:\s*(#ffffff|#fff|rgb\(255,\s*255,\s*255\));?/gi, "");
-
-              if (newStyle.trim() === "") {
-                el.removeAttribute("style");
-              } else {
-                el.setAttribute("style", newStyle);
-              }
-            }
-
-            if (el.tagName.toLowerCase() === "font" && el.hasAttribute("color")) {
-              const color = el.getAttribute("color")?.toLowerCase();
-              if (["#000000", "#000", "black", "#ffffff", "#fff", "white"].includes(color || "")) {
-                el.removeAttribute("color");
-              }
-            }
-          });
-
-          return doc.body.innerHTML;
+          return sanitizePastedHtml(html);
         },
       },
       onCreate({ editor }) {
