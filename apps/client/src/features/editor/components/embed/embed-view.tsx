@@ -136,19 +136,29 @@ export default function EmbedView(props: NodeViewProps) {
 
   const isSlides = provider === "gslides" || provider === "google slides";
   const isDrive = provider === "gdrive" || provider === "google drive";
+  const isDoc = provider === "gdoc" || provider === "google docs";
+  const isSheets = provider === "gsheets" || provider === "google sheets";
+  const isFigma = provider === "figma";
+
+  // Use taller defaults for document-heavy embeds
+  const defaultHeight = useMemo(() => {
+    if (isDoc || isSheets) return 720;
+    if (isFigma) return 640;
+    return 480;
+  }, [isDoc, isSheets, isFigma]);
 
   const buttonLabel = useMemo(() => {
     if (isSlides || isDrive) {
       return t("View {{provider}}", { provider: providerName });
     }
-    return t("Edit {{provider}}", { provider: providerName });
+    return t("Open {{provider}}", { provider: providerName });
   }, [isSlides, isDrive, providerName, t]);
 
   const modalTitle = useMemo(() => {
     if (isSlides || isDrive) {
       return t("Viewing {{provider}}", { provider: providerName });
     }
-    return t("Editing {{provider}}", { provider: providerName });
+    return t("Viewing {{provider}}", { provider: providerName });
   }, [isSlides, isDrive, providerName, t]);
 
   return (
@@ -156,7 +166,7 @@ export default function EmbedView(props: NodeViewProps) {
       {embedUrl ? (
         <>
           <ResizableWrapper
-            initialHeight={nodeHeight || 480}
+            initialHeight={nodeHeight || defaultHeight}
             minHeight={200}
             maxHeight={1200}
             onResize={handleResize}

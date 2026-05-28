@@ -35,7 +35,8 @@ export const embedProviders: IEmbedProvider[] = [
     regex:
       /^https:\/\/[\w\.-]+\.?figma.com\/(file|proto|board|design|slides|deck)\/([0-9a-zA-Z]{22,128})/,
     getEmbedUrl: (match, url: string) => {
-      return `https://www.figma.com/embed?url=${url}&embed_host=docmost`;
+      // Hide UI chrome for cleaner embedding, allow scaling to fit
+      return `https://www.figma.com/embed?url=${encodeURIComponent(url)}&embed_host=docmost&hide-ui=1`;
     },
   },
   {
@@ -104,7 +105,8 @@ export const embedProviders: IEmbedProvider[] = [
     regex:
       /^((?:https?:)?\/\/)?((?:www|m)\.)?(docs\.google\.com)\/spreadsheets\/d\/(?:e\/)?([a-zA-Z0-9_-]+)(?:\/.*)?$/,
     getEmbedUrl: (match, url: string) => {
-      return url;
+      // Use htmlembed for a clean, read-only view without editing UI clutter
+      return `https://docs.google.com/spreadsheets/d/${match[4]}/htmlembed?widget=true&headers=false&chrome=false`;
     },
   },
   {
@@ -113,10 +115,8 @@ export const embedProviders: IEmbedProvider[] = [
     regex:
       /^((?:https?:)?\/\/)?((?:www|m)\.)?(docs\.google\.com)\/document\/d\/(?:e\/)?([a-zA-Z0-9_-]+)(?:\/.*)?$/,
     getEmbedUrl: (match, url: string) => {
-      if (url.includes("/edit")) {
-        return url.replace("/edit", "/preview");
-      }
-      return url;
+      // Use preview mode with embedded=true for a cleaner, scrollable view
+      return `https://docs.google.com/document/d/${match[4]}/preview?usp=sharing&embedded=true`;
     },
   },
   {
@@ -125,10 +125,8 @@ export const embedProviders: IEmbedProvider[] = [
     regex:
       /^((?:https?:)?\/\/)?((?:www|m)\.)?(docs\.google\.com)\/presentation\/d\/(?:e\/)?([a-zA-Z0-9_-]+)(?:\/.*)?$/,
     getEmbedUrl: (match, url: string) => {
-      if (url.includes("/edit")) {
-        return url.replace("/edit", "/embed");
-      }
-      return url;
+      // Use embed mode with start=false for a cleaner presentation view
+      return `https://docs.google.com/presentation/d/${match[4]}/embed?start=false&loop=false&delayms=3000`;
     },
   },
 
