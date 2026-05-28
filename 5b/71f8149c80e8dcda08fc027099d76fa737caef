@@ -1,0 +1,33 @@
+apps/server/src/integrations/export/pdf-export.service.ts
+  s_9a997b0547e44b::t_f6f26cc78bc86e 1-35,41-428
+  s_82f30eea7ac3c4::t_91711a5dc3be08 36-40
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "5b71f8149c80e8dcda08fc027099d76fa737caef",
+  "prompts": {},
+  "humans": {
+    "h_0612cf7e255131": {
+      "author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  },
+  "sessions": {
+    "s_82f30eea7ac3c4": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_1922e99c4ffeXvJ9D6His71BpC",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    },
+    "s_9a997b0547e44b": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_1938932c5ffeiuLZdV092jL6zT",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  }
+}
