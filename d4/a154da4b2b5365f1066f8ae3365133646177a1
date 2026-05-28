@@ -1,0 +1,40 @@
+apps/server/src/integrations/export/export.module.ts
+  s_82f30eea7ac3c4::t_078ad9f72d3f97 4,9
+apps/server/src/integrations/export/export.controller.ts
+  s_82f30eea7ac3c4::t_1e7bbcef7a67c6 55-64
+  s_82f30eea7ac3c4::t_9b4235c20be188 13
+apps/server/src/integrations/export/export.service.ts
+  s_82f30eea7ac3c4::t_7393833053dc9a 15
+  s_82f30eea7ac3c4::t_982b5aca37897f 91-93
+  s_82f30eea7ac3c4::t_74fe915befcf14 48
+  s_9a997b0547e44b::t_4513e0ea0be375 232,239,243
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "d4a154da4b2b5365f1066f8ae3365133646177a1",
+  "prompts": {},
+  "humans": {
+    "h_0612cf7e255131": {
+      "author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  },
+  "sessions": {
+    "s_82f30eea7ac3c4": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_1922e99c4ffeXvJ9D6His71BpC",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    },
+    "s_9a997b0547e44b": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_1938932c5ffeiuLZdV092jL6zT",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  }
+}
