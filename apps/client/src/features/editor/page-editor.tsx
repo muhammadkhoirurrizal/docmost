@@ -51,6 +51,12 @@ import {
   handlePaste,
 } from "@/features/editor/components/common/editor-paste-handler.tsx";
 import { sanitizePastedHtml } from "@/features/editor/utils/sanitize-pasted-html.ts";
+import {
+  handleSideDragOver,
+  handleSideDrop,
+  cleanupSideDrop,
+  trackDragStart,
+} from "@/features/editor/utils/side-drop-handler.ts";
 import LinkMenu from "@/features/editor/components/link/link-menu.tsx";
 import ExcalidrawMenu from "./components/excalidraw/excalidraw-menu";
 import DrawioMenu from "./components/drawio/drawio-menu";
@@ -263,8 +269,31 @@ export default function PageEditor({
       editorProps: {
         handlePaste: (view, event) =>
           handlePaste(view, event, pageId, currentUser?.user.id),
-        handleDrop: (view, event, _slice, moved) =>
-          handleFileDrop(view, event, moved, pageId),
+        handleDrop: (view, event, slice, moved) => {
+          // Check for side-drop first (drag block to side of another block)
+          if (moved && handleSideDrop(view, event, slice, moved)) {
+            return true;
+          }
+          return handleFileDrop(view, event, moved, pageId);
+        },
+        handleDOMEvents: {
+          dragstart: (_view, _event) => {
+            trackDragStart(_view);
+            return false;
+          },
+          dragover: (_view, event) => {
+            handleSideDragOver(_view, event as DragEvent);
+            return false;
+          },
+          dragend: () => {
+            cleanupSideDrop();
+            return false;
+          },
+          dragleave: () => {
+            cleanupSideDrop();
+            return false;
+          },
+        },
         transformPastedHTML: (html) => {
           return sanitizePastedHtml(html);
         },
