@@ -38,18 +38,18 @@ export default function ShareActionMenu({ share }: Props) {
   };
 
   const copyLink = async () => {
-    try {
-      const shareLink =
-        getAppUrl() +
-        buildSharedPageUrl({
-          shareId: share.key,
-          pageTitle: share.page.title,
-          pageSlugId: share.page.slugId,
-        });
+    const shareLink =
+      getAppUrl() +
+      buildSharedPageUrl({
+        shareId: share.key,
+        pageTitle: share.page.title,
+        pageSlugId: share.page.slugId,
+      });
 
-      await copyToClipboard(shareLink);
+    const success = await copyToClipboard(shareLink);
+    if (success) {
       notifications.show({ message: t("Link copied") });
-    } catch {
+    } else {
       notifications.show({
         message: t("Failed to copy link"),
         color: "red",

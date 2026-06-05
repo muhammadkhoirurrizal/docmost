@@ -25,12 +25,15 @@ export default function InviteActionMenu({ invitationId }: Props) {
   const handleCopyLink = async (invitationId: string) => {
     try {
       const link = await getInviteLink({ invitationId });
-
-      await copyToClipboard(link.inviteLink);
-
-      notifications.show({
-        message: t("Link copied"),
-      });
+      const success = await copyToClipboard(link.inviteLink);
+      if (success) {
+        notifications.show({ message: t("Link copied") });
+      } else {
+        notifications.show({
+          message: t("Failed to copy link"),
+          color: "red",
+        });
+      }
     } catch (err: any) {
       notifications.show({
         message: err?.response?.data?.message || t("Failed to copy link"),

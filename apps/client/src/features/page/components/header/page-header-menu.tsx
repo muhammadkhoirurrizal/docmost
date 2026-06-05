@@ -162,13 +162,13 @@ function PageActionMenu({ readOnly }: PageActionMenuProps) {
   const userRole = useUserRole();
 
   const handleCopyLink = async () => {
-    try {
-      const pageUrl =
-        getAppUrl() + buildPageUrl(spaceSlug, page.slugId, page.title);
+    const pageUrl =
+      getAppUrl() + buildPageUrl(spaceSlug, page.slugId, page.title);
 
-      await copyToClipboard(pageUrl);
+    const success = await copyToClipboard(pageUrl);
+    if (success) {
       notifications.show({ message: t("Link copied") });
-    } catch {
+    } else {
       notifications.show({
         message: t("Failed to copy link"),
         color: "red",

@@ -93,13 +93,13 @@ export const TableOfContents: FC<TableOfContentsProps> = (props) => {
   const handleCopyLink = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     if (!page) return;
-    try {
-      const pageUrl =
-        getAppUrl() + buildPageUrl(spaceSlug, page.slugId, page.title);
-      const url = `${pageUrl}#${id}`;
-      await copyToClipboard(url);
+    const pageUrl =
+      getAppUrl() + buildPageUrl(spaceSlug, page.slugId, page.title);
+    const url = `${pageUrl}#${id}`;
+    const success = await copyToClipboard(url);
+    if (success) {
       notifications.show({ message: t("Link copied") });
-    } catch {
+    } else {
       notifications.show({
         message: t("Failed to copy link"),
         color: "red",
@@ -274,13 +274,13 @@ export const TableOfContentsOnPage = () => {
   const handleCopyLink = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     if (!page) return;
-    try {
-      const pageUrl =
-        getAppUrl() + buildPageUrl(spaceSlug, page.slugId, page.title);
-      const url = `${pageUrl}#${id}`;
-      await copyToClipboard(url);
+    const pageUrl =
+      getAppUrl() + buildPageUrl(spaceSlug, page.slugId, page.title);
+    const url = `${pageUrl}#${id}`;
+    const success = await copyToClipboard(url);
+    if (success) {
       notifications.show({ message: t("Link copied") });
-    } catch {
+    } else {
       notifications.show({
         message: t("Failed to copy link"),
         color: "red",

@@ -18,7 +18,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import classes from "@/features/page/tree/styles/tree.module.css";
-import { ActionIcon, Box, Menu, rem, TextInput } from "@mantine/core";
+import { ActionIcon, Box, Menu, Modal, rem, TextInput } from "@mantine/core";
 import {
   IconArchive,
   IconArrowRight,
@@ -602,18 +602,21 @@ function NodeMenu({ node, treeApi, spaceId }: NodeMenuProps) {
     copyPageModalOpened,
     { open: openCopyPageModal, close: closeCopySpaceModal },
   ] = useDisclosure(false);
+  const [
+    copyLinkFallbackOpened,
+    { open: openCopyLinkFallback, close: closeCopyLinkFallback },
+  ] = useDisclosure(false);
+  const [copyLinkUrl, setCopyLinkUrl] = useState("");
 
   const handleCopyLink = async () => {
-    try {
-      const pageUrl =
-        getAppUrl() + buildPageUrl(spaceSlug, node.data.slugId, node.data.name);
-      await copyToClipboard(pageUrl);
+    const pageUrl =
+      getAppUrl() + buildPageUrl(spaceSlug, node.data.slugId, node.data.name);
+    const success = await copyToClipboard(pageUrl);
+    if (success) {
       notifications.show({ message: t("Link copied") });
-    } catch {
-      notifications.show({
-        message: t("Failed to copy link"),
-        color: "red",
-      });
+    } else {
+      setCopyLinkUrl(pageUrl);
+      openCopyLinkFallback();
     }
   };
 
@@ -875,6 +878,35 @@ function NodeMenu({ node, treeApi, spaceId }: NodeMenuProps) {
         open={exportOpened}
         onClose={closeExportModal}
       />
+
+      <Modal
+        opened={copyLinkFallbackOpened}
+        onClose={closeCopyLinkFallback}
+        title={t("Copy link")}
+        size="md"
+      >
+        <TextInput
+          value={copyLinkUrl}
+          readOnly
+          onClick={(e) => (e.target as HTMLInputElement).select()}
+          rightSection={
+            <ActionIcon
+              variant="subtle"
+              onClick={() => {
+                const input = document.querySelector(
+                  'input[value="' + copyLinkUrl + '"]'
+                ) as HTMLInputElement;
+                input?.select();
+                document.execCommand("copy");
+                notifications.show({ message: t("Link copied") });
+                closeCopyLinkFallback();
+              }}
+            >
+              <IconCopy size={16} />
+            </ActionIcon>
+          }
+        />
+      </Modal>
     </>
   );
 }

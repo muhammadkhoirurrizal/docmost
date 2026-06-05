@@ -1,9 +1,9 @@
-export async function copyToClipboard(text: string): Promise<void> {
+export async function copyToClipboard(text: string): Promise<boolean> {
   // Modern API - requires secure context (HTTPS) and user gesture
   if (navigator.clipboard?.writeText) {
     try {
       await navigator.clipboard.writeText(text);
-      return;
+      return true;
     } catch {
       // Fallback to legacy method
     }
@@ -25,17 +25,15 @@ export async function copyToClipboard(text: string): Promise<void> {
   const selection = document.getSelection();
   const selectedRange = selection?.rangeCount > 0 ? selection.getRangeAt(0) : null;
 
+  let success = false;
   try {
     textarea.focus();
     textarea.select();
     textarea.setSelectionRange(0, text.length);
 
-    const success = document.execCommand("copy");
-    if (!success) {
-      throw new Error("Copy command failed");
-    }
+    success = document.execCommand("copy");
   } catch {
-    throw new Error("Failed to copy to clipboard");
+    success = false;
   } finally {
     document.body.removeChild(textarea);
 
@@ -45,4 +43,6 @@ export async function copyToClipboard(text: string): Promise<void> {
       selection.addRange(selectedRange);
     }
   }
+
+  return success;
 }
