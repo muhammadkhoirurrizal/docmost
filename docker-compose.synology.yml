@@ -1,0 +1,82 @@
+services:
+  docmost:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: docmost
+    depends_on:
+      - db
+      - redis
+    environment:
+      # Change to your domain
+      APP_URL: https://docmost.yourdomain.com
+      HOST: 0.0.0.0
+      PORT: 3000
+
+      # Change these secrets!
+      APP_SECRET: CHANGE_THIS_TO_A_RANDOM_32_CHAR_STRING
+      JWT_SECRET: CHANGE_THIS_TO_ANOTHER_RANDOM_32_CHAR_STRING
+
+      DATABASE_URL: postgresql://docmost:STRONG_DB_PASSWORD@db:5432/docmost
+      REDIS_URL: redis://redis:6379
+
+      # Optional: for email notifications
+      # MAIL_DRIVER: smtp
+      # SMTP_HOST: smtp.gmail.com
+      # SMTP_PORT: 587
+      # SMTP_USERNAME: your-email@gmail.com
+      # SMTP_PASSWORD: your-app-password
+      # MAIL_FROM_ADDRESS: noreply@yourdomain.com
+      # MAIL_FROM_NAME: Docmost
+    networks:
+      - docmost-network
+    restart: unless-stopped
+    volumes:
+      - docmost_data:/app/data/storage
+
+  db:
+    image: postgres:16-alpine
+    container_name: docmost-db
+    environment:
+      POSTGRES_DB: docmost
+      POSTGRES_USER: docmost
+      POSTGRES_PASSWORD: STRONG_DB_PASSWORD
+    networks:
+      - docmost-network
+    restart: unless-stopped
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: docmost-redis
+    networks:
+      - docmost-network
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+
+  nginx-proxy-manager:
+    image: jc21/nginx-proxy-manager:latest
+    container_name: nginx-proxy-manager
+    networks:
+      - docmost-network
+    ports:
+      - "80:80"
+      - "443:443"
+      - "81:81"
+    restart: unless-stopped
+    volumes:
+      - npm_data:/data
+      - npm_letsencrypt:/etc/letsencrypt
+
+networks:
+  docmost-network:
+    driver: bridge
+
+volumes:
+  docmost_data:
+  db_data:
+  redis_data:
+  npm_data:
+  npm_letsencrypt:
