@@ -20,7 +20,12 @@ export async function copyToClipboard(text: string): Promise<void> {
   textarea.select();
 
   try {
-    document.execCommand("copy");
+    const success = document.execCommand("copy");
+    if (!success) {
+      throw new Error("Copy command failed");
+    }
+  } catch {
+    throw new Error("Failed to copy to clipboard");
   } finally {
     document.body.removeChild(textarea);
   }
