@@ -1,0 +1,24 @@
+apps/client/src/features/editor/utils/clipboard.ts
+  s_f608fac338cc9a::t_7b3011a9c169eb 2,8,12,15-18,20,23-26,29-32,41-46
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "470279fa94c81941c3a6d99a75209b68b55f5b8e",
+  "prompts": {},
+  "humans": {
+    "h_0612cf7e255131": {
+      "author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  },
+  "sessions": {
+    "s_f608fac338cc9a": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_168208259ffeJD0uZ9000W9eBn",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  }
+}
