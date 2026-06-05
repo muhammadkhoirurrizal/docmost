@@ -1,0 +1,33 @@
+apps/client/src/features/page/tree/components/space-tree.tsx
+  s_8b6f56f17fdf1f::t_468fcaea11c885 607-617
+  s_89a05d93542b8e::t_4c864a7d19fca6 606
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "e8b98219e1d6af31ca2f7ea585e1a27ff66077ca",
+  "prompts": {},
+  "humans": {
+    "h_0612cf7e255131": {
+      "author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  },
+  "sessions": {
+    "s_89a05d93542b8e": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_174987ce1ffeAeg4SvdKBEq6ty",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    },
+    "s_8b6f56f17fdf1f": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_168644457ffeXvCRhGZM3n8uv9",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  }
+}
