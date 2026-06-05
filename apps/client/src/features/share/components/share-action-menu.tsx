@@ -13,8 +13,8 @@ import {
   buildPageUrl,
   buildSharedPageUrl,
 } from "@/features/page/page.utils.ts";
-import { useClipboard } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
+import { copyToClipboard } from "@/features/editor/utils/clipboard";
 import { useNavigate } from "react-router-dom";
 import { useDeleteShareMutation } from "@/features/share/queries/share-query.ts";
 
@@ -26,7 +26,6 @@ interface Props {
 export default function ShareActionMenu({ share }: Props) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const clipboard = useClipboard();
   const deleteShareMutation = useDeleteShareMutation();
 
   const openPage = () => {
@@ -38,17 +37,24 @@ export default function ShareActionMenu({ share }: Props) {
     navigate(pageLink);
   };
 
-  const copyLink = () => {
-    const shareLink =
-      getAppUrl() +
-      buildSharedPageUrl({
-        shareId: share.key,
-        pageTitle: share.page.title,
-        pageSlugId: share.page.slugId,
-      });
+  const copyLink = async () => {
+    try {
+      const shareLink =
+        getAppUrl() +
+        buildSharedPageUrl({
+          shareId: share.key,
+          pageTitle: share.page.title,
+          pageSlugId: share.page.slugId,
+        });
 
-    clipboard.copy(shareLink);
-    notifications.show({ message: t("Link copied") });
+      await copyToClipboard(shareLink);
+      notifications.show({ message: t("Link copied") });
+    } catch {
+      notifications.show({
+        message: t("Failed to copy link"),
+        color: "red",
+      });
+    }
   };
   const onDelete = async () => {
     deleteShareMutation.mutateAsync(share.key);
