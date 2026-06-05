@@ -1,0 +1,36 @@
+apps/client/src/features/page/components/header/page-header-menu.tsx
+  s_f608fac338cc9a::t_5244b52c50ad0f 165-166,168-169,171
+apps/client/src/features/share/components/share-action-menu.tsx
+  s_f608fac338cc9a::t_d7beb5552b6a6e 41-47,49-50,52
+apps/client/src/features/editor/utils/clipboard.ts
+  s_f608fac338cc9a::t_4d9a4fae768042 1,6,28,34,36,46-47
+apps/client/src/features/page/tree/components/space-tree.tsx
+  s_f608fac338cc9a::t_51af009fea5900 605-609,612-615,617-619
+  s_f608fac338cc9a::t_7843c3927feba6 881-909
+  s_f608fac338cc9a::t_a18ba6d6389f43 21
+apps/client/src/features/editor/components/table-of-contents/table-of-contents.tsx
+  s_f608fac338cc9a::t_b3984eafb1c707 96-100,102,277-281,283
+apps/client/src/features/workspace/components/members/components/invite-action-menu.tsx
+  s_f608fac338cc9a::t_1c3c9b450cd8f4 28-36
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "c286c6cef50368615440a0b727e68551483ff82c",
+  "prompts": {},
+  "humans": {
+    "h_0612cf7e255131": {
+      "author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  },
+  "sessions": {
+    "s_f608fac338cc9a": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_168208259ffeJD0uZ9000W9eBn",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  }
+}
