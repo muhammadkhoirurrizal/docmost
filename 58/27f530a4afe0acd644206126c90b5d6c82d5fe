@@ -1,0 +1,26 @@
+docker-compose.synology.yml
+  s_f608fac338cc9a::t_d8c0fae07117a4 1-82
+DEPLOY_SYNOLOGY.md
+  s_f608fac338cc9a::t_05faf51184654c 1-142
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "5827f530a4afe0acd644206126c90b5d6c82d5fe",
+  "prompts": {},
+  "humans": {
+    "h_0612cf7e255131": {
+      "author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  },
+  "sessions": {
+    "s_f608fac338cc9a": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_168208259ffeJD0uZ9000W9eBn",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  }
+}
