@@ -1,0 +1,24 @@
+apps/client/src/features/editor/components/table-of-contents/table-of-contents.tsx
+  s_8b6f56f17fdf1f::t_97dcd53b1fb71c 96-107,277-288
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "c77b4ac0f9004c05aaf861177df9baa6d698ca5d",
+  "prompts": {},
+  "humans": {
+    "h_0612cf7e255131": {
+      "author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  },
+  "sessions": {
+    "s_8b6f56f17fdf1f": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_168644457ffeXvCRhGZM3n8uv9",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  }
+}
