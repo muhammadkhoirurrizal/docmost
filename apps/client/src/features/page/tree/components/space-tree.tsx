@@ -59,7 +59,6 @@ import { IPage, SidebarPagesParams } from "@/features/page/types/page.types.ts";
 import { queryClient } from "@/main.tsx";
 import { OpenMap } from "react-arborist/dist/main/state/open-slice";
 import {
-  useClipboard,
   useDisclosure,
   useElementSize,
   useMergedRef,
@@ -70,6 +69,7 @@ import { buildPageUrl } from "@/features/page/page.utils.ts";
 import { notifications } from "@mantine/notifications";
 import { getAppUrl, getSpaceUrl } from "@/lib/config.ts";
 import { extractPageSlugId } from "@/lib";
+import { copyToClipboard } from "@/features/editor/utils/clipboard";
 import { useDeletePageModal } from "@/features/page/hooks/use-delete-page-modal.tsx";
 import { useTranslation } from "react-i18next";
 import ExportModal from "@/components/common/export-modal";
@@ -573,7 +573,6 @@ interface NodeMenuProps {
 
 function NodeMenu({ node, treeApi, spaceId }: NodeMenuProps) {
   const { t } = useTranslation();
-  const clipboard = useClipboard({ timeout: 500 });
   const { spaceSlug, pageSlug } = useParams();
   const navigate = useNavigate();
   const { openDeleteModal } = useDeletePageModal();
@@ -604,11 +603,18 @@ function NodeMenu({ node, treeApi, spaceId }: NodeMenuProps) {
     { open: openCopyPageModal, close: closeCopySpaceModal },
   ] = useDisclosure(false);
 
-  const handleCopyLink = () => {
-    const pageUrl =
-      getAppUrl() + buildPageUrl(spaceSlug, node.data.slugId, node.data.name);
-    clipboard.copy(pageUrl);
-    notifications.show({ message: t("Link copied") });
+  const handleCopyLink = async () => {
+    try {
+      const pageUrl =
+        getAppUrl() + buildPageUrl(spaceSlug, node.data.slugId, node.data.name);
+      await copyToClipboard(pageUrl);
+      notifications.show({ message: t("Link copied") });
+    } catch {
+      notifications.show({
+        message: t("Failed to copy link"),
+        color: "red",
+      });
+    }
   };
 
   const handleDuplicatePage = async () => {
