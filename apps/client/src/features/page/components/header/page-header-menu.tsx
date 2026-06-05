@@ -18,7 +18,6 @@ import useToggleAside from "@/hooks/use-toggle-aside.tsx";
 import { useAtom } from "jotai";
 import { historyAtoms } from "@/features/page-history/atoms/history-atoms.ts";
 import {
-  useClipboard,
   useDisclosure,
   useHotkeys,
 } from "@mantine/hooks";
@@ -32,6 +31,7 @@ import { buildPageUrl } from "@/features/page/page.utils.ts";
 import { notifications } from "@mantine/notifications";
 import { getAppUrl, getSpaceUrl } from "@/lib/config.ts";
 import { extractPageSlugId } from "@/lib";
+import { copyToClipboard } from "@/features/editor/utils/clipboard";
 import { treeApiAtom } from "@/features/page/tree/atoms/tree-api-atom.ts";
 import { useDeletePageModal } from "@/features/page/hooks/use-delete-page-modal.tsx";
 import { PageWidthToggle } from "@/features/user/components/page-width-pref.tsx";
@@ -130,7 +130,6 @@ interface PageActionMenuProps {
 function PageActionMenu({ readOnly }: PageActionMenuProps) {
   const { t } = useTranslation();
   const [, setHistoryModalOpen] = useAtom(historyAtoms);
-  const clipboard = useClipboard({ timeout: 500 });
   const { pageSlug, spaceSlug } = useParams();
   const navigate = useNavigate();
   const { data: page, isLoading: _isLoading } = usePageQuery({
@@ -162,12 +161,19 @@ function PageActionMenu({ readOnly }: PageActionMenuProps) {
   const pageUpdatedAt = useTimeAgo(page?.updatedAt);
   const userRole = useUserRole();
 
-  const handleCopyLink = () => {
-    const pageUrl =
-      getAppUrl() + buildPageUrl(spaceSlug, page.slugId, page.title);
+  const handleCopyLink = async () => {
+    try {
+      const pageUrl =
+        getAppUrl() + buildPageUrl(spaceSlug, page.slugId, page.title);
 
-    clipboard.copy(pageUrl);
-    notifications.show({ message: t("Link copied") });
+      await copyToClipboard(pageUrl);
+      notifications.show({ message: t("Link copied") });
+    } catch {
+      notifications.show({
+        message: t("Failed to copy link"),
+        color: "red",
+      });
+    }
   };
 
   const handlePrint = () => {
