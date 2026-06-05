@@ -1,0 +1,24 @@
+apps/client/src/features/page/components/header/page-header-menu.tsx
+  s_8b6f56f17fdf1f::t_b0c73f817cfab2 165-167,169-176
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "5fada8d1aeb1a61fd5e15d962d5c6b841deb065f",
+  "prompts": {},
+  "humans": {
+    "h_0612cf7e255131": {
+      "author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  },
+  "sessions": {
+    "s_8b6f56f17fdf1f": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_168644457ffeXvCRhGZM3n8uv9",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  }
+}
