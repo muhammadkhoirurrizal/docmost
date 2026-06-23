@@ -1,0 +1,37 @@
+apps/client/src/features/editor/page-editor.tsx
+  s_b225bb8a17cf9d::t_70e42818a78880 57
+apps/client/src/features/editor/utils/side-drop-handler.ts
+  s_b225bb8a17cf9d::t_4ed1527493ecbe 65-71
+  s_b225bb8a17cf9d::t_96a5643c735e67 296-314,408,414,427,488-489,615,649,654-655,657,687
+  s_b225bb8a17cf9d::t_c92b6e10aa0042 471-472
+  s_b225bb8a17cf9d::t_2a115f5be578b0 225,228,322,324-325,330
+  s_b225bb8a17cf9d::t_911644b487938d 496-507,597-598,601-602
+  s_b225bb8a17cf9d::t_4305ed31d8e458 647
+  s_b225bb8a17cf9d::t_5e582b557cd4e6 7,128,250-295,315,406,438-443,695
+  s_b225bb8a17cf9d::t_a074c00669360b 518-591
+  s_b225bb8a17cf9d::t_682b1ec201e8ca 8,72-76,78,80-127
+  s_b225bb8a17cf9d::t_70e42818a78880 2,22-27,219-224,226-227,229-249,320-321,331-341,346,352,363,366,382,388-389,592,639-646,648,650-653,656,658-659,665-669,681-686
+  s_b225bb8a17cf9d::t_7b4db6f5d6556b 4,77,79
+  s_b225bb8a17cf9d::t_516819f8fc4d9e 323,326-329,660-664,670-680
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.10",
+  "base_commit_sha": "520e3c5719ca2b238c92eb86950cb4787aa7d638",
+  "prompts": {},
+  "humans": {
+    "h_0612cf7e255131": {
+      "author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  },
+  "sessions": {
+    "s_b225bb8a17cf9d": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_10d6d3df3ffes2eCYhvkVu0amZ",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  }
+}
