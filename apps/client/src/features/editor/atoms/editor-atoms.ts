@@ -9,4 +9,14 @@ export const readOnlyEditorAtom = atom<Editor | null>(null);
 
 export const yjsConnectionStatusAtom = atom<string>("");
 
-export const hasUnsavedChangesAtom = atom<boolean>(false);
+export const unsavedPageChangesAtom = atom<Record<string, boolean>>({});
+
+export type LastSavedPage = {
+  id: string;
+  title: string;
+  savedAt: number;
+};
+
+export const lastSavedPageAtom = atom<LastSavedPage | null>(
+  null as LastSavedPage | null,
+);

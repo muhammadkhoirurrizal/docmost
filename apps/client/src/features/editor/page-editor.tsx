@@ -26,11 +26,11 @@ import {
 } from "@/features/editor/extensions/extensions";
 import { useAtom, useSetAtom } from "jotai";
 import useCollaborationUrl from "@/features/editor/hooks/use-collaboration-url";
-import { currentUserAtom, userAtom } from "@/features/user/atoms/current-user-atom";
+import { currentUserAtom } from "@/features/user/atoms/current-user-atom";
 import {
   pageEditorAtom,
   yjsConnectionStatusAtom,
-  hasUnsavedChangesAtom,
+  unsavedPageChangesAtom,
 } from "@/features/editor/atoms/editor-atoms";
 import { asideStateAtom } from "@/components/layouts/global/hooks/atoms/sidebar-atom";
 import {
@@ -67,7 +67,6 @@ import { useIdle } from "@/hooks/use-idle.ts";
 import { queryClient } from "@/main.tsx";
 import { IPage } from "@/features/page/types/page.types.ts";
 import { useUpdatePageMutation } from "@/features/page/queries/page-query";
-import { updateUser } from "@/features/user/services/user-service";
 import { useParams } from "react-router-dom";
 import { extractPageSlugId } from "@/lib";
 import { FIVE_MINUTES } from "@/lib/constants.ts";
@@ -96,13 +95,26 @@ export default function PageEditor({
   const editorCreated = useRef(false);
 
   const [currentUser] = useAtom(currentUserAtom);
-  const [, setUser] = useAtom(userAtom);
   const setEditor = useSetAtom(pageEditorAtom as any);
   const [, setAsideState] = useAtom(asideStateAtom);
   const [, setActiveCommentId] = useAtom(activeCommentIdAtom);
   const [showCommentPopup, setShowCommentPopup] = useAtom(showCommentPopupAtom);
-  const setHasUnsavedChanges = useSetAtom(hasUnsavedChangesAtom);
-  const [hasUnsavedChanges] = useAtom(hasUnsavedChangesAtom);
+  const [unsavedPageChanges, setUnsavedPageChanges] = useAtom(unsavedPageChangesAtom);
+  const hasUnsavedChanges = !!unsavedPageChanges[pageId];
+
+  const setPageUnsavedChanges = useCallback(
+    (isUnsaved: boolean) => {
+      setUnsavedPageChanges((current) => {
+        if (isUnsaved) {
+          return { ...current, [pageId]: true };
+        }
+
+        const { [pageId]: _removed, ...rest } = current;
+        return rest;
+      });
+    },
+    [pageId, setUnsavedPageChanges],
+  );
 
   useEffect(() => {
     isComponentMounted.current = true;
@@ -110,7 +122,6 @@ export default function PageEditor({
       isComponentMounted.current = false;
       // CLEAR GLOBAL STATE ON UNMOUNT to avoid leakage to next page
       setEditor(null);
-      setHasUnsavedChanges(false);
     };
   }, []);
   const ydocRef = useRef<Y.Doc | null>(null);
@@ -315,12 +326,12 @@ export default function PageEditor({
 
         // Only mark unsaved changes if collab is ready and it's a local change
         // AND the editor is in explicit edit mode (not quick-edit in read mode)
-        if (isCollabReady && transaction.getMeta("y-sync$") === undefined && editor.isEditable) {
-          setHasUnsavedChanges(true);
+        if (transaction.getMeta("y-sync$") === undefined && editor.isEditable) {
+          setPageUnsavedChanges(true);
         }
       },
     },
-    [pageId, editable, remoteProvider],
+    [pageId, editable, remoteProvider, setPageUnsavedChanges],
   );
 
   useStickyHeader(editor);
@@ -376,7 +387,6 @@ export default function PageEditor({
     setActiveCommentId(null);
     setShowCommentPopup(false);
     setAsideState({ tab: "", isAsideOpen: false });
-    setHasUnsavedChanges(false);
   }, [pageId]);
 
   useEffect(() => {
@@ -429,9 +439,9 @@ export default function PageEditor({
         content,
         forceHistorySave: true,
       });
-      setHasUnsavedChanges(false);
+      setPageUnsavedChanges(false);
     }
-  }, [editor, hasUnsavedChanges, pageId]);
+  }, [editor, hasUnsavedChanges, pageId, setPageUnsavedChanges]);
 
   const hasUnsavedChangesRef = useRef(hasUnsavedChanges);
 
@@ -440,41 +450,6 @@ export default function PageEditor({
   }, [hasUnsavedChanges]);
 
   useEffect(() => {
-    // Force Read mode on initial load
-    if (userPageEditMode === PageEditMode.Edit && editable) {
-      updateUser({ pageEditMode: PageEditMode.Read }).then((updatedUser) => {
-        setUser(updatedUser);
-      });
-    }
-  }, []); // Only on mount/load
-
-  useEffect(() => {
-    const handleExitSave = () => {
-      const isExitingOrNavigating = !isComponentMounted.current;
-
-      // If in Edit mode and either navigating away or refresing
-      if (userPageEditMode === PageEditMode.Edit && editable) {
-        // 1. Save changes ONLY if there are any and the editor belongs to this page
-        const editorPageId = editor?.storage?.pageId;
-        if (hasUnsavedChangesRef.current && editor && pageId && editorPageId === pageId) {
-          const content = editor.getJSON();
-          updatePageMutation.mutate({
-            pageId,
-            content,
-            forceHistorySave: true,
-          });
-          setHasUnsavedChanges(false);
-        }
-
-        // 2. Always switch user preference to Read mode if we are leaving this specific editor instance
-        if (isExitingOrNavigating) {
-          updateUser({ pageEditMode: PageEditMode.Read }).then((updatedUser) => {
-            setUser(updatedUser);
-          });
-        }
-      }
-    };
-
     const handleBeforeUnload = () => {
       // For window close/refresh, we use fetch with keepalive to ensure the preference update reaches the server
       if (userPageEditMode === PageEditMode.Edit && editable) {
@@ -498,16 +473,6 @@ export default function PageEditor({
           });
         }
 
-        // Also update the mode preference to Read
-        const prefBody = JSON.stringify({ pageEditMode: PageEditMode.Read });
-        fetch("/api/users/update", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: prefBody,
-          keepalive: true,
-        });
       }
     };
 
@@ -515,14 +480,13 @@ export default function PageEditor({
 
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
-      handleExitSave();
     };
   }, [
     pageId,
     userPageEditMode,
     editor,
     editable,
-    setHasUnsavedChanges,
+    setPageUnsavedChanges,
   ]);
 
   const hasConnectedOnceRef = useRef(false);

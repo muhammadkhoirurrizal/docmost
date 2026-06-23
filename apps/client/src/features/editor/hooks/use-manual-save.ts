@@ -1,12 +1,12 @@
 import { useAtom } from "jotai";
 import { useCallback } from "react";
-import { pageEditorAtom, hasUnsavedChangesAtom } from "@/features/editor/atoms/editor-atoms";
+import { pageEditorAtom, unsavedPageChangesAtom } from "@/features/editor/atoms/editor-atoms";
 import { useUpdatePageMutation } from "@/features/page/queries/page-query";
 import { notifications } from "@mantine/notifications";
 
 export function useManualSave(pageId: string) {
     const [pageEditor] = useAtom(pageEditorAtom);
-    const [, setHasUnsavedChanges] = useAtom(hasUnsavedChangesAtom);
+    const [, setUnsavedPageChanges] = useAtom(unsavedPageChangesAtom);
     const updatePageMutation = useUpdatePageMutation();
 
     const handleManualSave = useCallback(async () => {
@@ -23,18 +23,18 @@ export function useManualSave(pageId: string) {
                 forceHistorySave: true,
             });
 
-            setHasUnsavedChanges(false);
-            notifications.show({
-                message: "Page saved successfully",
-                color: "green",
+            setUnsavedPageChanges((current) => {
+                const { [pageId]: _removed, ...rest } = current;
+                return rest;
             });
         } catch {
             notifications.show({
                 message: "Failed to save page",
                 color: "red",
+                position: "top-right",
             });
         }
-    }, [pageEditor, pageId, updatePageMutation, setHasUnsavedChanges]);
+    }, [pageEditor, pageId, updatePageMutation, setUnsavedPageChanges]);
 
     return { handleManualSave, isSaving: updatePageMutation.isPending };
 }

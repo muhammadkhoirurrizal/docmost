@@ -10,7 +10,11 @@ import {
   ResponsiveSettingsContent,
   ResponsiveSettingsControl,
 } from "@/components/ui/responsive-settings-row";
-import { pageEditorAtom, hasUnsavedChangesAtom } from "@/features/editor/atoms/editor-atoms.ts";
+import {
+  lastSavedPageAtom,
+  pageEditorAtom,
+  unsavedPageChangesAtom,
+} from "@/features/editor/atoms/editor-atoms.ts";
 import { useUpdatePageMutation } from "@/features/page/queries/page-query.ts";
 import { notifications } from "@mantine/notifications";
 
@@ -45,41 +49,53 @@ export function PageStateSegmentedControl({
   const { t } = useTranslation();
   const [user, setUser] = useAtom(userAtom);
   const [pageEditor] = useAtom(pageEditorAtom);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useAtom(hasUnsavedChangesAtom);
+  const [unsavedPageChanges, setUnsavedPageChanges] = useAtom(unsavedPageChangesAtom);
+  const [, setLastSavedPage] = useAtom(lastSavedPageAtom);
   const updatePageMutation = useUpdatePageMutation();
   const pageEditMode =
     user?.settings?.preferences?.pageEditMode ?? PageEditMode.Edit;
   const [value, setValue] = useState(pageEditMode);
+  const hasUnsavedChanges = pageId ? !!unsavedPageChanges[pageId] : false;
+
+  const clearUnsavedChanges = useCallback(() => {
+    if (!pageId) return;
+
+    setUnsavedPageChanges((current) => {
+      const { [pageId]: _removed, ...rest } = current;
+      return rest;
+    });
+  }, [pageId, setUnsavedPageChanges]);
 
   const handleChange = useCallback(
     async (newValue: string) => {
       // Safety Check: Only save if the editor's internal pageId matches the expected pageId
       const editorPageId = pageEditor?.storage?.pageId;
-      if (newValue === PageEditMode.Read && hasUnsavedChanges && pageEditor && pageId) {
+      if (newValue === PageEditMode.Read && pageEditor && pageId) {
         if (editorPageId !== pageId) {
           const updatedUser = await updateUser({ pageEditMode: newValue });
           setValue(newValue);
           setUser(updatedUser);
-          setHasUnsavedChanges(false);
           return;
         }
 
         try {
           const content = pageEditor.getJSON();
-          await updatePageMutation.mutateAsync({
+          const savedPage = await updatePageMutation.mutateAsync({
             pageId,
             content,
             forceHistorySave: true,
           });
-          setHasUnsavedChanges(false);
-          notifications.show({
-            message: t("Page saved successfully"),
-            color: "green",
+          setLastSavedPage({
+            id: pageId,
+            title: savedPage.title || t("Untitled"),
+            savedAt: Date.now(),
           });
+          clearUnsavedChanges();
         } catch {
           notifications.show({
             message: t("Failed to save page"),
             color: "red",
+            position: "top-right",
           });
           return; // Don't switch mode if save failed
         }
@@ -89,7 +105,7 @@ export function PageStateSegmentedControl({
       setValue(newValue);
       setUser(updatedUser);
     },
-    [user, setUser, hasUnsavedChanges, pageEditor, pageId, updatePageMutation, setHasUnsavedChanges, t]
+    [setUser, pageEditor, pageId, updatePageMutation, setLastSavedPage, clearUnsavedChanges, t]
   );
 
   useEffect(() => {
@@ -103,10 +119,15 @@ export function PageStateSegmentedControl({
       size={size}
       value={value}
       onChange={handleChange}
+      color={hasUnsavedChanges ? "orange" : undefined}
       data={[
         { label: t("Edit"), value: PageEditMode.Edit },
         {
-          label: hasUnsavedChanges ? t("Save") : t("Read"),
+          label: hasUnsavedChanges ? (
+            <Text span fw={600} c="orange.7" size={size === "xs" ? "xs" : undefined}>
+              {t("Save")}
+            </Text>
+          ) : t("Read"),
           value: PageEditMode.Read
         },
       ]}
