@@ -1,4 +1,4 @@
-import { ActionIcon, Group, Menu, Text, Tooltip } from "@mantine/core";
+import { ActionIcon, Badge, Group, Menu, Text, Tooltip } from "@mantine/core";
 import {
   IconArchive,
   IconArrowRight,
@@ -13,7 +13,7 @@ import {
   IconTrash,
   IconWifiOff,
 } from "@tabler/icons-react";
-import React from "react";
+import React, { useEffect } from "react";
 import useToggleAside from "@/hooks/use-toggle-aside.tsx";
 import { useAtom } from "jotai";
 import { historyAtoms } from "@/features/page-history/atoms/history-atoms.ts";
@@ -38,6 +38,7 @@ import { PageWidthToggle } from "@/features/user/components/page-width-pref.tsx"
 import { Trans, useTranslation } from "react-i18next";
 import ExportModal from "@/components/common/export-modal";
 import {
+  lastSavedPageAtom,
   pageEditorAtom,
   yjsConnectionStatusAtom,
 } from "@/features/editor/atoms/editor-atoms.ts";
@@ -57,8 +58,24 @@ export default function PageHeaderMenu({ readOnly }: PageHeaderMenuProps) {
   const toggleAside = useToggleAside();
   const userRole = useUserRole();
   const [yjsConnectionStatus] = useAtom(yjsConnectionStatusAtom);
+  const [lastSavedPage, setLastSavedPage] = useAtom(lastSavedPageAtom);
   const { pageSlug } = useParams();
   const slugId = extractPageSlugId(pageSlug);
+  const showSavedIndicator = lastSavedPage?.id === slugId;
+  const savedPageTitle = showSavedIndicator ? lastSavedPage.title : "";
+  const savedAt = showSavedIndicator ? lastSavedPage.savedAt : undefined;
+
+  useEffect(() => {
+    if (!savedAt) return;
+
+    const timeout = window.setTimeout(() => {
+      setLastSavedPage((current) =>
+        current?.savedAt === savedAt ? null : current,
+      );
+    }, 5000);
+
+    return () => window.clearTimeout(timeout);
+  }, [savedAt, setLastSavedPage]);
 
   useHotkeys(
     [
@@ -96,6 +113,11 @@ export default function PageHeaderMenu({ readOnly }: PageHeaderMenuProps) {
       {!userRole.isVisitor && !readOnly && (
         <>
           <PageStateSegmentedControl size="xs" pageId={slugId} />
+          {showSavedIndicator && (
+            <Badge color="green" variant="light" size="sm">
+              {t("Page {{title}} Saved", { title: savedPageTitle })}
+            </Badge>
+          )}
           <ShareModal readOnly={readOnly} />
         </>
       )}

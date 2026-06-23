@@ -31,13 +31,14 @@ import {
   SidebarPagesParams,
 } from "@/features/page/types/page.types";
 import { notifications } from "@mantine/notifications";
+import { useAtom, useSetAtom } from "jotai";
+import { lastSavedPageAtom } from "@/features/editor/atoms/editor-atoms.ts";
 import { IPagination, QueryParams } from "@/lib/types.ts";
 import { queryClient } from "@/main.tsx";
 import { buildTree } from "@/features/page/tree/utils";
 import { useEffect } from "react";
 import { validate as isValidUuid } from "uuid";
 import { useTranslation } from "react-i18next";
-import { useAtom } from "jotai";
 import { treeDataAtom } from "@/features/page/tree/atoms/tree-data-atom";
 import { SimpleTree } from "react-arborist";
 import { SpaceTreeNode } from "@/features/page/tree/types";
@@ -114,6 +115,8 @@ export function useUpdateTitlePageMutation() {
 
 export function useUpdatePageMutation() {
   const { t } = useTranslation();
+  const setLastSavedPage = useSetAtom(lastSavedPageAtom);
+
   return useMutation<IPage, Error, Partial<IPageInput>>({
     mutationFn: (data) => updatePage(data),
     onSuccess: (data, variables) => {
@@ -128,8 +131,18 @@ export function useUpdatePageMutation() {
       );
 
       if (variables.forceHistorySave) {
+        const title = data.title || variables.title || t("Untitled");
+
+        setLastSavedPage({
+          id: variables.pageId || data.slugId || data.id,
+          title,
+          savedAt: Date.now(),
+        });
+
         notifications.show({
-          message: t("Page saved"),
+          message: t("Page {{title}} Saved", { title }),
+          color: "green",
+          position: "top-right",
         });
       }
     },
