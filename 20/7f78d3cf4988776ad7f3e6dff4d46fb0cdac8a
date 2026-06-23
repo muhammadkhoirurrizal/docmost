@@ -1,0 +1,31 @@
+apps/client/src/features/editor/hooks/use-manual-save.ts
+  s_b225bb8a17cf9d::t_e811bb07b3e310 3
+apps/client/src/features/editor/page-editor.tsx
+  s_b225bb8a17cf9d::t_a2bd430e969ccc 33
+apps/client/src/features/user/components/page-state-pref.tsx
+  s_b225bb8a17cf9d::t_cf93d47a81575b 53
+  s_b225bb8a17cf9d::t_a2bd430e969ccc 15-17,58-66
+apps/client/src/features/editor/atoms/editor-atoms.ts
+  s_b225bb8a17cf9d::t_6a1ff0cfd0f092 12-13
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.9",
+  "base_commit_sha": "207f78d3cf4988776ad7f3e6dff4d46fb0cdac8a",
+  "prompts": {},
+  "humans": {
+    "h_0612cf7e255131": {
+      "author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  },
+  "sessions": {
+    "s_b225bb8a17cf9d": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_10d6d3df3ffes2eCYhvkVu0amZ",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  }
+}
