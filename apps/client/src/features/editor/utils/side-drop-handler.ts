@@ -1,8 +1,11 @@
 import type { EditorView } from "@tiptap/pm/view";
-import { Slice } from "@tiptap/pm/model";
+import { Node as ProseMirrorNode, Slice } from "@tiptap/pm/model";
 import { NodeSelection } from "@tiptap/pm/state";
+import type { Fragment, Schema } from "@tiptap/pm/model";
 
 const SIDE_DROP_THRESHOLD = 0.2; // 20% of block width
+const SIDE_DROP_OUTSIDE_GUTTER = 180;
+const MAX_COLUMNS = 5;
 
 export interface SideDropState {
   active: boolean;
@@ -16,8 +19,12 @@ let sideDropState: SideDropState = {
   targetPos: null,
 };
 
-let draggedNodeInfo: { pos: number; nodeSize: number; typeName: string } | null =
-  null;
+let draggedNodeInfo: {
+  pos: number;
+  nodeSize: number;
+  typeName: string;
+  json: unknown;
+} | null = null;
 
 let indicatorEl: HTMLElement | null = null;
 let previewEl: HTMLElement | null = null;
@@ -53,6 +60,71 @@ function createPreviewOverlay(): HTMLElement {
   el.appendChild(rightCol);
 
   return el;
+}
+
+function toColumnContent(node: ProseMirrorNode, schema: Schema): ProseMirrorNode {
+  if (node.isBlock) {
+    return node.copy(node.content);
+  }
+
+  const paragraphType = schema.nodes.paragraph;
+  return paragraphType?.create(null, node) ?? node;
+}
+
+function ensureColumnContent(
+  column: ProseMirrorNode,
+  schema: Schema,
+): Fragment | ProseMirrorNode {
+  if (column.content.size > 0) {
+    return column.content;
+  }
+
+  return schema.nodes.paragraph.create();
+}
+
+function getColumnContext(
+  state: EditorView["state"],
+  pos: number,
+):
+  | {
+      columnGroupPos: number;
+      columnGroupNode: ProseMirrorNode;
+      columnPos: number;
+      columnIndex: number;
+    }
+  | null {
+  const resolvedPos = Math.min(pos + 1, state.doc.content.size);
+  const $pos = state.doc.resolve(resolvedPos);
+
+  for (let depth = $pos.depth; depth > 0; depth--) {
+    const column = $pos.node(depth);
+    const columnGroup = depth > 0 ? $pos.node(depth - 1) : null;
+
+    if (column.type.name !== "column" || columnGroup?.type.name !== "columnGroup") {
+      continue;
+    }
+
+    const columnPos = $pos.before(depth);
+    const columnGroupPos = $pos.before(depth - 1);
+    let columnIndex = 0;
+    let found = false;
+
+    columnGroup.forEach((child, _offset, index) => {
+      if (!found && child === column) {
+        columnIndex = index;
+        found = true;
+      }
+    });
+
+    return {
+      columnGroupPos,
+      columnGroupNode: columnGroup,
+      columnPos,
+      columnIndex,
+    };
+  }
+
+  return null;
 }
 
 function showPreview(targetEl: HTMLElement, side: "left" | "right") {
@@ -145,18 +217,139 @@ function cleanupAllVisuals() {
 }
 
 /**
+ * Find the block node at screen coordinates.
+ */
+function getBlockAtCoords(
+  view: EditorView,
+  event: DragEvent,
+  xOffset = 0,
+): { pos: number; node: ProseMirrorNode; dom: HTMLElement } | null {
+  const coords = view.posAtCoords({
+    left: event.clientX + xOffset,
+    top: event.clientY,
+  });
+
+  if (!coords) return null;
+
+  const $pos = view.state.doc.resolve(coords.pos);
+
+  for (let depth = $pos.depth; depth > 0; depth--) {
+    const node = $pos.node(depth);
+    if (!node.type.isBlock || node.type.name === "doc") continue;
+
+    const pos = $pos.before(depth);
+    const dom = view.nodeDOM(pos) as HTMLElement;
+    if (dom) {
+      return { pos, node, dom };
+    }
+  }
+
+  return null;
+}
+
+function getBlockNearCoords(
+  view: EditorView,
+  event: DragEvent,
+): { pos: number; node: ProseMirrorNode; dom: HTMLElement } | null {
+  const x = event.clientX;
+  const y = event.clientY;
+  let closest:
+    | {
+        pos: number;
+        node: ProseMirrorNode;
+        dom: HTMLElement;
+        distance: number;
+      }
+    | null = null;
+
+  view.state.doc.descendants((node, pos) => {
+    if (!node.type.isBlock || node.type.name === "doc") return true;
+
+    const dom = view.nodeDOM(pos) as HTMLElement | null;
+    if (!dom) return true;
+
+    const rect = dom.getBoundingClientRect();
+    const isVerticallyAligned = y >= rect.top - 8 && y <= rect.bottom + 8;
+    const isInSideGutter =
+      x >= rect.left - SIDE_DROP_OUTSIDE_GUTTER &&
+      x <= rect.right + SIDE_DROP_OUTSIDE_GUTTER;
+
+    if (!isVerticallyAligned || !isInSideGutter) return true;
+
+    const horizontalDistance =
+      x < rect.left ? rect.left - x : x > rect.right ? x - rect.right : 0;
+    const verticalDistance = Math.abs(y - (rect.top + rect.height / 2));
+    const distance = horizontalDistance * 2 + verticalDistance;
+
+    if (!closest || distance < closest.distance) {
+      closest = { pos, node, dom, distance };
+    }
+
+    return true;
+  });
+
+  return closest
+    ? { pos: closest.pos, node: closest.node, dom: closest.dom }
+    : null;
+}
+
+function getDraggedNodeFromState(
+  state: EditorView["state"],
+): { pos: number; node: ProseMirrorNode } | null {
+  const trackedPos = findDraggedNodePos(state);
+  if (trackedPos !== null) {
+    const trackedNode = state.doc.nodeAt(trackedPos);
+    if (trackedNode) {
+      return { pos: trackedPos, node: trackedNode };
+    }
+  }
+
+  if (state.selection instanceof NodeSelection) {
+    return {
+      pos: state.selection.from,
+      node: state.selection.node,
+    };
+  }
+
+  return null;
+}
+
+/**
  * Call this on dragstart to remember the dragged block.
  */
-export function trackDragStart(view: EditorView) {
+export function trackDragStart(view: EditorView, event?: DragEvent) {
+  if (event) {
+    const target = event.target as HTMLElement | null;
+    const isDragHandle = !!target?.closest?.(".drag-handle");
+    const block =
+      getBlockAtCoords(view, event) ||
+      (isDragHandle
+        ? getBlockAtCoords(view, event, 40) ||
+          getBlockAtCoords(view, event, 80) ||
+          getBlockAtCoords(view, event, 120)
+        : null);
+    if (block) {
+      draggedNodeInfo = {
+        pos: block.pos,
+        nodeSize: block.node.nodeSize,
+        typeName: block.node.type.name,
+        json: block.node.toJSON(),
+      };
+      return;
+    }
+  }
+
   const { selection } = view.state;
   let pos: number;
   let nodeSize: number;
   let typeName: string;
+  let json: unknown;
 
   if (selection instanceof NodeSelection) {
     pos = selection.from;
     nodeSize = selection.node.nodeSize;
     typeName = selection.node.type.name;
+    json = selection.node.toJSON();
   } else {
     const $from = selection.$from;
     let depth = $from.depth;
@@ -167,9 +360,10 @@ export function trackDragStart(view: EditorView) {
     pos = $from.start(depth) - 1;
     nodeSize = node.nodeSize;
     typeName = node.type.name;
+    json = node.toJSON();
   }
 
-  draggedNodeInfo = { pos, nodeSize, typeName };
+  draggedNodeInfo = { pos, nodeSize, typeName, json };
 }
 
 /**
@@ -185,13 +379,14 @@ function findDraggedNodePos(state: EditorView["state"]): number | null {
     return draggedNodeInfo.pos;
   }
 
-  // If not, search the document for a node with the same type and size
+  // If not, search the document for the same serialized node.
   let foundPos: number | null = null;
   state.doc.descendants((node, pos) => {
     if (
       foundPos === null &&
       node.type.name === draggedNodeInfo!.typeName &&
-      node.nodeSize === draggedNodeInfo!.nodeSize
+      node.nodeSize === draggedNodeInfo!.nodeSize &&
+      JSON.stringify(node.toJSON()) === JSON.stringify(draggedNodeInfo!.json)
     ) {
       foundPos = pos;
       return false; // stop searching
@@ -208,35 +403,15 @@ export function handleSideDragOver(
   view: EditorView,
   event: DragEvent,
 ): SideDropState {
-  const coords = view.posAtCoords({
-    left: event.clientX,
-    top: event.clientY,
-  });
+  const hoveredBlock = getBlockAtCoords(view, event) || getBlockNearCoords(view, event);
 
-  if (!coords) {
+  if (!hoveredBlock) {
     cleanupAllVisuals();
     sideDropState = { active: false, side: null, targetPos: null };
     return sideDropState;
   }
 
-  const $pos = view.state.doc.resolve(coords.pos);
-
-  // Find the top-level block node
-  let blockDepth = $pos.depth;
-  while (
-    blockDepth > 0 &&
-    $pos.node(blockDepth).type.name !== "doc" &&
-    !$pos.node(blockDepth).type.isBlock
-  ) {
-    blockDepth--;
-  }
-
-  const blockNode = $pos.node(blockDepth);
-  if (!blockNode || blockNode.type.name === "doc") {
-    cleanupAllVisuals();
-    sideDropState = { active: false, side: null, targetPos: null };
-    return sideDropState;
-  }
+  const { pos: blockPos, node: blockNode, dom } = hoveredBlock;
 
   // Skip columns/column groups
   if (
@@ -248,18 +423,9 @@ export function handleSideDragOver(
     return sideDropState;
   }
 
-  const blockPos = $pos.start(blockDepth) - 1;
-
   // Don't drop onto the dragged node itself
-  const draggedPos = findDraggedNodePos(view.state);
+  const draggedPos = getDraggedNodeFromState(view.state)?.pos ?? null;
   if (draggedPos !== null && blockPos === draggedPos) {
-    cleanupAllVisuals();
-    sideDropState = { active: false, side: null, targetPos: null };
-    return sideDropState;
-  }
-
-  const dom = view.nodeDOM(blockPos) as HTMLElement;
-  if (!dom) {
     cleanupAllVisuals();
     sideDropState = { active: false, side: null, targetPos: null };
     return sideDropState;
@@ -269,8 +435,12 @@ export function handleSideDragOver(
   const relativeX = event.clientX - rect.left;
   const width = rect.width;
 
-  const leftZone = relativeX < width * SIDE_DROP_THRESHOLD;
-  const rightZone = relativeX > width * (1 - SIDE_DROP_THRESHOLD);
+  const leftZone =
+    relativeX < width * SIDE_DROP_THRESHOLD &&
+    relativeX >= -SIDE_DROP_OUTSIDE_GUTTER;
+  const rightZone =
+    relativeX > width * (1 - SIDE_DROP_THRESHOLD) &&
+    relativeX <= width + SIDE_DROP_OUTSIDE_GUTTER;
 
   if (leftZone || rightZone) {
     const side = leftZone ? "left" : "right";
@@ -298,7 +468,8 @@ export function handleSideDrop(
   slice: Slice,
   moved: boolean,
 ): boolean {
-  if (!sideDropState.active || !sideDropState.targetPos || !moved) {
+  const hasInternalDrag = !!draggedNodeInfo || view.state.selection instanceof NodeSelection;
+  if (!sideDropState.active || sideDropState.targetPos === null || (!moved && !hasInternalDrag)) {
     cleanupAllVisuals();
     draggedNodeInfo = null;
     return false;
@@ -314,11 +485,24 @@ export function handleSideDrop(
     return false;
   }
 
-  const draggedNode = slice.content.firstChild;
+  const dragged = getDraggedNodeFromState(state);
+  const draggedNode = dragged?.node ?? slice.content.firstChild;
   if (!draggedNode) {
     cleanupAllVisuals();
     draggedNodeInfo = null;
     return false;
+  }
+
+  const draggedPos = dragged?.pos ?? null;
+  if (
+    draggedPos !== null &&
+    draggedPos >= targetPos &&
+    draggedPos < targetPos + targetNode.nodeSize
+  ) {
+    cleanupAllVisuals();
+    sideDropState = { active: false, side: null, targetPos: null };
+    draggedNodeInfo = null;
+    return true;
   }
 
   const { schema } = state;
@@ -331,15 +515,91 @@ export function handleSideDrop(
     return false;
   }
 
+  const columnContext = getColumnContext(state, targetPos);
+  if (columnContext) {
+    if (columnContext.columnGroupNode.childCount >= MAX_COLUMNS) {
+      cleanupAllVisuals();
+      sideDropState = { active: false, side: null, targetPos: null };
+      draggedNodeInfo = null;
+      return true;
+    }
+
+    const tr = state.tr;
+
+    if (draggedPos !== null && draggedPos !== targetPos) {
+      tr.delete(draggedPos, draggedPos + draggedNode.nodeSize);
+    }
+
+    const mappedColumnGroupPos = tr.mapping.map(columnContext.columnGroupPos);
+    const columnGroupAfterDelete = tr.doc.nodeAt(mappedColumnGroupPos);
+
+    if (!columnGroupAfterDelete || columnGroupAfterDelete.type.name !== "columnGroup") {
+      cleanupAllVisuals();
+      sideDropState = { active: false, side: null, targetPos: null };
+      draggedNodeInfo = null;
+      return true;
+    }
+
+    const nextColumnCount = columnGroupAfterDelete.childCount + 1;
+    const nextWidth = 100 / nextColumnCount;
+    const insertIndex = side === "left" ? columnContext.columnIndex : columnContext.columnIndex + 1;
+    const columns: ProseMirrorNode[] = [];
+
+    columnGroupAfterDelete.forEach((column, _offset, index) => {
+      if (index === insertIndex) {
+        columns.push(
+          columnType.create(
+            { width: nextWidth },
+            toColumnContent(draggedNode, schema),
+          ),
+        );
+      }
+
+      columns.push(
+        columnType.create(
+          { ...column.attrs, width: nextWidth },
+          ensureColumnContent(column, schema),
+        ),
+      );
+    });
+
+    if (insertIndex >= columnGroupAfterDelete.childCount) {
+      columns.push(
+        columnType.create(
+          { width: nextWidth },
+          toColumnContent(draggedNode, schema),
+        ),
+      );
+    }
+
+    const nextColumnGroup = columnGroupType.create(
+      columnGroupAfterDelete.attrs,
+      columns,
+    );
+
+    tr.replaceWith(
+      mappedColumnGroupPos,
+      mappedColumnGroupPos + columnGroupAfterDelete.nodeSize,
+      nextColumnGroup,
+    );
+
+    view.dispatch(tr);
+
+    cleanupAllVisuals();
+    sideDropState = { active: false, side: null, targetPos: null };
+    draggedNodeInfo = null;
+    return true;
+  }
+
   // Build column contents based on drop side
   const firstColumnContent =
     side === "left"
-      ? draggedNode
-      : targetNode.copy(targetNode.content);
+      ? toColumnContent(draggedNode, schema)
+      : toColumnContent(targetNode, schema);
   const secondColumnContent =
     side === "right"
-      ? draggedNode
-      : targetNode.copy(targetNode.content);
+      ? toColumnContent(draggedNode, schema)
+      : toColumnContent(targetNode, schema);
 
   const columns = [
     columnType.create({ width: 50 }, firstColumnContent),
@@ -351,12 +611,8 @@ export function handleSideDrop(
   const tr = state.tr;
 
   // 1. Delete the original dragged node (MOVE, not copy)
-  const draggedPos = findDraggedNodePos(state);
   if (draggedPos !== null && draggedPos !== targetPos) {
-    const dragged = state.doc.nodeAt(draggedPos);
-    if (dragged) {
-      tr.delete(draggedPos, draggedPos + dragged.nodeSize);
-    }
+    tr.delete(draggedPos, draggedPos + draggedNode.nodeSize);
   }
 
   // 2. Map target position through the deletion
@@ -371,6 +627,64 @@ export function handleSideDrop(
       columnGroup,
     );
   }
+
+  view.dispatch(tr);
+
+  cleanupAllVisuals();
+  sideDropState = { active: false, side: null, targetPos: null };
+  draggedNodeInfo = null;
+  return true;
+}
+
+/**
+ * Handle normal block move drops so dragged blocks are moved, not duplicated.
+ * Returns false for non-block drops so ProseMirror/file-drop can handle them.
+ */
+export function handleBlockMoveDrop(
+  view: EditorView,
+  event: DragEvent,
+  slice: Slice,
+  _moved: boolean,
+): boolean {
+  if (slice.content.childCount === 0 && !(view.state.selection instanceof NodeSelection)) {
+    return false;
+  }
+
+  const state = view.state;
+  const dragged = getDraggedNodeFromState(state);
+  if (!dragged) return false;
+
+  const { pos: draggedPos, node: draggedNode } = dragged;
+
+  const dropTarget = getBlockAtCoords(view, event);
+  const coords = view.posAtCoords({ left: event.clientX, top: event.clientY });
+  if (!dropTarget && !coords) return false;
+
+  const dropPos = dropTarget?.pos ?? coords!.pos;
+  if (dropPos >= draggedPos && dropPos < draggedPos + draggedNode.nodeSize) {
+    cleanupAllVisuals();
+    draggedNodeInfo = null;
+    return true;
+  }
+
+  let rawInsertPos: number;
+  let insertBefore = false;
+
+  if (dropTarget) {
+    const rect = dropTarget.dom.getBoundingClientRect();
+    insertBefore = event.clientY < rect.top + rect.height / 2;
+    rawInsertPos = insertBefore
+      ? dropTarget.pos
+      : dropTarget.pos + dropTarget.node.nodeSize;
+  } else {
+    rawInsertPos = coords!.pos;
+  }
+
+  const tr = state.tr;
+  tr.delete(draggedPos, draggedPos + draggedNode.nodeSize);
+
+  const mappedInsertPos = tr.mapping.map(rawInsertPos, insertBefore ? -1 : 1);
+  tr.insert(mappedInsertPos, draggedNode);
 
   view.dispatch(tr);
 

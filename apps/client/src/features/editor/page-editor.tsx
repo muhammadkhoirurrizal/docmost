@@ -54,6 +54,7 @@ import { sanitizePastedHtml } from "@/features/editor/utils/sanitize-pasted-html
 import {
   handleSideDragOver,
   handleSideDrop,
+  handleBlockMoveDrop,
   cleanupSideDrop,
   trackDragStart,
 } from "@/features/editor/utils/side-drop-handler.ts";
@@ -282,14 +283,17 @@ export default function PageEditor({
           handlePaste(view, event, pageId, currentUser?.user.id),
         handleDrop: (view, event, slice, moved) => {
           // Check for side-drop first (drag block to side of another block)
-          if (moved && handleSideDrop(view, event, slice, moved)) {
+          if (handleSideDrop(view, event, slice, moved)) {
+            return true;
+          }
+          if (handleBlockMoveDrop(view, event, slice, moved)) {
             return true;
           }
           return handleFileDrop(view, event, moved, pageId);
         },
         handleDOMEvents: {
           dragstart: (_view, _event) => {
-            trackDragStart(_view);
+            trackDragStart(_view, _event as DragEvent);
             return false;
           },
           dragover: (_view, event) => {
