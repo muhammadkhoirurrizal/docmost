@@ -1,0 +1,20 @@
+packages/editor-ext/src/lib/link.ts
+  s_4164c200e60cf7::t_3338531382fcd7 21-23
+  s_4164c200e60cf7::t_3c8ac16411e6c9 5-14,19-20,24-25
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.13",
+  "base_commit_sha": "01a033cee4fa037f94de888ea2323ced29891b4f",
+  "prompts": {},
+  "sessions": {
+    "s_4164c200e60cf7": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_1088a6536ffeR02u6ktZ3I56HP",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  }
+}
