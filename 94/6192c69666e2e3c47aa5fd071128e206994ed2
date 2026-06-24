@@ -1,0 +1,24 @@
+packages/editor-ext/src/lib/plugins/paste-to-embed.ts
+  s_4164c200e60cf7::t_c609f072b9766b 231
+  s_4164c200e60cf7::t_443ea9681b7c65 1-2,4-230,232-271
+  s_4164c200e60cf7::t_17d1923f91ecb5 3
+apps/client/src/features/editor/services/link-preview.service.ts
+  s_4164c200e60cf7::t_206a9288523fb4 2-13
+  s_4164c200e60cf7::t_3b4623dc1a7076 1
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.13",
+  "base_commit_sha": "946192c69666e2e3c47aa5fd071128e206994ed2",
+  "prompts": {},
+  "sessions": {
+    "s_4164c200e60cf7": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_1088a6536ffeR02u6ktZ3I56HP",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  }
+}
