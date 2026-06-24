@@ -1,0 +1,26 @@
+apps/server/src/integrations/link-preview/link-preview.module.ts
+  s_4164c200e60cf7::t_06e5b845be0be9 1-9
+apps/server/src/integrations/link-preview/link-preview.service.ts
+  s_4164c200e60cf7::t_f15291522d25e2 1-2,5-73
+  s_4164c200e60cf7::t_35b6cd851d8a50 3-4
+apps/server/src/integrations/link-preview/dto/link-metadata.dto.ts
+  s_4164c200e60cf7::t_4b238cd1065325 1-14
+apps/server/src/integrations/link-preview/link-preview.controller.ts
+  s_4164c200e60cf7::t_af36f2735b1e26 1-22
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.13",
+  "base_commit_sha": "7ad99e7d2291a4e814d3b1a6328d1b56419c078a",
+  "prompts": {},
+  "sessions": {
+    "s_4164c200e60cf7": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_1088a6536ffeR02u6ktZ3I56HP",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  }
+}
