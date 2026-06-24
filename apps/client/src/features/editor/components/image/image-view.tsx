@@ -68,6 +68,12 @@ export default function ImageView(props: NodeViewProps) {
     };
     setResizing(true);
 
+    // Start smart guides
+    const controller = (editor.view.dom as any).__smartGuideController;
+    if (controller) {
+      controller.startInteraction(props.getPos());
+    }
+
     document.body.style.cursor = "ew-resize";
     document.body.style.userSelect = "none";
   };
@@ -90,12 +96,24 @@ export default function ImageView(props: NodeViewProps) {
 
       // Update local state as percentage for smooth resizing
       setCurrentWidth(`${percentage}%`);
+
+      // Update smart guides
+      const controller = (editor.view.dom as any).__smartGuideController;
+      if (controller && containerRef.current) {
+        controller.updateGuides(containerRef.current.getBoundingClientRect());
+      }
     };
 
     const onMouseUp = () => {
       setResizing(false);
       document.body.style.cursor = "";
       document.body.style.userSelect = "";
+
+      // End smart guides
+      const controller = (editor.view.dom as any).__smartGuideController;
+      if (controller) {
+        controller.endInteraction();
+      }
 
       if (resizeRef.current) {
         // Commit the final width change as percentage
