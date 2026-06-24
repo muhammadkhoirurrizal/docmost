@@ -1,0 +1,33 @@
+packages/editor-ext/src/lib/smart-guide/smart-guide-controller.ts
+  s_4164c200e60cf7::t_00fd8b8600eb5e 153-155
+  s_42632daf5a1f2c::t_5f686ec91aa4d6 1-152,156-171
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.10",
+  "base_commit_sha": "79df1d619d365fa791300125048d7ce839ec9075",
+  "prompts": {},
+  "humans": {
+    "h_0612cf7e255131": {
+      "author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  },
+  "sessions": {
+    "s_4164c200e60cf7": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_1088a6536ffeR02u6ktZ3I56HP",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    },
+    "s_42632daf5a1f2c": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_1085838baffe30avWMkmkLuB5Z",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  }
+}
