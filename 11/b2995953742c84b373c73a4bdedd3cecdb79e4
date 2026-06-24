@@ -1,0 +1,19 @@
+apps/client/src/features/editor/hooks/use-sticky-header.ts
+  s_4164c200e60cf7::t_35b8e6805d21e6 4-11,14-15,17-21,23-25,27,29-48,50,52-54,56-106,109-117,120-127,129,132-182,184-185,187-191,193-235,240,245,256
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.13",
+  "base_commit_sha": "11b2995953742c84b373c73a4bdedd3cecdb79e4",
+  "prompts": {},
+  "sessions": {
+    "s_4164c200e60cf7": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_1088a6536ffeR02u6ktZ3I56HP",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  }
+}
