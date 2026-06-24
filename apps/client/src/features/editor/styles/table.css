@@ -99,7 +99,7 @@
       font-weight: bold;
       text-align: left;
       position: sticky !important;
-      top: -1px;
+      top: -1px !important;
       z-index: 10 !important;
       padding: 8px 12px;
       border-top: none;
