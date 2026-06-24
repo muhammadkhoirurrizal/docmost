@@ -1,0 +1,44 @@
+packages/editor-ext/src/lib/smart-guide/guide-calculator.ts
+  s_f9d2da458f531c::t_e3c25633be07c6 1-5,7-90,134-203,205-207,209-214
+  s_4164c200e60cf7::t_8e1df67f9dd7a8 6,91-133,204,208
+packages/editor-ext/src/lib/smart-guide/types.ts
+  s_132a0c400c9efb::t_2b21fe0a704cfc 1-17,19-29
+  s_4164c200e60cf7::t_71b45b1de6fc0c 18
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.10",
+  "base_commit_sha": "833b9160b0abe9506a68a2af9acfb10c13474cc3",
+  "prompts": {},
+  "humans": {
+    "h_0612cf7e255131": {
+      "author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  },
+  "sessions": {
+    "s_132a0c400c9efb": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_10858db09ffe17xjup4zbxSFV5",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    },
+    "s_4164c200e60cf7": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_1088a6536ffeR02u6ktZ3I56HP",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    },
+    "s_f9d2da458f531c": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_1085888a6ffeOAbd0xQLiYHEpa",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  }
+}
