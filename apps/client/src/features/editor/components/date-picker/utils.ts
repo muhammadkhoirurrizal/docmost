@@ -14,7 +14,7 @@ export const getDateFormat = (format: string, includeTime: boolean) => {
     else if (format === 'day-month-year') base = 'DD/MM/YYYY';
     else if (format === 'year-month-day') base = 'YYYY/MM/DD';
 
-    return includeTime ? `${base} h:mm A` : base;
+    return includeTime ? `${base} HH:mm` : base;
 };
 
 export const getFormatLabel = (format: string) => {
