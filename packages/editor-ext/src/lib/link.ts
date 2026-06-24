@@ -2,9 +2,26 @@ import { mergeAttributes } from "@tiptap/core";
 import TiptapLink from "@tiptap/extension-link";
 import { Plugin } from "@tiptap/pm/state";
 import { EditorView } from "@tiptap/pm/view";
+import {
+  PasteToEmbedPlugin,
+  PasteToEmbedOptions,
+} from "./plugins/paste-to-embed";
+
+declare module "@tiptap/core" {
+  interface LinkOptions {
+    pasteToEmbed?: PasteToEmbedOptions;
+  }
+}
 
 export const LinkExtension = TiptapLink.extend({
   inclusive: false,
+
+  addOptions() {
+    return {
+      ...this.parent?.(),
+      pasteToEmbed: undefined,
+    };
+  },
 
   parseHTML() {
     return [
@@ -52,8 +69,7 @@ export const LinkExtension = TiptapLink.extend({
 
   addProseMirrorPlugins() {
     const { editor } = this;
-
-    return [
+    const plugins: Plugin[] = [
       ...(this.parent?.() || []),
       new Plugin({
         props: {
@@ -62,6 +78,7 @@ export const LinkExtension = TiptapLink.extend({
 
             if (event.key === "Escape" && selection.empty !== true) {
               editor.commands.focus(selection.to, { scrollIntoView: false });
+              return true;
             }
 
             return false;
@@ -69,5 +86,12 @@ export const LinkExtension = TiptapLink.extend({
         },
       }),
     ];
+
+    const pasteToEmbedOptions = (this.options as any).pasteToEmbed;
+    if (pasteToEmbedOptions) {
+      plugins.push(PasteToEmbedPlugin(pasteToEmbedOptions));
+    }
+
+    return plugins;
   },
 });

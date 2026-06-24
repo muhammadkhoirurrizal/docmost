@@ -150,7 +150,15 @@ export const baseExtensions = [
   Underline,
   LinkExtension.configure({
     openOnClick: false,
-  }),
+    pasteToEmbed: {
+      fetchMetadata: async (url: string) => {
+        const { fetchLinkMetadata } = await import(
+          "@/features/editor/services/link-preview.service"
+        );
+        return fetchLinkMetadata(url);
+      },
+    },
+  } as any),
   Superscript,
   SubScript,
   Highlight.configure({
