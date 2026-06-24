@@ -40,7 +40,15 @@ export default function ImageView(props: NodeViewProps) {
   const hasCaption = !!caption;
 
   useEffect(() => {
-    setCurrentWidth(width || "100%");
+    if (width && typeof width === 'string' && width.endsWith('px') && containerRef.current?.parentElement) {
+      // Convert pixel width to percentage for consistency
+      const parentWidth = containerRef.current.parentElement.offsetWidth || 1;
+      const pxValue = parseInt(width);
+      const percentage = Math.max(10, Math.min(100, Math.round((pxValue / parentWidth) * 100)));
+      setCurrentWidth(`${percentage}%`);
+    } else {
+      setCurrentWidth(width || "100%");
+    }
   }, [width]);
 
   const onMouseDown = (
@@ -68,17 +76,20 @@ export default function ImageView(props: NodeViewProps) {
     if (!resizing) return;
 
     const onMouseMove = (e: MouseEvent) => {
-      if (!resizeRef.current) return;
+      if (!resizeRef.current || !containerRef.current) return;
 
       const { startX, startWidth, direction } = resizeRef.current;
       const uniqueDelta = (e.clientX - startX) * direction;
 
-      // Calculate new width
-      // We assume aspect ratio is maintained by height: auto
-      const newWidth = Math.max(50, startWidth + uniqueDelta);
+      // Calculate new width in pixels
+      const newWidthPx = Math.max(50, startWidth + uniqueDelta);
 
-      // Update local state for smooth resizing
-      setCurrentWidth(`${newWidth}px`);
+      // Convert to percentage relative to parent container
+      const parentWidth = containerRef.current.parentElement?.offsetWidth || 1;
+      const percentage = Math.max(10, Math.min(100, Math.round((newWidthPx / parentWidth) * 100)));
+
+      // Update local state as percentage for smooth resizing
+      setCurrentWidth(`${percentage}%`);
     };
 
     const onMouseUp = () => {
@@ -87,14 +98,8 @@ export default function ImageView(props: NodeViewProps) {
       document.body.style.userSelect = "";
 
       if (resizeRef.current) {
-        // Commit the final width change
-        // We use the last calculated width from the ref or derive it
-        // Ideally we should have been tracking it in a ref if updates are slow, 
-        // but setState is usually fast enough for mouseup commit.
-        // Let's grab the actual DOM width if possible or trust currentWidth
-
-        // Better: parse currentWidth if it is in px
-        if (typeof currentWidth === 'string' && currentWidth.endsWith('px')) {
+        // Commit the final width change as percentage
+        if (typeof currentWidth === 'string' && currentWidth.endsWith('%')) {
           updateAttributes({ width: currentWidth });
         }
       }
