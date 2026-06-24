@@ -43,6 +43,7 @@ import {
   Mention,
   Subpages,
   TableDndExtension,
+  SmartGuideExtension,
   Heading,
   Highlight,
   UniqueID,
@@ -196,6 +197,7 @@ export const baseExtensions = [
   TableCell,
   TableHeader,
   TableDndExtension,
+  SmartGuideExtension,
   MathInline.configure({
     view: MathInlineView,
   }),
