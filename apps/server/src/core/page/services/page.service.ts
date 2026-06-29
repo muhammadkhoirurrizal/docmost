@@ -686,8 +686,9 @@ export class PageService {
     if (parentPageId) {
       const parent = await this.pageRepo.findById(parentPageId);
 
-      // If parent missing, deleted, or archived, move to root top
-      if (!parent || parent.deletedAt || parent.archivedAt) {
+      // If parent missing or deleted, move to root top
+      // Archived parents are kept — the child retains its original position
+      if (!parent || parent.deletedAt) {
         parentPageId = null;
 
         const firstPage = await this.db

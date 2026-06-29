@@ -205,6 +205,10 @@ export class PageController {
     }
 
     await this.pageService.unarchive(pageIdDto.pageId, workspace.id);
+
+    return this.pageRepo.findById(pageIdDto.pageId, {
+      includeHasChildren: true,
+    });
   }
 
   @HttpCode(HttpStatus.OK)

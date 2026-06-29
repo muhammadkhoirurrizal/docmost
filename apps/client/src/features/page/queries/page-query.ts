@@ -227,10 +227,64 @@ export function useArchivePageMutation() {
 }
 
 export function useUnarchivePageMutation() {
+  const [treeData, setTreeData] = useAtom(treeDataAtom);
+  const emit = useQueryEmit();
+
   return useMutation({
     mutationFn: (pageId: string) => unarchivePage(pageId),
-    onSuccess: () => {
+    onSuccess: (unarchivedPage) => {
       notifications.show({ message: "Page unarchived" });
+
+      // Add the unarchived page back to the tree
+      const treeApi = new SimpleTree<SpaceTreeNode>(treeData);
+
+      if (!treeApi.find(unarchivedPage.id)) {
+        const nodeData: SpaceTreeNode = {
+          id: unarchivedPage.id,
+          slugId: unarchivedPage.slugId,
+          name: unarchivedPage.title || "Untitled",
+          icon: unarchivedPage.icon,
+          position: unarchivedPage.position,
+          spaceId: unarchivedPage.spaceId,
+          parentPageId: unarchivedPage.parentPageId,
+          hasChildren: unarchivedPage.hasChildren || false,
+          children: [],
+        };
+
+        const parentId = unarchivedPage.parentPageId || null;
+        let index = 0;
+
+        if (parentId) {
+          const parentNode = treeApi.find(parentId);
+          if (parentNode) {
+            index = parentNode.children?.length || 0;
+          }
+        } else {
+          index = treeApi.data.length;
+        }
+
+        treeApi.create({
+          parentId,
+          index,
+          data: nodeData,
+        });
+
+        setTreeData(treeApi.data);
+
+        // Emit websocket event to sync with other users
+        setTimeout(() => {
+          emit({
+            operation: "addTreeNode",
+            spaceId: unarchivedPage.spaceId,
+            payload: {
+              parentId,
+              index,
+              data: nodeData,
+            },
+          });
+        }, 50);
+      }
+
       queryClient.invalidateQueries({ queryKey: ["root-sidebar-pages"] });
       queryClient.invalidateQueries({ queryKey: ["sidebar-pages"] });
 

@@ -61,8 +61,9 @@ export async function archivePage(pageId: string): Promise<void> {
   await api.post("/pages/archive", { pageId });
 }
 
-export async function unarchivePage(pageId: string): Promise<void> {
-  await api.post("/pages/unarchive", { pageId });
+export async function unarchivePage(pageId: string): Promise<IPage> {
+  const response = await api.post<IPage>("/pages/unarchive", { pageId });
+  return response.data;
 }
 
 export async function movePage(data: IMovePage): Promise<void> {
