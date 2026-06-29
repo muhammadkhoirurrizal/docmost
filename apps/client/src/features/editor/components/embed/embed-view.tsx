@@ -135,7 +135,6 @@ export default function EmbedView(props: NodeViewProps) {
   }, [provider]);
 
   const isSlides = provider === "gslides" || provider === "google slides";
-  const isDrive = provider === "gdrive" || provider === "google drive";
   const isDoc = provider === "gdoc" || provider === "google docs";
   const isSheets = provider === "gsheets" || provider === "google sheets";
   const isFigma = provider === "figma";
@@ -149,18 +148,18 @@ export default function EmbedView(props: NodeViewProps) {
   }, [isDoc, isSheets, isFigma]);
 
   const buttonLabel = useMemo(() => {
-    if (isSlides || isDrive) {
+    if (isSlides) {
       return t("View {{provider}}", { provider: providerName });
     }
     return t("Open {{provider}}", { provider: providerName });
-  }, [isSlides, isDrive, providerName, t]);
+  }, [isSlides, providerName, t]);
 
   const modalTitle = useMemo(() => {
-    if (isSlides || isDrive) {
+    if (isSlides) {
       return t("Viewing {{provider}}", { provider: providerName });
     }
     return t("Viewing {{provider}}", { provider: providerName });
-  }, [isSlides, isDrive, providerName, t]);
+  }, [isSlides, providerName, t]);
 
   return (
     <NodeViewWrapper contentEditable={false} className="docmost-embed-node">

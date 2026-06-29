@@ -88,18 +88,6 @@ export const embedProviders: IEmbedProvider[] = [
     },
   },
   {
-    id: "gdrive",
-    name: "Google Drive",
-    regex:
-      /^((?:https?:)?\/\/)?((?:www|m)\.)?(drive\.google\.com)\/(?:file\/d\/|open\?id=|drive\/(?:u\/\d+\/)?folders\/)([a-zA-Z0-9_-]+)(?:\/.*|&.*)?$/,
-    getEmbedUrl: (match, url: string) => {
-      if (url.includes("/folders/")) {
-        return `https://drive.google.com/embeddedfolderview?id=${match[4]}#list`;
-      }
-      return `https://drive.google.com/file/d/${match[4]}/preview`;
-    },
-  },
-  {
     id: "gsheets",
     name: "Google Sheets",
     regex:

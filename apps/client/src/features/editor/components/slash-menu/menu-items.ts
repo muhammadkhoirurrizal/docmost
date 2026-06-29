@@ -49,7 +49,6 @@ import {
   AirtableIcon,
   FigmaIcon,
   FramerIcon,
-  GoogleDriveIcon,
   GoogleDocsIcon,
   GoogleSheetsIcon,
   GoogleSlidesIcon,
@@ -710,20 +709,6 @@ const CommandGroups: SlashMenuGroupedItemsType = {
           .focus()
           .deleteRange(range)
           .setEmbed({ provider: "framer" })
-          .run();
-      },
-    },
-    {
-      title: "Google Drive",
-      description: "Embed Google Drive content",
-      searchTerms: ["google drive", "gdrive"],
-      icon: GoogleDriveIcon,
-      command: ({ editor, range }: CommandProps) => {
-        editor
-          .chain()
-          .focus()
-          .deleteRange(range)
-          .setEmbed({ provider: "gdrive" })
           .run();
       },
     },
