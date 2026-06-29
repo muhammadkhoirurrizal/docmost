@@ -279,6 +279,9 @@ export default function PageEditor({
       immediatelyRender: false,
       shouldRerenderOnTransaction: false,
       editorProps: {
+        attributes: {
+          tabindex: "0",
+        },
         handlePaste: (view, event) =>
           handlePaste(view, event, pageId, currentUser?.user.id),
         handleDrop: (view, event, slice, moved) => {
@@ -292,6 +295,29 @@ export default function PageEditor({
           return handleFileDrop(view, event, moved, pageId);
         },
         handleDOMEvents: {
+          copy: (view, event) => {
+            // If editor is editable, let ProseMirror's built-in copy handler work
+            if (view.editable) {
+              return false;
+            }
+            // In read-only mode, use native browser selection to populate clipboard
+            const selection = window.getSelection();
+            if (!selection || selection.isCollapsed) {
+              return false;
+            }
+            const range = selection.getRangeAt(0);
+            const htmlContent = range.cloneContents();
+            const tempDiv = document.createElement("div");
+            tempDiv.appendChild(htmlContent.cloneNode(true));
+            const html = tempDiv.innerHTML;
+            const text = selection.toString();
+            if (event.clipboardData) {
+              event.clipboardData.setData("text/html", html);
+              event.clipboardData.setData("text/plain", text);
+            }
+            event.preventDefault();
+            return true;
+          },
           dragstart: (_view, _event) => {
             trackDragStart(_view, _event as DragEvent);
             return false;
@@ -513,6 +539,31 @@ export default function PageEditor({
         immediatelyRender={false}
         extensions={mainExtensions}
         content={content}
+        editorProps={{
+          attributes: {
+            tabindex: "0",
+          },
+          handleDOMEvents: {
+            copy: (_view, event) => {
+              const selection = window.getSelection();
+              if (!selection || selection.isCollapsed) {
+                return false;
+              }
+              const range = selection.getRangeAt(0);
+              const htmlContent = range.cloneContents();
+              const tempDiv = document.createElement("div");
+              tempDiv.appendChild(htmlContent.cloneNode(true));
+              const html = tempDiv.innerHTML;
+              const text = selection.toString();
+              if (event.clipboardData) {
+                event.clipboardData.setData("text/html", html);
+                event.clipboardData.setData("text/plain", text);
+              }
+              event.preventDefault();
+              return true;
+            },
+          },
+        }}
       />
     );
   }

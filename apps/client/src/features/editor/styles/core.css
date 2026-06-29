@@ -151,6 +151,9 @@
   }
 
   &[contenteditable="false"] {
+    /* Fix Chrome not firing copy events on contenteditable="false" elements */
+    -webkit-user-modify: read-write;
+
     .node-image {
       &.ProseMirror-selectednode {
         outline: none !important;

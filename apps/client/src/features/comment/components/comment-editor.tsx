@@ -48,7 +48,31 @@ const CommentEditor = forwardRef(
         EmojiCommand,
       ],
       editorProps: {
+        attributes: {
+          tabindex: "0",
+        },
         handleDOMEvents: {
+          copy: (view, event) => {
+            if (view.editable) {
+              return false;
+            }
+            const selection = window.getSelection();
+            if (!selection || selection.isCollapsed) {
+              return false;
+            }
+            const range = selection.getRangeAt(0);
+            const htmlContent = range.cloneContents();
+            const tempDiv = document.createElement("div");
+            tempDiv.appendChild(htmlContent.cloneNode(true));
+            const html = tempDiv.innerHTML;
+            const text = selection.toString();
+            if (event.clipboardData) {
+              event.clipboardData.setData("text/html", html);
+              event.clipboardData.setData("text/plain", text);
+            }
+            event.preventDefault();
+            return true;
+          },
           keydown: (_view, event) => {
             if (
               [
