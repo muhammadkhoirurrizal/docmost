@@ -4,6 +4,8 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  MinLength,
+  MaxLength,
 } from 'class-validator';
 
 export enum ExportFormat {
@@ -28,6 +30,12 @@ export class ExportPageDto {
   @IsOptional()
   @IsBoolean()
   includeAttachments?: boolean;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(4, { message: 'Password must be at least 4 characters' })
+  @MaxLength(128, { message: 'Password must be at most 128 characters' })
+  password?: string;
 }
 
 export class ExportSpaceDto {
@@ -42,4 +50,10 @@ export class ExportSpaceDto {
   @IsOptional()
   @IsBoolean()
   includeAttachments?: boolean;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(4, { message: 'Password must be at least 4 characters' })
+  @MaxLength(128, { message: 'Password must be at most 128 characters' })
+  password?: string;
 }

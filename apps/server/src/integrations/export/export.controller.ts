@@ -4,6 +4,7 @@ import {
   ForbiddenException,
   HttpCode,
   HttpStatus,
+  Logger,
   NotFoundException,
   Post,
   Res,
@@ -25,6 +26,8 @@ import { sanitize } from 'sanitize-filename-ts';
 
 @Controller()
 export class ExportController {
+  private readonly logger = new Logger(ExportController.name);
+
   constructor(
     private readonly exportService: ExportService,
     private readonly pageRepo: PageRepo,
@@ -52,7 +55,11 @@ export class ExportController {
       throw new ForbiddenException();
     }
 
-    if (dto.format === ExportFormat.PDF && !dto.includeChildren) {
+    console.log(
+      `[export] exportPage request: pageId=${dto.pageId}, format=${dto.format}, password=${dto.password ? 'provided' : 'missing'}`,
+    );
+
+    if (dto.format === ExportFormat.PDF && !dto.includeChildren && !dto.password) {
       const pdfBuffer = await this.exportService.exportPage(dto.format, page, true);
       const fileName = sanitize(page.title || 'untitled') + '.pdf';
       res.headers({
@@ -68,6 +75,7 @@ export class ExportController {
       dto.format,
       dto.includeAttachments,
       dto.includeChildren,
+      dto.password,
     );
 
     const fileName = sanitize(page.title || 'untitled') + '.zip';
@@ -98,6 +106,7 @@ export class ExportController {
       dto.spaceId,
       dto.format,
       dto.includeAttachments,
+      dto.password,
     );
 
     res.headers({

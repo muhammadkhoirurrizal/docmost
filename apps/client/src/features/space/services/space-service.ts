@@ -61,7 +61,12 @@ export async function changeMemberRole(
 }
 
 export async function exportSpace(data: IExportSpaceParams): Promise<void> {
-  const req = await api.post("/spaces/export", data, {
+  const body = { ...data };
+  if (!body.password) {
+    delete body.password;
+  }
+
+  const req = await api.post("/spaces/export", body, {
     responseType: "blob",
   });
 

@@ -13,10 +13,10 @@ import { KyselyDB } from '@docmost/db/types/kysely.types';
 import * as JSZip from 'jszip';
 import { StorageService } from '../storage/storage.service';
 import { PdfExportService } from './pdf-export.service';
+import { ZipEncryptionService, ExportEntry } from './zip-encryption.service';
 import {
   buildTree,
   computeLocalPath,
-  getExportExtension,
   getPageTitle,
   PageExportTree,
   replaceInternalLinks,
@@ -43,6 +43,7 @@ export class ExportService {
     private readonly storageService: StorageService,
     private readonly environmentService: EnvironmentService,
     private readonly pdfExportService: PdfExportService,
+    private readonly zipEncryptionService: ZipEncryptionService,
   ) {}
 
   async exportPage(format: string, page: Page, singlePage?: boolean): Promise<string | Buffer> {
@@ -100,6 +101,7 @@ export class ExportService {
     format: string,
     includeAttachments: boolean,
     includeChildren: boolean,
+    password?: string,
   ) {
     let pages: Page[];
 
@@ -109,11 +111,10 @@ export class ExportService {
         includeContent: true,
       });
     } else {
-      // Only fetch the single page when includeChildren is false
       const page = await this.pageRepo.findById(pageId, {
         includeContent: true,
       });
-      if (page){
+      if (page) {
         pages = [page];
       }
     }
@@ -123,13 +124,23 @@ export class ExportService {
     }
 
     const parentPageIndex = pages.findIndex((obj) => obj.id === pageId);
-    // set to null to make export of pages with parentId work
     pages[parentPageIndex].parentPageId = null;
 
     const tree = buildTree(pages as Page[]);
 
+    const entries = await this.getExportEntries(tree, format, includeAttachments);
+    console.log(
+      `[export] exportPages: entries=${entries.length}, password=${password ? 'provided' : 'missing'}`,
+    );
+
+    if (password) {
+      return this.zipEncryptionService.createEncryptedZipStream(entries, password);
+    }
+
     const zip = new JSZip();
-    await this.zipPages(tree, format, zip, includeAttachments);
+    for (const entry of entries) {
+      zip.file(entry.entryPath, entry.content);
+    }
 
     const zipFile = zip.generateNodeStream({
       type: 'nodebuffer',
@@ -144,6 +155,7 @@ export class ExportService {
     spaceId: string,
     format: string,
     includeAttachments: boolean,
+    password?: string,
   ) {
     const space = await this.db
       .selectFrom('spaces')
@@ -171,15 +183,25 @@ export class ExportService {
 
     const tree = buildTree(pages as Page[]);
 
-    const zip = new JSZip();
+    const entries = await this.getExportEntries(tree, format, includeAttachments);
+    console.log(
+      `[export] exportSpace: entries=${entries.length}, password=${password ? 'provided' : 'missing'}`,
+    );
 
-    await this.zipPages(tree, format, zip, includeAttachments);
-
-    const zipFile = zip.generateNodeStream({
-      type: 'nodebuffer',
-      streamFiles: true,
-      compression: 'DEFLATE',
-    });
+    let zipFile: NodeJS.ReadableStream;
+    if (password) {
+      zipFile = this.zipEncryptionService.createEncryptedZipStream(entries, password);
+    } else {
+      const zip = new JSZip();
+      for (const entry of entries) {
+        zip.file(entry.entryPath, entry.content);
+      }
+      zipFile = zip.generateNodeStream({
+        type: 'nodebuffer',
+        streamFiles: true,
+        compression: 'DEFLATE',
+      });
+    }
 
     const fileName = `${space.name}-space-export.zip`;
     return {
@@ -188,22 +210,22 @@ export class ExportService {
     };
   }
 
-  async zipPages(
+  async getExportEntries(
     tree: PageExportTree,
     format: string,
-    zip: JSZip,
     includeAttachments: boolean,
-  ): Promise<void> {
+  ): Promise<ExportEntry[]> {
     const slugIdToPath: Record<string, string> = {};
 
     computeLocalPath(tree, format, null, '', slugIdToPath);
 
-    const stack: { folder: JSZip; parentPageId: string }[] = [
-      { folder: zip, parentPageId: null },
+    const entries: ExportEntry[] = [];
+    const stack: { parentPageId: string | null }[] = [
+      { parentPageId: null },
     ];
 
     while (stack.length > 0) {
-      const { folder, parentPageId } = stack.pop();
+      const { parentPageId } = stack.pop();
       const children = tree[parentPageId] || [];
 
       for (const page of children) {
@@ -223,55 +245,64 @@ export class ExportService {
         );
 
         if (includeAttachments) {
-          await this.zipAttachments(updatedJsonContent, page.spaceId, folder);
+          const attachmentEntries = await this.getAttachmentEntries(
+            updatedJsonContent,
+            page.spaceId,
+          );
+          entries.push(...attachmentEntries);
           updatedJsonContent =
             updateAttachmentUrlsToLocalPaths(updatedJsonContent);
         }
 
-        const pageTitle = getPageTitle(page.title);
-        const safeTitle = slugify(pageTitle);
         const pageExportContent = await this.exportPage(format, {
           ...page,
           content: updatedJsonContent,
         });
 
-        folder.file(
-          `${safeTitle}${getExportExtension(format)}`,
-          pageExportContent,
-        );
+        entries.push({
+          entryPath: currentPagePath,
+          content: pageExportContent,
+        });
+
         if (childPages.length > 0) {
-          const pageFolder = folder.folder(safeTitle);
-          stack.push({ folder: pageFolder, parentPageId: page.id });
+          stack.push({ parentPageId: page.id });
         }
       }
     }
+
+    return entries;
   }
 
-  async zipAttachments(prosemirrorJson: any, spaceId: string, zip: JSZip) {
+  async getAttachmentEntries(
+    prosemirrorJson: any,
+    spaceId: string,
+  ): Promise<ExportEntry[]> {
     const attachmentIds = getAttachmentIds(prosemirrorJson);
 
-    if (attachmentIds.length > 0) {
-      const attachments = await this.db
-        .selectFrom('attachments')
-        .selectAll()
-        .where('id', 'in', attachmentIds)
-        .where('spaceId', '=', spaceId)
-        .execute();
+    if (attachmentIds.length === 0) return [];
 
-      await Promise.all(
-        attachments.map(async (attachment) => {
-          try {
-            const fileBuffer = await this.storageService.read(
-              attachment.filePath,
-            );
-            const filePath = `/files/${attachment.id}/${attachment.fileName}`;
-            zip.file(filePath, fileBuffer);
-          } catch (err) {
-            this.logger.debug(`Attachment export error ${attachment.id}`, err);
-          }
-        }),
-      );
-    }
+    const attachments = await this.db
+      .selectFrom('attachments')
+      .selectAll()
+      .where('id', 'in', attachmentIds)
+      .where('spaceId', '=', spaceId)
+      .execute();
+
+    const entries: ExportEntry[] = [];
+    await Promise.all(
+      attachments.map(async (attachment) => {
+        try {
+          const fileBuffer = await this.storageService.read(
+            attachment.filePath,
+          );
+          const filePath = `files/${attachment.id}/${attachment.fileName}`;
+          entries.push({ entryPath: filePath, content: fileBuffer });
+        } catch (err) {
+          this.logger.debug(`Attachment export error ${attachment.id}`, err);
+        }
+      }),
+    );
+    return entries;
   }
 
   async turnPageMentionsToLinks(prosemirrorJson: any, workspaceId: string) {

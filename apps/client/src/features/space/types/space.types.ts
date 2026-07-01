@@ -74,4 +74,5 @@ export interface IExportSpaceParams {
   spaceId: string;
   format: ExportFormat;
   includeAttachments?: boolean;
+  password?: string;
 }

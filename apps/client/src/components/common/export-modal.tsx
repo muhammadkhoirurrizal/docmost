@@ -6,9 +6,10 @@ import {
   Select,
   Switch,
   Divider,
+  PasswordInput,
 } from "@mantine/core";
 import { exportPage } from "@/features/page/services/page-service.ts";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ExportFormat } from "@/features/page/types/page.types.ts";
 import { notifications } from "@mantine/notifications";
 import { exportSpace } from "@/features/space/services/space-service";
@@ -30,7 +31,16 @@ export default function ExportModal({
   const [format, setFormat] = useState<ExportFormat>(ExportFormat.Markdown);
   const [includeChildren, setIncludeChildren] = useState<boolean>(false);
   const [includeAttachments, setIncludeAttachments] = useState<boolean>(false);
+  const [passwordProtection, setPasswordProtection] = useState<boolean>(false);
+  const [password, setPassword] = useState<string>("");
   const { t } = useTranslation();
+
+  useEffect(() => {
+    if (!open) {
+      setPasswordProtection(false);
+      setPassword("");
+    }
+  }, [open]);
 
   const handleExport = async () => {
     try {
@@ -40,10 +50,11 @@ export default function ExportModal({
           format,
           includeChildren,
           includeAttachments,
+          password: passwordProtection ? password.trim() || undefined : undefined,
         });
       }
       if (type === "space") {
-        await exportSpace({ spaceId: id, format, includeAttachments });
+        await exportSpace({ spaceId: id, format, includeAttachments, password: passwordProtection ? password.trim() || undefined : undefined });
       }
       onClose();
     } catch (err: any) {
@@ -141,6 +152,38 @@ export default function ExportModal({
                   checked={includeAttachments}
                 />
               </Group>
+            </>
+          )}
+
+          <Divider my="sm" />
+
+          <Group justify="space-between" wrap="nowrap">
+            <div>
+              <Text size="md">{t("Password protection")}</Text>
+            </div>
+            <Switch
+              onChange={(event) => {
+                setPasswordProtection(event.currentTarget.checked);
+                if (!event.currentTarget.checked) {
+                  setPassword("");
+                }
+              }}
+              checked={passwordProtection}
+            />
+          </Group>
+
+          {passwordProtection && (
+            <>
+              <PasswordInput
+                placeholder={t("Enter password (4+ characters)")}
+                value={password}
+                onChange={(event) => setPassword(event.currentTarget.value)}
+                maxLength={128}
+                mt="sm"
+              />
+              <Text size="xs" c="dimmed" mt={4}>
+                {t("The exported file will be encrypted with this password.")}
+              </Text>
             </>
           )}
 
