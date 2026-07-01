@@ -5,12 +5,13 @@ import {
   EditorMenuProps,
   ShouldShowProps,
 } from "@/features/editor/components/table/types/types.ts";
-import { isCellSelection } from "@docmost/editor-ext";
+import { isCellSelection, autoNumberCells } from "@docmost/editor-ext";
 import { ActionIcon, Tooltip } from "@mantine/core";
 import {
   IconBoxMargin,
   IconColumnRemove,
   IconRowRemove,
+  IconListNumbers,
   IconSquareToggle,
   IconTableRow,
 } from "@tabler/icons-react";
@@ -52,6 +53,10 @@ export const TableCellMenu = React.memo(
       editor.chain().focus().toggleHeaderCell().run();
     }, [editor]);
 
+    const autoNumber = useCallback(() => {
+      autoNumberCells(editor);
+    }, [editor]);
+
     return (
       <BaseBubbleMenu
         editor={editor}
@@ -89,6 +94,17 @@ export const TableCellMenu = React.memo(
               aria-label={t("Split cell")}
             >
               <IconSquareToggle size={18} />
+            </ActionIcon>
+          </Tooltip>
+
+          <Tooltip position="top" label={t("Row numbers")}>
+            <ActionIcon
+              onClick={autoNumber}
+              variant="default"
+              size="lg"
+              aria-label={t("Row numbers")}
+            >
+              <IconListNumbers size={18} />
             </ActionIcon>
           </Tooltip>
 

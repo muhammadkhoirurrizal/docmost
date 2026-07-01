@@ -15,12 +15,13 @@ import {
   IconColumnInsertLeft,
   IconColumnInsertRight,
   IconColumnRemove,
+  IconListNumbers,
   IconRowInsertBottom,
   IconRowInsertTop,
   IconRowRemove, IconTableColumn, IconTableRow,
   IconTrashX,
 } from '@tabler/icons-react';
-import { isCellSelection } from "@docmost/editor-ext";
+import { isCellSelection, autoNumberCells } from "@docmost/editor-ext";
 import { useTranslation } from "react-i18next";
 
 export const TableMenu = React.memo(
@@ -82,6 +83,10 @@ export const TableMenu = React.memo(
       editor.chain().focus().deleteRow().run();
     }, [editor]);
 
+    const addRowNumbers = useCallback(() => {
+      autoNumberCells(editor);
+    }, [editor]);
+
     const deleteTable = useCallback(() => {
       editor.chain().focus().deleteTable().run();
     }, [editor]);
@@ -141,6 +146,17 @@ export const TableMenu = React.memo(
               aria-label={t("Add right column")}
             >
               <IconColumnInsertRight size={18} />
+            </ActionIcon>
+          </Tooltip>
+
+          <Tooltip position="top" label={t("Row numbers")}>
+            <ActionIcon
+              onClick={addRowNumbers}
+              variant="default"
+              size="lg"
+              aria-label={t("Row numbers")}
+            >
+              <IconListNumbers size={18} />
             </ActionIcon>
           </Tooltip>
 
