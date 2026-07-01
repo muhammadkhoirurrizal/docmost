@@ -1,0 +1,21 @@
+apps/server/package.json
+  s_1495a9b08fe639::t_3c61eb8e3076bf 84-85
+pnpm-lock.yaml
+  s_1495a9b08fe639::t_b9bb3e006940ea 608-613,5341-5343,5445-5459,5983-5986,6077-6085,7996-7999,8089-8091,8128-8130,9578-9580,11034-11037,16453-16454,16553-16598,17223-17229,17323-17329,19706-19709,19805-19806,19831-19832,21735-21738,23277-23282
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.6",
+  "base_commit_sha": "51bb3124eb45491f761568d68bc23e8102af77f7",
+  "prompts": {},
+  "sessions": {
+    "s_1495a9b08fe639": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_0e8b6c53effeOi9H4o3wMSJgBl",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  }
+}
