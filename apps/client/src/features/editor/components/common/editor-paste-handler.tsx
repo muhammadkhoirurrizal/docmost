@@ -7,6 +7,7 @@ import { createMentionAction } from "@/features/editor/components/link/internal-
 import { INTERNAL_LINK_REGEX } from "@/lib/constants.ts";
 import { uploadFile } from "@/features/page/services/page-service.ts";
 import { sanitizePastedHtml } from "@/features/editor/utils/sanitize-pasted-html.ts";
+import { find } from "linkifyjs";
 
 const LOCAL_IMAGE_PREFIX = "/api/files/";
 
@@ -171,6 +172,24 @@ export const handlePaste = (
       : url;
     createMentionAction(urlWithoutAnchor, view, pos, creatorId, anchorId);
     return true;
+  }
+
+  // If text is selected and a URL is pasted, turn the selection into a hyperlink (like Discord)
+  if (!view.state.selection.empty) {
+    const url = clipboardData.trim();
+    const links = find(url, { defaultProtocol: "https" });
+    const isUrl = links.some((item) => item.isLink && item.value === url);
+
+    if (isUrl) {
+      event.preventDefault();
+      const { from, to } = view.state.selection;
+      const href = links[0].href;
+      const linkMark = view.state.schema.marks.link?.create({ href });
+      if (linkMark) {
+        view.dispatch(view.state.tr.addMark(from, to, linkMark));
+      }
+      return true;
+    }
   }
 
   // If there are direct file blobs (e.g., copy-image from file system), upload them
