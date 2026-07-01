@@ -2,6 +2,7 @@ import api from "@/lib/api-client";
 import { IUser } from "@/features/user/types/user.types";
 import {
   ICreateInvite,
+  ICreateInviteResponse,
   IInvitation,
   IWorkspace,
   IAcceptInvite,
@@ -61,7 +62,9 @@ export async function getPendingInvitations(
   return req.data;
 }
 
-export async function createInvitation(data: ICreateInvite) {
+export async function createInvitation(
+  data: ICreateInvite,
+): Promise<ICreateInviteResponse[]> {
   const req = await api.post("/workspace/invites/create", data);
   return req.data;
 }

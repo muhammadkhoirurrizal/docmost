@@ -74,3 +74,8 @@ export interface IVersion {
   latestVersion: string;
   releaseUrl: string;
 }
+
+export interface ICreateInviteResponse {
+  email: string;
+  inviteLink: string;
+}

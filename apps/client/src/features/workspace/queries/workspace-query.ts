@@ -22,6 +22,7 @@ import { IPagination, QueryParams } from "@/lib/types.ts";
 import { notifications } from "@mantine/notifications";
 import {
   ICreateInvite,
+  ICreateInviteResponse,
   IInvitation,
   IPublicWorkspace,
   IVersion,
@@ -125,7 +126,7 @@ export function useCreateInvitationMutation() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
 
-  return useMutation<void, Error, ICreateInvite>({
+  return useMutation<ICreateInviteResponse[], Error, ICreateInvite>({
     mutationFn: (data) => createInvitation(data),
     onSuccess: (_data, _variables) => {
       notifications.show({ message: t("Invitation sent") });

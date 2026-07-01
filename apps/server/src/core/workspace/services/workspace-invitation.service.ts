@@ -106,7 +106,7 @@ export class WorkspaceInvitationService {
     inviteUserDto: InviteUserDto,
     workspace: Workspace,
     authUser: User,
-  ): Promise<void> {
+  ): Promise<{ email: string; inviteLink: string }[]> {
     const { emails, role, groupIds } = inviteUserDto;
 
     let invites: WorkspaceInvitation[] = [];
@@ -168,8 +168,7 @@ export class WorkspaceInvitationService {
       );
     }
 
-    // do not send code to do nothing users
-    if (invites) {
+    if (invites && invites.length > 0) {
       invites.forEach((invitation: WorkspaceInvitation) => {
         this.sendInvitationMail(
           invitation.id,
@@ -179,7 +178,24 @@ export class WorkspaceInvitationService {
           workspace.hostname,
         );
       });
+
+      const inviteLinks = await Promise.all(
+        invites.map((invitation) =>
+          this.buildInviteLink({
+            invitationId: invitation.id,
+            inviteToken: invitation.token,
+            hostname: workspace.hostname,
+          }).then((link) => ({
+            email: invitation.email,
+            inviteLink: link,
+          })),
+        ),
+      );
+
+      return inviteLinks;
     }
+
+    return [];
   }
 
   async acceptInvitation(

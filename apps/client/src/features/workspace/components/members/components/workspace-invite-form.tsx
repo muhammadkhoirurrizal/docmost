@@ -1,9 +1,24 @@
-import { Group, Box, Button, TagsInput, Select } from "@mantine/core";
+import {
+  Group,
+  Box,
+  Button,
+  TagsInput,
+  Select,
+  Modal,
+  TextInput,
+  CopyButton,
+  ActionIcon,
+  Stack,
+  Text,
+  Tooltip,
+} from "@mantine/core";
+import { IconCheck, IconCopy } from "@tabler/icons-react";
 import React, { useState } from "react";
 import { MultiGroupSelect } from "@/features/group/components/multi-group-select.tsx";
 import { UserRole } from "@/lib/types.ts";
 import { userRoleData } from "@/features/workspace/types/user-role-data.ts";
 import { useCreateInvitationMutation } from "@/features/workspace/queries/workspace-query.ts";
+import { ICreateInviteResponse } from "@/features/workspace/types/workspace.types";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
@@ -15,6 +30,7 @@ export function WorkspaceInviteForm({ onClose }: Props) {
   const [emails, setEmails] = useState<string[]>([]);
   const [role, setRole] = useState<string | null>(UserRole.MEMBER);
   const [groupIds, setGroupIds] = useState<string[]>([]);
+  const [inviteLinks, setInviteLinks] = useState<ICreateInviteResponse[] | null>(null);
   const createInvitationMutation = useCreateInvitationMutation();
   const navigate = useNavigate();
 
@@ -24,15 +40,18 @@ export function WorkspaceInviteForm({ onClose }: Props) {
       return regex.test(email);
     });
 
-    await createInvitationMutation.mutateAsync({
+    const result = await createInvitationMutation.mutateAsync({
       role: role.toLowerCase(),
       emails: validEmails,
       groupIds: groupIds,
     });
 
-    onClose();
-
-    navigate("?tab=invites");
+    if (result && result.length > 0) {
+      setInviteLinks(result);
+    } else {
+      onClose();
+      navigate("?tab=invites");
+    }
   }
 
   const handleGroupSelect = (value: string[]) => {
@@ -95,6 +114,53 @@ export function WorkspaceInviteForm({ onClose }: Props) {
           </Button>
         </Group>
       </Box>
+
+      {inviteLinks && (
+        <Modal
+          opened={!!inviteLinks}
+          onClose={() => {
+            setInviteLinks(null);
+            onClose();
+            navigate("?tab=invites");
+          }}
+          title={t("Invitation links")}
+          size="lg"
+        >
+          <Stack gap="md">
+            <Text size="sm" c="dimmed">
+              {t("Share these links with the invited members. They can use them to create their accounts.")}
+            </Text>
+            {inviteLinks.map((item, index) => (
+              <div key={index}>
+                <Text size="sm" fw={500} mb={4}>
+                  {item.email}
+                </Text>
+                <Group gap="xs" wrap="nowrap">
+                  <TextInput
+                    value={item.inviteLink}
+                    readOnly
+                    style={{ flex: 1 }}
+                    styles={{ input: { fontSize: "13px" } }}
+                  />
+                  <CopyButton value={item.inviteLink} timeout={2000}>
+                    {({ copied, copy }) => (
+                      <Tooltip label={copied ? t("Copied") : t("Copy")} withArrow>
+                        <ActionIcon
+                          color={copied ? "teal" : "gray"}
+                          variant="subtle"
+                          onClick={copy}
+                        >
+                          {copied ? <IconCheck size={16} /> : <IconCopy size={16} />}
+                        </ActionIcon>
+                      </Tooltip>
+                    )}
+                  </CopyButton>
+                </Group>
+              </div>
+            ))}
+          </Stack>
+        </Modal>
+      )}
     </>
   );
 }
