@@ -91,7 +91,14 @@ export default function ShareActionMenu({ share }: Props) {
         </Menu.Target>
 
         <Menu.Dropdown>
-          <Menu.Item onClick={copyLink} leftSection={<IconCopy size={16} />}>
+          <Menu.Item
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              copyLink();
+            }}
+            leftSection={<IconCopy size={16} />}
+          >
             {t("Copy link")}
           </Menu.Item>
 
