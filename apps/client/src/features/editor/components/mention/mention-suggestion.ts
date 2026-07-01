@@ -17,6 +17,11 @@ const mentionRenderItems = () => {
       clientRect: DOMRect;
       query: string;
     }) => {
+      // don't show mention popup if editor is read-only
+      if (!props.editor.isEditable) {
+        return;
+      }
+
       // query must not start with a whitespace
       if (props.query.charAt(0) === ' '){
         return;

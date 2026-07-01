@@ -9,20 +9,17 @@ export interface MentionListProps {
   editor: Editor;
 }
 
-export type MentionSuggestionItem =
-  | { entityType: "header"; label: string }
-  | {
-  id: string;
+export interface MentionSuggestionItemBase {
+  entityType: string;
   label: string;
-  entityType: "user";
-  entityId: string;
-  avatarUrl: string;
+  id?: string | null;
+  entityId?: string;
+  slugId?: string;
+  icon?: string;
+  avatarUrl?: string;
+  hasChildren?: boolean;
+  isExpanded?: boolean;
+  depth?: number;
 }
-  | {
-  id: string;
-  label: string;
-  entityType: "page";
-  entityId: string;
-  slugId: string;
-  icon: string;
-};
+
+export type MentionSuggestionItem = MentionSuggestionItemBase;

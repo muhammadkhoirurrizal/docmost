@@ -19,7 +19,12 @@ import {
 import clsx from "clsx";
 import classes from "./mention.module.css";
 import { CustomAvatar } from "@/components/ui/custom-avatar.tsx";
-import { IconFileDescription, IconPlus } from "@tabler/icons-react";
+import {
+  IconChevronDown,
+  IconChevronRight,
+  IconFileDescription,
+  IconPlus,
+} from "@tabler/icons-react";
 import { useSpaceQuery } from "@/features/space/queries/space-query.ts";
 import { useParams } from "react-router-dom";
 import { v7 as uuid7 } from "uuid";
@@ -37,6 +42,7 @@ import { SpaceTreeNode } from "@/features/page/tree/types";
 import { useTranslation } from "react-i18next";
 import { useQueryEmit } from "@/features/websocket/use-query-emit";
 import { extractPageSlugId } from "@/lib";
+import { getPageChildren } from "@/features/search/services/search-service";
 
 const MentionList = forwardRef<any, MentionListProps>((props, ref) => {
   const [selectedIndex, setSelectedIndex] = useState(1);
@@ -51,6 +57,8 @@ const MentionList = forwardRef<any, MentionListProps>((props, ref) => {
   const tree = useMemo(() => new SimpleTree<SpaceTreeNode>(data), [data]);
   const createPageMutation = useCreatePageMutation();
   const emit = useQueryEmit();
+  const [expandedPages, setExpandedPages] = useState<Set<string>>(new Set());
+  const [loadingPages, setLoadingPages] = useState<Set<string>>(new Set());
 
   const { data: suggestion, isLoading } = useSearchSuggestionsQuery({
     query: props.query,
@@ -70,6 +78,124 @@ const MentionList = forwardRef<any, MentionListProps>((props, ref) => {
       icon: null,
     }
   }
+
+  const toggleExpand = useCallback(async (pageId: string, index: number) => {
+    // Use functional updates to avoid stale closure issues
+    setRenderItems((prevItems) => {
+      const item = prevItems[index];
+      if (!item || item.entityType !== "page") return prevItems;
+
+      const isCurrentlyExpanded = expandedPages.has(pageId);
+
+      if (isCurrentlyExpanded) {
+        // Collapse: remove all children of this page
+        setExpandedPages((prev) => {
+          const next = new Set(prev);
+          next.delete(pageId);
+          return next;
+        });
+
+        const itemDepth = item.depth || 0;
+        const newItems: MentionSuggestionItem[] = [];
+        let removing = false;
+
+        for (let i = 0; i < prevItems.length; i++) {
+          if (i === index) {
+            newItems.push({ ...prevItems[i], isExpanded: false });
+            removing = true;
+            continue;
+          }
+
+          if (removing) {
+            if (prevItems[i].entityType === "page" && (prevItems[i].depth || 0) > itemDepth) {
+              // This is a child, skip it
+              continue;
+            } else {
+              removing = false;
+              newItems.push(prevItems[i]);
+            }
+          } else {
+            newItems.push(prevItems[i]);
+          }
+        }
+
+        return newItems;
+      }
+
+      // For expansion, we'll fetch async and update later
+      return prevItems;
+    });
+
+    // Check if we need to expand (fetch children)
+    const isCurrentlyExpanded = expandedPages.has(pageId);
+    if (!isCurrentlyExpanded) {
+      // Expand: fetch children
+      setExpandedPages((prev) => {
+        const next = new Set(prev);
+        next.add(pageId);
+        return next;
+      });
+
+      setLoadingPages((prev) => {
+        const next = new Set(prev);
+        next.add(pageId);
+        return next;
+      });
+
+      try {
+        const children = await getPageChildren({ pageId });
+        
+        setRenderItems((prevItems) => {
+          const item = prevItems[index];
+          if (!item) return prevItems;
+          
+          const childDepth = (item.depth || 0) + 1;
+
+          const childItems: MentionSuggestionItem[] = children.map((child) => ({
+            id: uuid7(),
+            label: child.title || "Untitled",
+            entityType: "page" as const,
+            entityId: child.id,
+            slugId: child.slugId,
+            icon: child.icon,
+            hasChildren: child.hasChildren,
+            isExpanded: false,
+            depth: childDepth,
+          }));
+
+          const newItems: MentionSuggestionItem[] = [];
+          for (let i = 0; i < prevItems.length; i++) {
+            newItems.push(prevItems[i]);
+            if (i === index) {
+              // Mark as expanded
+              newItems[newItems.length - 1] = { ...newItems[newItems.length - 1], isExpanded: true };
+              // Insert children after
+              newItems.push(...childItems);
+            }
+          }
+
+          // Update editor storage
+          props.editor.storage.mentionItems = newItems;
+          
+          return newItems;
+        });
+      } catch (error) {
+        console.error("Failed to fetch page children:", error);
+        // Revert expanded state on error
+        setExpandedPages((prev) => {
+          const next = new Set(prev);
+          next.delete(pageId);
+          return next;
+        });
+      } finally {
+        setLoadingPages((prev) => {
+          const next = new Set(prev);
+          next.delete(pageId);
+          return next;
+        });
+      }
+    }
+  }, [expandedPages]);
 
   useEffect(() => {
     if (suggestion && !isLoading) {
@@ -99,10 +225,16 @@ const MentionList = forwardRef<any, MentionListProps>((props, ref) => {
             entityId: page.id,
             slugId: page.slugId,
             icon: page.icon,
+            hasChildren: page.hasChildren || false,
+            isExpanded: false,
+            depth: 0,
           })),
         );
       }
-      items.push(createPageItem(props.query));
+
+      if (props.editor.isEditable) {
+        items.push(createPageItem(props.query));
+      }
 
       setRenderItems(items);
       // update editor storage
@@ -308,6 +440,9 @@ const MentionList = forwardRef<any, MentionListProps>((props, ref) => {
               </UnstyledButton>
             );
           } else if (item.entityType === "page") {
+            const depth = item.depth || 0;
+            const isLoadingChildren = item.entityId && loadingPages.has(item.entityId);
+
             return (
               <UnstyledButton
                 data-item-index={index}
@@ -316,8 +451,32 @@ const MentionList = forwardRef<any, MentionListProps>((props, ref) => {
                 className={clsx(classes.menuBtn, {
                   [classes.selectedItem]: index === selectedIndex,
                 })}
+                style={{ paddingLeft: `${8 + depth * 16}px` }}
               >
-                <Group>
+                <Group gap="xs">
+                  {item.hasChildren ? (
+                    <ActionIcon
+                      variant="transparent"
+                      component="div"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (item.entityId) {
+                          toggleExpand(item.entityId, index);
+                        }
+                      }}
+                      loading={isLoadingChildren}
+                    >
+                      {item.isExpanded ? (
+                        <IconChevronDown size={14} />
+                      ) : (
+                        <IconChevronRight size={14} />
+                      )}
+                    </ActionIcon>
+                  ) : (
+                    <div style={{ width: 28 }} />
+                  )}
+
                   <ActionIcon
                     variant="default"
                     component="div"
