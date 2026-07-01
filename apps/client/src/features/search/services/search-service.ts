@@ -1,6 +1,8 @@
 import api from "@/lib/api-client";
 import {
   IAttachmentSearch,
+  IPageChild,
+  IPageChildrenParams,
   IPageSearch,
   IPageSearchParams,
   ISuggestionResult,
@@ -32,5 +34,12 @@ export async function searchAttachments(
   params: IPageSearchParams,
 ): Promise<IAttachmentSearch[]> {
   const req = await api.post<IAttachmentSearch[]>("/search-attachments", params);
+  return req.data;
+}
+
+export async function getPageChildren(
+  params: IPageChildrenParams,
+): Promise<IPageChild[]> {
+  const req = await api.post<IPageChild[]>("/search/page-children", params);
   return req.data;
 }

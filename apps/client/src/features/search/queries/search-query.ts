@@ -1,5 +1,6 @@
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
 import {
+  getPageChildren,
   searchAttachments,
   searchPage,
   searchShare,
@@ -7,6 +8,8 @@ import {
 } from '@/features/search/services/search-service';
 import {
   IAttachmentSearch,
+  IPageChild,
+  IPageChildrenParams,
   IPageSearch,
   IPageSearchParams,
   ISuggestionResult,
@@ -51,5 +54,17 @@ export function useAttachmentSearchQuery(
     queryKey: ["attachment-search", params],
     queryFn: () => searchAttachments(params),
     enabled: !!params.query,
+  });
+}
+
+export function usePageChildrenQuery(
+  params: IPageChildrenParams,
+  enabled: boolean = false,
+): UseQueryResult<IPageChild[], Error> {
+  return useQuery({
+    queryKey: ["page-children", params.pageId],
+    queryFn: () => getPageChildren(params),
+    enabled: enabled && !!params.pageId,
+    staleTime: 30 * 1000, // 30 seconds
   });
 }

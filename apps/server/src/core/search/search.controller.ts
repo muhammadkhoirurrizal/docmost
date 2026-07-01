@@ -83,6 +83,19 @@ export class SearchController {
     return this.searchService.searchSuggestions(dto, user.id, workspace.id);
   }
 
+  @HttpCode(HttpStatus.OK)
+  @Post('page-children')
+  async getPageChildren(
+    @Body() dto: { pageId: string },
+    @AuthUser() user: User,
+    @AuthWorkspace() workspace: Workspace,
+  ) {
+    if (!dto.pageId) {
+      throw new BadRequestException('pageId is required');
+    }
+    return this.searchService.getPageChildren(dto.pageId, user.id, workspace.id);
+  }
+
   @Public()
   @HttpCode(HttpStatus.OK)
   @Post('share-search')

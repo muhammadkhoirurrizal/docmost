@@ -443,19 +443,14 @@ export class PageRepo {
 
   withHasChildren(eb: ExpressionBuilder<DB, 'pages'>) {
     return eb
-      .selectFrom('pages as child')
-      .select((eb) =>
+      .exists(
         eb
-          .case()
-          .when(eb.fn.countAll(), '>', 0)
-          .then(true)
-          .else(false)
-          .end()
-          .as('count'),
+          .selectFrom('pages as child')
+          .select('child.id')
+          .whereRef('child.parentPageId', '=', 'pages.id')
+          .where('child.deletedAt', 'is', null)
+          .limit(1),
       )
-      .whereRef('child.parentPageId', '=', 'pages.id')
-      .where('child.deletedAt', 'is', null)
-      .limit(1)
       .as('hasChildren');
   }
 

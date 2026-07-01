@@ -29,7 +29,21 @@ export interface SearchSuggestionParams {
 export interface ISuggestionResult {
   users?: Partial<IUser[]>;
   groups?: Partial<IGroup[]>;
-  pages?: Partial<IPage[]>;
+  pages?: Partial<IPage & { hasChildren?: boolean }>[];
+}
+
+export interface IPageChildrenParams {
+  pageId: string;
+}
+
+export interface IPageChild {
+  id: string;
+  slugId: string;
+  title: string;
+  icon: string;
+  spaceId: string;
+  parentPageId: string;
+  hasChildren: boolean;
 }
 
 export interface IPageSearchParams {

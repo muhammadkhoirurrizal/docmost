@@ -183,7 +183,8 @@ export class SearchService {
     if (suggestion.includePages) {
       let pageSearch = this.db
         .selectFrom('pages')
-        .select(['id', 'slugId', 'title', 'icon', 'spaceId'])
+        .select(['id', 'slugId', 'title', 'icon', 'spaceId', 'parentPageId'])
+        .select((eb) => this.pageRepo.withHasChildren(eb))
         .where((eb) =>
           eb(
             sql`LOWER(f_unaccent(pages.title))`,
@@ -212,5 +213,36 @@ export class SearchService {
     }
 
     return { users, groups, pages };
+  }
+
+  async getPageChildren(
+    parentPageId: string,
+    userId: string,
+    workspaceId: string,
+  ) {
+    // Verify user has access to the parent page's space
+    const parentPage = await this.pageRepo.findById(parentPageId);
+    if (!parentPage || parentPage.workspaceId !== workspaceId) {
+      return [];
+    }
+
+    const userSpaceIds = await this.spaceMemberRepo.getUserSpaceIds(userId);
+    if (!userSpaceIds.includes(parentPage.spaceId)) {
+      return [];
+    }
+
+    // Get direct children with hasChildren flag
+    const children = await this.db
+      .selectFrom('pages')
+      .select(['id', 'slugId', 'title', 'icon', 'spaceId', 'parentPageId'])
+      .select((eb) => this.pageRepo.withHasChildren(eb))
+      .where('parentPageId', '=', parentPageId)
+      .where('deletedAt', 'is', null)
+      .where('archivedAt', 'is', null)
+      .where('workspaceId', '=', workspaceId)
+      .orderBy('position', (ob) => ob.collate('C').asc())
+      .execute();
+
+    return children;
   }
 }
