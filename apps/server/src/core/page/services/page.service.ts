@@ -101,6 +101,7 @@ export class PageService {
       creatorId: userId,
       workspaceId: workspaceId,
       lastUpdatedById: userId,
+      content: createPageDto.content,
     });
 
     return createdPage;
@@ -227,6 +228,10 @@ export class PageService {
     });
 
     return result;
+  }
+
+  async getChildrenWithContent(pageId: string) {
+    return this.pageRepo.getChildrenWithContent(pageId);
   }
 
   async movePageToSpace(rootPage: Page, spaceId: string) {
@@ -555,19 +560,14 @@ export class PageService {
               ])
               .select(
                 exp
-                  .selectFrom('pages as child')
-                  .select((eb) =>
-                    eb
-                      .case()
-                      .when(eb.fn.countAll(), '>', 0)
-                      .then(true)
-                      .else(false)
-                      .end()
-                      .as('count'),
+                  .exists(
+                    exp
+                      .selectFrom('pages as child')
+                      .select('child.id')
+                      .whereRef('child.parentPageId', '=', 'id')
+                      .where('child.deletedAt', 'is', null)
+                      .limit(1),
                   )
-                  .whereRef('child.parentPageId', '=', 'id')
-                  .where('child.deletedAt', 'is', null)
-                  .limit(1)
                   .as('hasChildren'),
               )
               //.select((eb) => this.withHasChildren(eb))

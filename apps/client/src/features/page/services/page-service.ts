@@ -112,6 +112,13 @@ export async function getAllSidebarPages(
   };
 }
 
+export async function getChildrenContent(
+  pageId: string,
+): Promise<(IPage & { depth: number })[]> {
+  const req = await api.post<(IPage & { depth: number })[]>("/pages/children-content", { pageId });
+  return req.data;
+}
+
 export async function getPageBreadcrumbs(
   pageId: string,
 ): Promise<Partial<IPage[]>> {
@@ -127,7 +134,12 @@ export async function getRecentChanges(
 }
 
 export async function exportPage(data: IExportPageParams): Promise<void> {
-  const req = await api.post("/pages/export", data, {
+  const body = { ...data };
+  if (!body.password) {
+    delete body.password;
+  }
+
+  const req = await api.post("/pages/export", body, {
     responseType: "blob",
   });
 

@@ -83,6 +83,7 @@ export interface IExportPageParams {
   format: ExportFormat;
   includeChildren?: boolean;
   includeAttachments?: boolean;
+  password?: string;
 }
 
 export enum ExportFormat {

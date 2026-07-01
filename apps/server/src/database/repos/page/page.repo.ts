@@ -497,4 +497,49 @@ export class PageRepo {
       .selectAll()
       .execute();
   }
+
+  async getChildrenWithContent(parentPageId: string) {
+    return this.db
+      .withRecursive('page_hierarchy', (db) =>
+        db
+          .selectFrom('pages')
+          .select([
+            'id',
+            'slugId',
+            'title',
+            'icon',
+            'position',
+            'parentPageId',
+            'spaceId',
+            'content',
+          ])
+          .select(sql<number>`0`.as('depth'))
+          .where('id', '=', parentPageId)
+          .where('deletedAt', 'is', null)
+          .unionAll((exp) =>
+            exp
+              .selectFrom('pages as p')
+              .select([
+                'p.id',
+                'p.slugId',
+                'p.title',
+                'p.icon',
+                'p.position',
+                'p.parentPageId',
+                'p.spaceId',
+                'p.content',
+              ])
+              .select(sql<number>`ph.depth + 1`.as('depth'))
+              .innerJoin('page_hierarchy as ph', 'p.parentPageId', 'ph.id')
+              .where('p.deletedAt', 'is', null)
+              .where('p.archivedAt', 'is', null),
+          ),
+      )
+      .selectFrom('page_hierarchy')
+      .selectAll()
+      .where('id', '!=', parentPageId)
+      .orderBy('depth', 'asc')
+      .orderBy('position', (ob) => ob.collate('C').asc())
+      .execute();
+  }
 }

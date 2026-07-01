@@ -5,6 +5,7 @@ import {
   IconArrowsHorizontal,
   IconDots,
   IconFileExport,
+  IconFiles,
   IconHistory,
   IconLink,
   IconList,
@@ -26,8 +27,11 @@ import {
   usePageQuery,
   useArchivePageMutation,
   useUnarchivePageMutation,
+  useCreatePageMutation,
+  useGetChildrenContentQuery,
 } from "@/features/page/queries/page-query.ts";
 import { buildPageUrl } from "@/features/page/page.utils.ts";
+import { buildRollupContent } from "@/features/page/utils/build-rollup-content.ts";
 import { notifications } from "@mantine/notifications";
 import { getAppUrl, getSpaceUrl } from "@/lib/config.ts";
 import { extractPageSlugId } from "@/lib";
@@ -160,6 +164,9 @@ function PageActionMenu({ readOnly }: PageActionMenuProps) {
   const { openDeleteModal } = useDeletePageModal();
   const archivePageMutation = useArchivePageMutation();
   const unarchivePageMutation = useUnarchivePageMutation();
+  const createPageMutation = useCreatePageMutation();
+  const { data: childrenContent, refetch: refetchChildrenContent } =
+    useGetChildrenContentQuery(page?.id);
 
   const handleArchive = async () => {
     await archivePageMutation.mutateAsync(page.id);
@@ -198,6 +205,40 @@ function PageActionMenu({ readOnly }: PageActionMenuProps) {
     }
   };
 
+  const handleGenerateRollup = async () => {
+    if (!page) return;
+
+    const descendants =
+      childrenContent ?? (await refetchChildrenContent()).data;
+
+    if (!descendants?.length) {
+      notifications.show({
+        message: t("No subpages to rollup"),
+        color: "orange",
+      });
+      return;
+    }
+
+    const rollupContent = buildRollupContent(page.title, descendants);
+
+    createPageMutation.mutate(
+      {
+        title: `${page.title} - ${t("All Content")}`,
+        parentPageId: page.id,
+        spaceId: page.spaceId,
+        content: rollupContent,
+        icon: "📑",
+      } as any,
+      {
+        onSuccess: (createdPage) => {
+          navigate(
+            buildPageUrl(spaceSlug, createdPage.slugId, createdPage.title),
+          );
+        },
+      },
+    );
+  };
+
   const handlePrint = () => {
     setTimeout(() => {
       window.print();
@@ -231,10 +272,28 @@ function PageActionMenu({ readOnly }: PageActionMenuProps) {
         <Menu.Dropdown>
           <Menu.Item
             leftSection={<IconLink size={16} />}
-            onClick={handleCopyLink}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleCopyLink();
+            }}
           >
             {t("Copy link")}
           </Menu.Item>
+
+          {page?.hasChildren && (
+            <Menu.Item
+              leftSection={<IconFiles size={16} />}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleGenerateRollup();
+              }}
+            >
+              {t("Generate rollup page")}
+            </Menu.Item>
+          )}
+
           <Menu.Divider />
 
           <Menu.Item leftSection={<IconArrowsHorizontal size={16} />}>

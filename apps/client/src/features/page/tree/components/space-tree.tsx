@@ -14,6 +14,8 @@ import {
   useUpdatePageMutation,
   useArchivePageMutation,
   useUnarchivePageMutation,
+  useCreatePageMutation,
+  useGetChildrenContentQuery,
 } from "@/features/page/queries/page-query.ts";
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -29,6 +31,7 @@ import {
   IconEdit,
   IconFileDescription,
   IconFileExport,
+  IconFiles,
   IconFolder,
   IconFolderOpen,
   IconLink,
@@ -66,6 +69,7 @@ import {
 import { dfs } from "react-arborist/dist/module/utils";
 import { useQueryEmit } from "@/features/websocket/use-query-emit.ts";
 import { buildPageUrl } from "@/features/page/page.utils.ts";
+import { buildRollupContent } from "@/features/page/utils/build-rollup-content.ts";
 import { notifications } from "@mantine/notifications";
 import { getAppUrl, getSpaceUrl } from "@/lib/config.ts";
 import { extractPageSlugId } from "@/lib";
@@ -578,6 +582,9 @@ function NodeMenu({ node, treeApi, spaceId }: NodeMenuProps) {
   const { openDeleteModal } = useDeletePageModal();
   const archivePageMutation = useArchivePageMutation();
   const unarchivePageMutation = useUnarchivePageMutation();
+  const createPageMutation = useCreatePageMutation();
+  const { data: childrenContent, refetch: refetchChildrenContent } =
+    useGetChildrenContentQuery(node.data.hasChildren ? node.id : undefined);
 
   const handleArchive = async () => {
     await archivePageMutation.mutateAsync(node.id);
@@ -615,6 +622,38 @@ function NodeMenu({ node, treeApi, spaceId }: NodeMenuProps) {
         color: "red",
       });
     }
+  };
+
+  const handleGenerateRollup = async () => {
+    const descendants =
+      childrenContent ?? (await refetchChildrenContent()).data;
+
+    if (!descendants?.length) {
+      notifications.show({
+        message: t("No subpages to rollup"),
+        color: "orange",
+      });
+      return;
+    }
+
+    const rollupContent = buildRollupContent(node.data.name, descendants);
+
+    createPageMutation.mutate(
+      {
+        title: `${node.data.name} - ${t("All Content")}`,
+        parentPageId: node.id,
+        spaceId,
+        content: rollupContent,
+        icon: "📑",
+      } as any,
+      {
+        onSuccess: (createdPage) => {
+          navigate(
+            buildPageUrl(spaceSlug, createdPage.slugId, createdPage.title),
+          );
+        },
+      },
+    );
   };
 
   const handleDuplicatePage = async () => {
@@ -737,6 +776,19 @@ function NodeMenu({ node, treeApi, spaceId }: NodeMenuProps) {
                 {t("New folder")}
               </Menu.Item>
             </>
+          )}
+
+          {node.data.hasChildren && (
+            <Menu.Item
+              leftSection={<IconFiles size={16} />}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleGenerateRollup();
+              }}
+            >
+              {t("Generate rollup page")}
+            </Menu.Item>
           )}
 
           <Menu.Item

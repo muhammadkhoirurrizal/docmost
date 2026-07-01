@@ -23,6 +23,7 @@ import {
   restorePage,
   archivePage,
   unarchivePage,
+  getChildrenContent,
 } from "@/features/page/services/page-service";
 import {
   IMovePage,
@@ -72,7 +73,7 @@ export function usePageQuery(
 
 export function useCreatePageMutation() {
   const { t } = useTranslation();
-  return useMutation<IPage, Error, Partial<IPageInput>>({
+  return useMutation<IPage, Error, Partial<IPage>>({
     mutationFn: (data) => createPage(data),
     onSuccess: (data) => {
       invalidateOnCreatePage(data);
@@ -413,6 +414,21 @@ export function useGetRootSidebarPagesQuery(data: SidebarPagesParams) {
       firstPage.meta.hasPrevPage ? firstPage.meta.page - 1 : undefined,
     getNextPageParam: (lastPage) =>
       lastPage.meta.hasNextPage ? lastPage.meta.page + 1 : undefined,
+  });
+}
+
+export function useGetChildrenContentQuery(
+  pageId: string | undefined,
+): UseQueryResult<(IPage & { depth: number })[], Error> {
+  return useQuery({
+    queryKey: ["children-content", pageId],
+    queryFn: async () => {
+      if (!pageId) return [];
+      const data = await getChildrenContent(pageId);
+      return data ?? [];
+    },
+    enabled: !!pageId,
+    staleTime: 5 * 60 * 1000,
   });
 }
 
