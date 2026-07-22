@@ -1,0 +1,36 @@
+apps/client/src/features/editor/utils/side-drop-handler.ts
+  s_112e0960666121::t_6d81454fcd8f10 44-51,53
+  s_6fcdb3d797deb9::t_135f2a8d392eae 32-42
+  s_6fcdb3d797deb9::t_1973b091390f59 31
+  s_112e0960666121::t_f20d2f97b39ea6 52
+  s_112e0960666121::t_9629a8ea2c1657 54-56
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "9bb9352fda0f3aa2f442c4fdb1d18fd4e1f0ac33",
+  "prompts": {},
+  "humans": {
+    "h_0612cf7e255131": {
+      "author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  },
+  "sessions": {
+    "s_112e0960666121": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_077c99becffe8UQgvCv70QnTg5",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    },
+    "s_6fcdb3d797deb9": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_0784e24b6ffeTnFcLn4MZNo3vz",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  }
+}
