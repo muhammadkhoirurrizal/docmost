@@ -28,6 +28,32 @@ let draggedNodeInfo: {
 
 let indicatorEl: HTMLElement | null = null;
 let previewEl: HTMLElement | null = null;
+let positionedTargetEl: HTMLElement | null = null;
+let originalTargetPosition: string | null = null;
+
+function restoreTargetPosition() {
+  if (positionedTargetEl && originalTargetPosition !== null) {
+    positionedTargetEl.style.position = originalTargetPosition;
+  }
+
+  positionedTargetEl = null;
+  originalTargetPosition = null;
+}
+
+function ensureTargetPosition(targetEl: HTMLElement) {
+  if (positionedTargetEl !== targetEl) {
+    restoreTargetPosition();
+  }
+
+  if (positionedTargetEl === targetEl) return;
+
+  if (getComputedStyle(targetEl).position === "static") {
+    originalTargetPosition = targetEl.style.position;
+    targetEl.style.position = "relative";
+  }
+
+  positionedTargetEl = targetEl;
+}
 
 function createPreviewOverlay(): HTMLElement {
   const el = document.createElement("div");
@@ -128,6 +154,8 @@ function getColumnContext(
 }
 
 function showPreview(targetEl: HTMLElement, side: "left" | "right") {
+  ensureTargetPosition(targetEl);
+
   if (!previewEl) {
     previewEl = createPreviewOverlay();
   }
@@ -170,6 +198,8 @@ function cleanupPreview() {
 }
 
 function showIndicator(targetEl: HTMLElement, side: "left" | "right") {
+  ensureTargetPosition(targetEl);
+
   if (!indicatorEl) {
     indicatorEl = document.createElement("div");
     indicatorEl.style.cssText = `
@@ -214,6 +244,7 @@ function cleanupAllVisuals() {
   hidePreview();
   cleanupIndicator();
   cleanupPreview();
+  restoreTargetPosition();
 }
 
 /**
@@ -375,7 +406,12 @@ function findDraggedNodePos(state: EditorView["state"]): number | null {
 
   // First, check if the node is still at the tracked position
   const nodeAtPos = state.doc.nodeAt(draggedNodeInfo.pos);
-  if (nodeAtPos && nodeAtPos.type.name === draggedNodeInfo.typeName) {
+  if (
+    nodeAtPos &&
+    nodeAtPos.type.name === draggedNodeInfo.typeName &&
+    nodeAtPos.nodeSize === draggedNodeInfo.nodeSize &&
+    JSON.stringify(nodeAtPos.toJSON()) === JSON.stringify(draggedNodeInfo.json)
+  ) {
     return draggedNodeInfo.pos;
   }
 
