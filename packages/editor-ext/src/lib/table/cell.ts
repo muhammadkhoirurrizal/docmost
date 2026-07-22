@@ -38,6 +38,10 @@ export const TableCell = TiptapTableCell.extend({
           };
         },
       },
+      isRowNumber: {
+        default: false,
+        rendered: false,
+      },
     };
   },
 });

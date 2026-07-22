@@ -2,6 +2,11 @@ import { Table } from "@tiptap/extension-table";
 import { Editor } from "@tiptap/core";
 import { DOMOutputSpec } from "@tiptap/pm/model";
 
+import {
+  getValidNumberColumn,
+  updateAutoNumberCells,
+} from "./utils/auto-number";
+
 const LIST_TYPES = ["bulletList", "orderedList", "taskList"];
 
 function isInList(editor: Editor): boolean {
@@ -32,6 +37,37 @@ function handleListOutdent(editor: Editor): boolean {
 }
 
 export const CustomTable = Table.extend({
+  addCommands() {
+    const parentCommands = this.parent?.();
+
+    // Keep row numbering in the same transaction as row mutations. This
+    // covers toolbar, cell-selection, and keyboard row commands alike.
+    const updateAfterRowCommand = (commandName: string) => (props: any) => {
+      const numberedColumn = getValidNumberColumn(props.editor, props.state);
+      const command = parentCommands?.[commandName];
+      const result = command?.()(props);
+
+      if (result && props.dispatch && numberedColumn) {
+        updateAutoNumberCells(
+          props.editor,
+          numberedColumn.startFrom,
+          props.tr,
+          false,
+          numberedColumn,
+        );
+      }
+
+      return result;
+    };
+
+    return {
+      ...parentCommands,
+      addRowBefore: () => updateAfterRowCommand("addRowBefore"),
+      addRowAfter: () => updateAfterRowCommand("addRowAfter"),
+      deleteRow: () => updateAfterRowCommand("deleteRow"),
+    };
+  },
+
   addKeyboardShortcuts() {
     return {
       ...this.parent?.(),
