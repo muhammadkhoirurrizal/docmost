@@ -1,0 +1,84 @@
+packages/editor-ext/src/lib/table/utils/auto-number.ts
+  s_c9fd3a705cd3aa::t_6bff5d9a5e515c 176,248,286,477-479,484,486-490,522-533
+  s_c9fd3a705cd3aa::t_993ece07a265c0 13,53-56
+  s_c9fd3a705cd3aa::t_b59c3f9bbe2164 47,64,74,119,154,222,314,377,401,405,413,417,455,521
+  s_fdbea5b3a0aad8::t_626d33f6e605c7 27-28,34,38,60-63,75-80,84-85,91-94,105-106,130-132,135,140-142,144,147-153,162,173-174,187-193,195,198-200,216-217,220,223,230,232-234,236-240,242-245,247,541-542,544,547
+  s_04ddc4f09678ce::t_6b35e8dd5df143 1,4,8-12,14-25,41-46,48-52,58-59,65-73,108,110-118,120,122-123,125-129,133-134,136-139,146,155,157-158,160,163-166,168-171,175,178-186,194,201-202,208,212,215,219,224-228,250-254,256-257,259-271,273-278,282,284-285,294,298,303,305-309,311,315,334,337-340,343,347-352,354-355,360-366,368-376,378-384,386-387,389-397,399-400,402-404,406-412,416,418-444,460-476,480-483,491-503,505-513,515-520
+  s_c9fd3a705cd3aa::t_6e622362b4c76c 385,398
+  s_c9fd3a705cd3aa::t_da8ae2c71417ba 81,83,95-104
+  s_04ddc4f09678ce::t_690b74ca697216 356-358,445-454,456-459,514
+  s_64678e6893f8a8::t_33d67655d12e08 3
+  s_c9fd3a705cd3aa::t_138c808e515b07 82,143,167
+  s_64678e6893f8a8::t_d23757b0c1973c 272
+  s_fdbea5b3a0aad8::t_7cbeef4b36610d 209,213-214
+  s_04ddc4f09678ce::t_87de0b3e6dd7ca 159
+  s_c9fd3a705cd3aa::t_6f276a9393b7cd 504
+  s_c9fd3a705cd3aa::t_29e8d35a50378f 197,205-207,221
+  s_c9fd3a705cd3aa::t_72d6e8dd9892ba 279-280,283,288-293,297,301-302,310
+  s_c9fd3a705cd3aa::t_247494a9cfd569 317-333,335-336,341-342,344
+  s_64678e6893f8a8::t_adfd2925b74c9b 145,196,203-204,235,345-346,353,359,367,388,414-415
+  s_c9fd3a705cd3aa::t_2c33079c7609f7 287
+  s_04ddc4f09678ce::t_f0a222dbad6e0b 304
+  s_c9fd3a705cd3aa::t_40168103dac66f 485
+packages/editor-ext/src/lib/table/cell.ts
+  s_04ddc4f09678ce::t_be3746518d1652 41-43
+  s_c9fd3a705cd3aa::t_2fc23d1dfb7956 44
+packages/editor-ext/src/lib/table/dnd/dnd-extension.ts
+  s_04ddc4f09678ce::t_8b1ea0fac9ed3c 4,16
+  s_c9fd3a705cd3aa::t_b59c3f9bbe2164 5-9,11-15,23,26-98,101-106,108-220,222,224-228,230-263,265-287,290-307,309-310,312,314,318-320,322-323,325-327
+packages/editor-ext/src/lib/table/table.ts
+  s_fdbea5b3a0aad8::t_295862261b7fde 43-44
+  s_04ddc4f09678ce::t_1629840b0aedef 5-8,50-52,54-57
+  s_fdbea5b3a0aad8::t_626d33f6e605c7 40-41,45,47-48,58-68
+  s_c9fd3a705cd3aa::t_b59c3f9bbe2164 9,46
+  s_c9fd3a705cd3aa::t_39ab7c02078dff 53
+  s_c9fd3a705cd3aa::t_d49492757c9319 42,49,69-70
+packages/editor-ext/src/lib/table/header.ts
+  s_04ddc4f09678ce::t_be3746518d1652 41-43
+  s_c9fd3a705cd3aa::t_4dc0922fb25b52 44
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "cd0bb164705405a44b22380337bba4da28c20ddf",
+  "prompts": {},
+  "humans": {
+    "h_0612cf7e255131": {
+      "author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  },
+  "sessions": {
+    "s_04ddc4f09678ce": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_0766eec5ffferC0x4smNaf9q3v",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    },
+    "s_64678e6893f8a8": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_076822f8affemZN2ZRqUh5zigr",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    },
+    "s_c9fd3a705cd3aa": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_076597305ffeudEpAJdQ9QSzKn",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    },
+    "s_fdbea5b3a0aad8": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_07691ce85ffeLFYnLAtVKenTjr",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  }
+}
