@@ -65,7 +65,9 @@ export default function PageHeaderMenu({ readOnly }: PageHeaderMenuProps) {
   const [lastSavedPage, setLastSavedPage] = useAtom(lastSavedPageAtom);
   const { pageSlug } = useParams();
   const slugId = extractPageSlugId(pageSlug);
-  const showSavedIndicator = lastSavedPage?.id === slugId;
+  const { data: page } = usePageQuery({ pageId: slugId });
+  const currentPageId = page?.id ?? slugId;
+  const showSavedIndicator = lastSavedPage?.id === currentPageId;
   const savedPageTitle = showSavedIndicator ? lastSavedPage.title : "";
   const savedAt = showSavedIndicator ? lastSavedPage.savedAt : undefined;
 
@@ -116,14 +118,14 @@ export default function PageHeaderMenu({ readOnly }: PageHeaderMenuProps) {
       )}
       {!userRole.isVisitor && !readOnly && (
         <>
-          <PageStateSegmentedControl size="xs" pageId={slugId} />
-          {showSavedIndicator && (
-            <Badge color="green" variant="light" size="sm">
-              {t("Page {{title}} Saved", { title: savedPageTitle })}
-            </Badge>
-          )}
+          <PageStateSegmentedControl size="xs" pageId={currentPageId} />
           <ShareModal readOnly={readOnly} />
         </>
+      )}
+      {!userRole.isVisitor && showSavedIndicator && (
+        <Badge color="green" variant="light" size="sm">
+          {t("Page {{title}} Saved", { title: savedPageTitle })}
+        </Badge>
       )}
 
       <Tooltip label={t("Comments")} openDelay={250} withArrow>
