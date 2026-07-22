@@ -18,8 +18,12 @@ import { markdownToHtml } from '@docmost/editor-ext';
 import {
   FileTaskStatus,
   FileTaskType,
+  FileImportSource,
   getFileTaskFolderPath,
 } from '../utils/file.utils';
+import { EnvironmentService } from '../../environment/environment.service';
+import { downloadGoogleDocZip } from '../utils/google-doc.utils';
+import * as bytes from 'bytes';
 import { v7 as uuid7 } from 'uuid';
 import { StorageService } from '../../storage/storage.service';
 import { InjectQueue } from '@nestjs/bullmq';
@@ -36,6 +40,7 @@ export class ImportService {
     @InjectKysely() private readonly db: KyselyDB,
     @InjectQueue(QueueName.FILE_TASK_QUEUE)
     private readonly fileTaskQueue: Queue,
+    private readonly environmentService: EnvironmentService,
   ) {}
 
   async importPage(
@@ -199,9 +204,46 @@ export class ImportService {
   ) {
     const file = await filePromise;
     const fileBuffer = await file.toBuffer();
-    const fileExtension = path.extname(file.filename).toLowerCase();
+    return this.createZipImportTask(
+      fileBuffer,
+      file.filename,
+      source,
+      userId,
+      spaceId,
+      workspaceId,
+    );
+  }
+
+  async importGoogleDoc(
+    url: string,
+    userId: string,
+    spaceId: string,
+    workspaceId: string,
+  ) {
+    const maxFileSize = bytes(this.environmentService.getFileImportSizeLimit());
+    const fileBuffer = await downloadGoogleDocZip(url, maxFileSize);
+
+    return this.createZipImportTask(
+      fileBuffer,
+      'google-doc.zip',
+      FileImportSource.Generic,
+      userId,
+      spaceId,
+      workspaceId,
+    );
+  }
+
+  private async createZipImportTask(
+    fileBuffer: Buffer,
+    inputFileName: string,
+    source: string,
+    userId: string,
+    spaceId: string,
+    workspaceId: string,
+  ) {
+    const fileExtension = path.extname(inputFileName).toLowerCase();
     const fileName = sanitizeFileName(
-      path.basename(file.filename, fileExtension),
+      path.basename(inputFileName, fileExtension),
     );
     const fileSize = fileBuffer.length;
 
@@ -210,31 +252,59 @@ export class ImportService {
     const fileTaskId = uuid7();
     const filePath = `${getFileTaskFolderPath(FileTaskType.Import, workspaceId)}/${fileTaskId}/${fileNameWithExt}`;
 
-    // upload file
-    await this.storageService.upload(filePath, fileBuffer);
+    let archiveUploadStarted = false;
+    let fileTaskInsertionStarted = false;
 
-    const fileTask = await this.db
-      .insertInto('fileTasks')
-      .values({
-        id: fileTaskId,
-        type: FileTaskType.Import,
-        source: source,
-        status: FileTaskStatus.Processing,
-        fileName: fileNameWithExt,
-        filePath: filePath,
-        fileSize: fileSize,
-        fileExt: 'zip',
-        creatorId: userId,
-        spaceId: spaceId,
-        workspaceId: workspaceId,
-      })
-      .returningAll()
-      .executeTakeFirst();
+    try {
+      // upload file
+      archiveUploadStarted = true;
+      await this.storageService.upload(filePath, fileBuffer);
 
-    await this.fileTaskQueue.add(QueueJob.IMPORT_TASK, {
-      fileTaskId: fileTaskId,
-    });
+      fileTaskInsertionStarted = true;
+      const fileTask = await this.db
+        .insertInto('fileTasks')
+        .values({
+          id: fileTaskId,
+          type: FileTaskType.Import,
+          source: source,
+          status: FileTaskStatus.Processing,
+          fileName: fileNameWithExt,
+          filePath: filePath,
+          fileSize: fileSize,
+          fileExt: 'zip',
+          creatorId: userId,
+          spaceId: spaceId,
+          workspaceId: workspaceId,
+        })
+        .returningAll()
+        .executeTakeFirst();
 
-    return fileTask;
+      await this.fileTaskQueue.add(QueueJob.IMPORT_TASK, {
+        fileTaskId: fileTaskId,
+      });
+
+      return fileTask;
+    } catch (error) {
+      if (archiveUploadStarted) {
+        try {
+          await this.storageService.delete(filePath);
+        } catch {
+          // Cleanup is best effort; preserve the original error.
+        }
+      }
+
+      if (fileTaskInsertionStarted) {
+        try {
+          await this.db
+            .deleteFrom('fileTasks')
+            .where('id', '=', fileTaskId)
+            .execute();
+        } catch {
+          // Cleanup is best effort; preserve the original error.
+        }
+      }
+
+      throw error;
+    }
   }
 }

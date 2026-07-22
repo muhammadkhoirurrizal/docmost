@@ -5,9 +5,11 @@ import {
   FileButton,
   Group,
   Text,
+  TextInput,
   Tooltip,
 } from "@mantine/core";
 import {
+  IconBrandGoogle,
   IconBrandNotion,
   IconCheck,
   IconFileCode,
@@ -17,6 +19,7 @@ import {
 } from "@tabler/icons-react";
 import {
   importPage,
+  importGoogleDoc,
   importZip,
 } from "@/features/page/services/page-service.ts";
 import { notifications } from "@mantine/notifications";
@@ -82,6 +85,9 @@ function ImportFormatSelection({ spaceId, onClose }: ImportFormatSelection) {
   const [treeData, setTreeData] = useAtom(treeDataAtom);
   const [workspace] = useAtom(workspaceAtom);
   const [fileTaskId, setFileTaskId] = useState<string | null>(null);
+  const [showGoogleDocs, setShowGoogleDocs] = useState(false);
+  const [googleDocsUrl, setGoogleDocsUrl] = useState("");
+  const googleDocsInputRef = useRef<HTMLInputElement>(null);
   const emit = useQueryEmit();
 
   const markdownFileRef = useRef<() => void>(null);
@@ -91,6 +97,59 @@ function ImportFormatSelection({ spaceId, onClose }: ImportFormatSelection) {
   const zipFileRef = useRef<() => void>(null);
 
   const canUseConfluence = isCloud() || workspace?.hasLicenseKey;
+
+  useEffect(() => {
+    if (showGoogleDocs) {
+      googleDocsInputRef.current?.focus();
+    }
+  }, [showGoogleDocs]);
+
+  const getErrorMessage = (err: any) =>
+    err?.response?.data?.message || t("Unable to import this Google Doc. Please check the link and try again.");
+
+  const handleGoogleDocsImport = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const url = googleDocsUrl.trim();
+    if (!url) {
+      googleDocsInputRef.current?.focus();
+      return;
+    }
+
+    try {
+      onClose();
+      notifications.show({
+        id: "import",
+        title: t("Importing Google Doc"),
+        message: t("Please don't close this tab."),
+        loading: true,
+        withCloseButton: false,
+        autoClose: false,
+      });
+
+      const importTask = await importGoogleDoc(url, spaceId);
+      notifications.update({
+        id: "import",
+        title: t("Importing pages"),
+        message: t("Page import is in progress. You can check back later if this takes longer."),
+        loading: true,
+        withCloseButton: true,
+        autoClose: false,
+      });
+      setFileTaskId(importTask.id);
+      setGoogleDocsUrl("");
+    } catch (err) {
+      notifications.update({
+        id: "import",
+        color: "red",
+        title: t("Failed to import Google Doc"),
+        message: getErrorMessage(err),
+        icon: <IconX size={18} />,
+        loading: false,
+        withCloseButton: true,
+        autoClose: false,
+      });
+    }
+  };
 
   const handleZipUpload = async (selectedFile: File, source: string) => {
     if (!selectedFile) {
@@ -355,10 +414,43 @@ function ImportFormatSelection({ spaceId, onClose }: ImportFormatSelection) {
             </Tooltip>
           )}
         </FileButton>
+
+        <Button
+          justify="start"
+          variant="default"
+          leftSection={<IconBrandGoogle size={18} />}
+          onClick={() => setShowGoogleDocs(true)}
+        >
+          Google Docs
+        </Button>
       </SimpleGrid>
 
       <Group justify="center" gap="xl" mih={150}>
-        <div>
+        {showGoogleDocs ? (
+          <div style={{ width: "100%" }}>
+            <Text ta="center" size="lg" inline>
+              Import from Google Docs
+            </Text>
+            <Text ta="center" size="sm" c="dimmed" inline py="sm">
+              {t("Imports a static copy with images. It is not synchronized and only works for documents accessible without Google sign-in.")}
+            </Text>
+            <form onSubmit={handleGoogleDocsImport}>
+              <Group align="end" wrap="nowrap">
+                <TextInput
+                  ref={googleDocsInputRef}
+                  label={t("Public Google Docs link")}
+                  placeholder="https://docs.google.com/document/d/..."
+                  type="url"
+                  value={googleDocsUrl}
+                  onChange={(event) => setGoogleDocsUrl(event.currentTarget.value)}
+                  style={{ flex: 1 }}
+                  required
+                />
+                <Button type="submit">{t("Import")}</Button>
+              </Group>
+            </form>
+          </div>
+        ) : <div>
           <Text ta="center" size="lg" inline>
             Import zip file
           </Text>
@@ -387,7 +479,7 @@ function ImportFormatSelection({ spaceId, onClose }: ImportFormatSelection) {
               </Group>
             )}
           </FileButton>
-        </div>
+        </div>}
       </Group>
     </>
   );

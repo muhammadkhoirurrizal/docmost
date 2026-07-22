@@ -183,6 +183,18 @@ export async function importZip(
   return req.data;
 }
 
+export async function importGoogleDoc(
+  url: string,
+  spaceId: string,
+): Promise<IFileTask> {
+  const req = await api.post<IFileTask>("/pages/import-google-doc", {
+    url,
+    spaceId,
+  });
+
+  return req.data;
+}
+
 export async function uploadFile(
   file: File,
   pageId: string,

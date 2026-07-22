@@ -1,4 +1,5 @@
 import {
+  Body,
   BadRequestException,
   Controller,
   ForbiddenException,
@@ -24,6 +25,7 @@ import * as path from 'path';
 import { ImportService } from './services/import.service';
 import { AuthWorkspace } from '../../common/decorators/auth-workspace.decorator';
 import { EnvironmentService } from '../environment/environment.service';
+import { GoogleDocImportDto } from './dto/google-doc-import.dto';
 
 @Controller()
 export class ImportController {
@@ -84,6 +86,35 @@ export class ImportController {
     }
 
     return this.importService.importPage(file, user.id, spaceId, workspace.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @Post('pages/import-google-doc')
+  async importGoogleDoc(
+    @Body() dto: GoogleDocImportDto,
+    @AuthUser() user: User,
+    @AuthWorkspace() workspace: Workspace,
+  ) {
+    if (!dto || typeof dto.url !== 'string' || !dto.url.trim()) {
+      throw new BadRequestException('url is required and must be a string');
+    }
+
+    if (typeof dto.spaceId !== 'string' || !dto.spaceId.trim()) {
+      throw new BadRequestException('spaceId is required and must be a string');
+    }
+
+    const ability = await this.spaceAbility.createForUser(user, dto.spaceId);
+    if (ability.cannot(SpaceCaslAction.Edit, SpaceCaslSubject.Page)) {
+      throw new ForbiddenException();
+    }
+
+    return this.importService.importGoogleDoc(
+      dto.url,
+      user.id,
+      dto.spaceId,
+      workspace.id,
+    );
   }
 
   @UseInterceptors(FileInterceptor)
