@@ -1,0 +1,87 @@
+apps/client/src/features/page/components/page-import-modal.tsx
+  s_1b4a2e589e7833::t_a1f5b98c180e01 12,22,88-90,101-109,114,116,151
+  s_1b4a2e589e7833::t_2230f706702e7a 110
+  s_1b4a2e589e7833::t_4f30e927d30ab3 111-113
+  s_1b4a2e589e7833::t_c419a4ede80f7e 115
+  s_1b4a2e589e7833::t_32976c22df0396 117-119,148-150
+  s_1b4a2e589e7833::t_da479a726592be 152-153
+apps/server/src/integrations/import/utils/google-doc.utils.ts
+  s_5ceb8bb8fb5ba0::t_40b0adeb3a9a5b 58-60
+  s_5ceb8bb8fb5ba0::t_17a04d592df004 1-4,7-25,27-30,35-57,61-70,73,85,91,103-143,168,196-202,210-248
+  s_c571a6b0d82ed2::t_eda50ec469504f 5-6,71-72,74-84,86-90,92-102,144-167,169-181,185-195
+  s_37da9539b78675::t_a5866a0af3b2ac 26,31-33
+  s_37da9539b78675::t_9a5d565ead66c2 34
+  s_c571a6b0d82ed2::t_6fc1ca2e9f6c87 182-184
+  s_5ceb8bb8fb5ba0::t_448538002b78c2 203-209
+apps/server/src/integrations/import/utils/google-doc.utils.spec.ts
+  s_37da9539b78675::t_6f56cb43fd11d0 61-68,72
+  s_37da9539b78675::t_a5866a0af3b2ac 10-16,23-25,73-80
+  s_c571a6b0d82ed2::t_eda50ec469504f 83-99,101-139,141-144,146-165
+  s_c571a6b0d82ed2::t_b8c4f775d7ad54 140,145
+  s_37da9539b78675::t_b9e9d866cd67a4 34
+  s_5ceb8bb8fb5ba0::t_d724fccb8f66cb 1-9,17-22,26-33,36-60,69,81-82,100,166-193
+  s_5ceb8bb8fb5ba0::t_40b0adeb3a9a5b 35,70-71
+apps/server/src/integrations/import/services/import.service.ts
+  s_5ceb8bb8fb5ba0::t_073961be2ed2da 238-244,246
+  s_9e20acaede9ef4::t_27c8656caa0665 255-284,286-294,296-308
+  s_5ceb8bb8fb5ba0::t_17a04d592df004 21,24-26,43,207-237
+apps/server/src/integrations/import/import.controller.ts
+  s_5ceb8bb8fb5ba0::t_40b0adeb3a9a5b 103-104
+  s_5ceb8bb8fb5ba0::t_17a04d592df004 2,28,91-100,107-115
+  s_5ceb8bb8fb5ba0::t_823d3557cda792 101-102,105-106,116-119
+apps/server/src/integrations/import/dto/google-doc-import.dto.ts
+  s_5ceb8bb8fb5ba0::t_17a04d592df004 1-11
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "f58f86a8061909c60de6d27e834f1783c6646d04",
+  "prompts": {},
+  "humans": {
+    "h_0612cf7e255131": {
+      "author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  },
+  "sessions": {
+    "s_1b4a2e589e7833": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_076f16ce5ffe3uuO3jg8Gaarkn",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    },
+    "s_37da9539b78675": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_076c9a881ffe5QANtOjvFPRIpr",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    },
+    "s_5ceb8bb8fb5ba0": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_076f16d04ffe4nMdoNdPzMFxAu",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    },
+    "s_9e20acaede9ef4": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_076b83bd3ffe2z3QfeJS6Bv6qF",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    },
+    "s_c571a6b0d82ed2": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_076c50061ffeCDLdwvbJcD1gvO",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  }
+}
