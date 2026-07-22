@@ -304,7 +304,15 @@ export default function PageEditor({
             cleanupSideDrop();
             return false;
           },
-          dragleave: () => {
+          dragleave: (view, event) => {
+            const relatedTarget = (event as DragEvent).relatedTarget;
+            if (
+              relatedTarget instanceof Node &&
+              view.dom.contains(relatedTarget)
+            ) {
+              return false;
+            }
+
             cleanupSideDrop();
             return false;
           },
@@ -337,6 +345,28 @@ export default function PageEditor({
     },
     [pageId, editable, remoteProvider, setPageUnsavedChanges],
   );
+
+  useEffect(() => {
+    if (!editor) return;
+
+    const editorParent = editor.view.dom.parentElement;
+    if (!editorParent) return;
+
+    const handleGlobalDragStart = (event: Event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+
+      const dragHandle = target.closest("[data-drag-handle]");
+      if (!dragHandle || dragHandle.parentElement !== editorParent) return;
+
+      trackDragStart(editor.view, event as DragEvent);
+    };
+
+    document.addEventListener("dragstart", handleGlobalDragStart);
+    return () => {
+      document.removeEventListener("dragstart", handleGlobalDragStart);
+    };
+  }, [editor]);
 
   useStickyHeader(editor);
 
