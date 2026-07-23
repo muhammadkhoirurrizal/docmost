@@ -1,12 +1,13 @@
 import { Table } from "@tiptap/extension-table";
 import { Editor } from "@tiptap/core";
 import { DOMOutputSpec } from "@tiptap/pm/model";
-import { Plugin, PluginKey } from "@tiptap/pm/state";
 
-import { updateAutoNumberCells } from "./utils/auto-number";
+import {
+  getValidNumberColumn,
+  updateAutoNumberCells,
+} from "./utils/auto-number";
 
 const LIST_TYPES = ["bulletList", "orderedList", "taskList"];
-const rowNumberingPluginKey = new PluginKey("tableRowNumbering");
 
 function isInList(editor: Editor): boolean {
   const { $from } = editor.state.selection;
@@ -36,35 +37,35 @@ function handleListOutdent(editor: Editor): boolean {
 }
 
 export const CustomTable = Table.extend({
-  addProseMirrorPlugins() {
-    const editor = this.editor;
-    return [
-      ...(this.parent?.() || []),
-      new Plugin({
-        key: rowNumberingPluginKey,
-        appendTransaction: (transactions, oldState, newState) => {
-          // Only react when the document actually changed.
-          const docChanged = transactions.some((tr) => tr.docChanged);
-          if (!docChanged) return null;
+  addCommands() {
+    const parentCommands = this.parent?.();
 
-          // Skip transactions we generated ourselves to avoid loops.
-          if (transactions.some((tr) => tr.getMeta(rowNumberingPluginKey))) {
-            return null;
-          }
+    // Keep row numbering in the same transaction as row mutations. This
+    // covers toolbar, cell-selection, and keyboard row commands alike.
+    const updateAfterRowCommand = (commandName: string) => (props: any) => {
+      const numberedColumn = getValidNumberColumn(props.editor, props.state);
+      const command = parentCommands?.[commandName];
+      const result = command?.()(props);
 
-          // Refresh the row-number column on the table at the current
-          // selection. updateAutoNumberCells is a no-op when the cursor is
-          // not in a numbered table, so this is safe to call broadly.
-          const tr = newState.tr;
-          updateAutoNumberCells(editor, undefined, tr, false);
+      if (result && props.dispatch && numberedColumn) {
+        updateAutoNumberCells(
+          props.editor,
+          numberedColumn.startFrom,
+          props.tr,
+          false,
+          numberedColumn,
+        );
+      }
 
-          if (!tr.docChanged) return null;
+      return result;
+    };
 
-          tr.setMeta(rowNumberingPluginKey, true);
-          return tr;
-        },
-      }),
-    ];
+    return {
+      ...parentCommands,
+      addRowBefore: () => updateAfterRowCommand("addRowBefore"),
+      addRowAfter: () => updateAfterRowCommand("addRowAfter"),
+      deleteRow: () => updateAfterRowCommand("deleteRow"),
+    };
   },
 
   addKeyboardShortcuts() {
