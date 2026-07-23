@@ -1,0 +1,28 @@
+apps/client/src/components/common/export-modal.tsx
+  s_5b36cfd51e407b::t_2c1267a4a7ba5c 64
+  s_5b36cfd51e407b::t_8912e93a52a170 12,36-37,44,49,53-54
+  s_5b36cfd51e407b::t_8522e2e7853701 182,196-199,202-203,206
+  s_5b36cfd51e407b::t_44d12d084686fb 50-52,68-73,207-212
+  s_5b36cfd51e407b::t_27b0180bd0749d 55-56
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "8fb761db6b28246c6edc6e82bf4ef3feeddb2ae0",
+  "prompts": {},
+  "humans": {
+    "h_0612cf7e255131": {
+      "author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  },
+  "sessions": {
+    "s_5b36cfd51e407b": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_0733b249effeIO6F1IRPv6yvUX",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  }
+}
