@@ -9,7 +9,7 @@ import {
   PasswordInput,
 } from "@mantine/core";
 import { exportPage } from "@/features/page/services/page-service.ts";
-import { useState, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 import { ExportFormat } from "@/features/page/types/page.types.ts";
 import { notifications } from "@mantine/notifications";
 import { exportSpace } from "@/features/space/services/space-service";
@@ -33,16 +33,27 @@ export default function ExportModal({
   const [includeAttachments, setIncludeAttachments] = useState<boolean>(false);
   const [passwordProtection, setPasswordProtection] = useState<boolean>(false);
   const [password, setPassword] = useState<string>("");
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const passwordInputRef = useRef<HTMLInputElement>(null);
   const { t } = useTranslation();
 
   useEffect(() => {
     if (!open) {
       setPasswordProtection(false);
       setPassword("");
+      setPasswordError(null);
     }
   }, [open]);
 
   const handleExport = async () => {
+    if (passwordProtection && password.trim().length < 4) {
+      setPasswordError(
+        t("Password must contain at least 4 non-whitespace characters."),
+      );
+      passwordInputRef.current?.focus();
+      return;
+    }
+
     try {
       if (type === "page") {
         await exportPage({
@@ -50,11 +61,16 @@ export default function ExportModal({
           format,
           includeChildren,
           includeAttachments,
-          password: passwordProtection ? password.trim() || undefined : undefined,
+          password: passwordProtection ? password : undefined,
         });
       }
       if (type === "space") {
-        await exportSpace({ spaceId: id, format, includeAttachments, password: passwordProtection ? password.trim() || undefined : undefined });
+        await exportSpace({
+          spaceId: id,
+          format,
+          includeAttachments,
+          password: passwordProtection ? password : undefined,
+        });
       }
       onClose();
     } catch (err: any) {
@@ -74,7 +90,6 @@ export default function ExportModal({
         message: "Export failed: " + msg,
         color: "red",
       });
-      console.error("export error", err);
     }
   };
 
@@ -164,6 +179,7 @@ export default function ExportModal({
             <Switch
               onChange={(event) => {
                 setPasswordProtection(event.currentTarget.checked);
+                setPasswordError(null);
                 if (!event.currentTarget.checked) {
                   setPassword("");
                 }
@@ -177,12 +193,23 @@ export default function ExportModal({
               <PasswordInput
                 placeholder={t("Enter password (4+ characters)")}
                 value={password}
-                onChange={(event) => setPassword(event.currentTarget.value)}
+                onChange={(event) => {
+                  setPassword(event.currentTarget.value);
+                  setPasswordError(null);
+                }}
                 maxLength={128}
                 mt="sm"
+                ref={passwordInputRef}
+                error={passwordError}
               />
               <Text size="xs" c="dimmed" mt={4}>
-                {t("The exported file will be encrypted with this password.")}
+                {format === ExportFormat.PDF
+                  ? t(
+                      "Protected PDF downloads are encrypted ZIP archives containing PDF files, not password-encrypted PDFs.",
+                    )
+                  : t(
+                      "Protected downloads are encrypted archives containing your exported files.",
+                    )}
               </Text>
             </>
           )}
