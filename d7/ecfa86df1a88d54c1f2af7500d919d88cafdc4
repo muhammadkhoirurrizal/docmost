@@ -1,0 +1,27 @@
+apps/client/src/features/editor/components/mention/mention-view.tsx
+  s_8e04a44d87c45e::t_e6db91f8f23d12 15
+  s_8e04a44d87c45e::t_d585a87a2d1161 2
+apps/client/src/features/editor/components/mention/mention-list.tsx
+  s_8e04a44d87c45e::t_207e1fac7cdebb 46,64-66,68-70
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "d7ecfa86df1a88d54c1f2af7500d919d88cafdc4",
+  "prompts": {},
+  "humans": {
+    "h_0612cf7e255131": {
+      "author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  },
+  "sessions": {
+    "s_8e04a44d87c45e": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_072a833e8ffer4348A2Zy8oZ2j",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  }
+}
