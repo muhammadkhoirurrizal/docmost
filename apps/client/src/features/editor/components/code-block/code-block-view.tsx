@@ -1,11 +1,12 @@
 import { NodeViewContent, NodeViewProps, NodeViewWrapper } from "@tiptap/react";
-import { ActionIcon, CopyButton, Group, Select, Tooltip } from "@mantine/core";
+import { ActionIcon, Group, Select, Tooltip } from "@mantine/core";
 import { useEffect, useState } from "react";
 import { IconCheck, IconCopy } from "@tabler/icons-react";
 import classes from "./code-block.module.css";
 import React from "react";
 import { Suspense } from "react";
 import { useTranslation } from "react-i18next";
+import { copyToClipboard } from "@/features/editor/utils/clipboard";
 
 const MermaidView = React.lazy(
   () => import("@/features/editor/components/code-block/mermaid-view.tsx"),
@@ -19,6 +20,7 @@ export default function CodeBlockView(props: NodeViewProps) {
     language || null,
   );
   const [isSelected, setIsSelected] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const updateSelection = () => {
@@ -44,6 +46,14 @@ export default function CodeBlockView(props: NodeViewProps) {
     });
   }
 
+  async function copyCode() {
+    const success = await copyToClipboard(node.textContent);
+    if (success) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  }
+
   return (
     <NodeViewWrapper className="codeBlock">
       <Group
@@ -63,23 +73,19 @@ export default function CodeBlockView(props: NodeViewProps) {
           disabled={!editor.isEditable}
         />
 
-        <CopyButton value={node?.textContent} timeout={2000}>
-          {({ copied, copy }) => (
-            <Tooltip
-              label={copied ? t("Copied") : t("Copy")}
-              withArrow
-              position="right"
-            >
-              <ActionIcon
-                color={copied ? "teal" : "gray"}
-                variant="subtle"
-                onClick={copy}
-              >
-                {copied ? <IconCheck size={16} /> : <IconCopy size={16} />}
-              </ActionIcon>
-            </Tooltip>
-          )}
-        </CopyButton>
+        <Tooltip
+          label={copied ? t("Copied") : t("Copy")}
+          withArrow
+          position="right"
+        >
+          <ActionIcon
+            color={copied ? "teal" : "gray"}
+            variant="subtle"
+            onClick={copyCode}
+          >
+            {copied ? <IconCheck size={16} /> : <IconCopy size={16} />}
+          </ActionIcon>
+        </Tooltip>
       </Group>
 
       <pre
