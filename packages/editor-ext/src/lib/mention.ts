@@ -38,6 +38,11 @@ export interface MentionNodeAttrs {
    * the anchor hash for page mentions (e.g., "heading-1")
    */
   anchorId?: string;
+
+  /**
+   * the trigger character(s) that activated this mention
+   */
+  trigger?: string;
 }
 
 export type MentionOptions<
@@ -106,15 +111,18 @@ export const Mention = Node.create<MentionOptions>({
     return {
       HTMLAttributes: {},
       renderText({ options, node }) {
-        return `${options.suggestion.char}${node.attrs.label ?? node.attrs.id}`;
+        return `${node.attrs.trigger || options.suggestion.char}${node.attrs.label ?? node.attrs.id}`;
       },
       deleteTriggerWithBackspace: false,
       renderHTML({ options, node }) {
         const isUserMention = node.attrs.entityType === "user";
+        const trigger = node.attrs.trigger || options.suggestion.char;
+        const showPrefix = isUserMention || (trigger !== options.suggestion.char);
+        const prefix = showPrefix ? trigger : "";
         return [
           "span",
           mergeAttributes(this.HTMLAttributes, options.HTMLAttributes),
-          `${isUserMention ? options.suggestion.char : ""}${node.attrs.label ?? node.attrs.entityId}`,
+          `${prefix}${node.attrs.label ?? node.attrs.entityId}`,
         ];
       },
       suggestion: {
@@ -130,13 +138,17 @@ export const Mention = Node.create<MentionOptions>({
             range.to += 1;
           }
 
+          // determine trigger from the matched text
+          const matchedText = editor.state.doc.textBetween(range.from, range.to);
+          const trigger = matchedText.startsWith("@@") ? "@@" : "@";
+
           editor
             .chain()
             .focus()
             .insertContentAt(range, [
               {
                 type: this.name,
-                attrs: props,
+                attrs: { ...props, trigger },
               },
               {
                 type: "text",
@@ -266,6 +278,17 @@ export const Mention = Node.create<MentionOptions>({
           };
         },
       },
+
+      trigger: {
+        default: "@",
+        parseHTML: (element: HTMLElement) => element.getAttribute("data-trigger"),
+        renderHTML: (attributes: Record<string, any>) => {
+          if (!attributes.trigger || attributes.trigger === "@") {
+            return {};
+          }
+          return { "data-trigger": attributes.trigger };
+        },
+      },
     };
   },
 
@@ -329,7 +352,7 @@ export const Mention = Node.create<MentionOptions>({
               tr.insertText(
                 this.options.deleteTriggerWithBackspace
                   ? ""
-                  : this.options.suggestion.char || "",
+                  : (node.attrs as any).trigger || this.options.suggestion.char || "",
                 pos,
                 pos + node.nodeSize,
               );
