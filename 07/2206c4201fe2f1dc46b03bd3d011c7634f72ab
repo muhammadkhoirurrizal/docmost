@@ -1,0 +1,25 @@
+Dockerfile
+  s_e515f961db87df::t_ce0d673b556a7b 17-20,22-43
+  s_e515f961db87df::t_b201f3d48ed07c 44-57,60-62
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "072206c4201fe2f1dc46b03bd3d011c7634f72ab",
+  "prompts": {},
+  "humans": {
+    "h_0612cf7e255131": {
+      "author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  },
+  "sessions": {
+    "s_e515f961db87df": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_072d45519ffe1pC5kiEoN7WbU4",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  }
+}
