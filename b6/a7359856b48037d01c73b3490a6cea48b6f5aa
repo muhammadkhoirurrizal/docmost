@@ -1,0 +1,25 @@
+packages/editor-ext/src/lib/table/table.ts
+  s_e515f961db87df::t_d564a9a5418603 39-48,50-53,55-59,61,63-67
+  s_e515f961db87df::t_c51e89787c3a89 4,6,9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "b6a7359856b48037d01c73b3490a6cea48b6f5aa",
+  "prompts": {},
+  "humans": {
+    "h_0612cf7e255131": {
+      "author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  },
+  "sessions": {
+    "s_e515f961db87df": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_072d45519ffe1pC5kiEoN7WbU4",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  }
+}
