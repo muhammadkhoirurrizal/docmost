@@ -253,16 +253,14 @@ export function useUnarchivePageMutation() {
         };
 
         const parentId = unarchivedPage.parentPageId || null;
-        let index = 0;
-
-        if (parentId) {
-          const parentNode = treeApi.find(parentId);
-          if (parentNode) {
-            index = parentNode.children?.length || 0;
-          }
-        } else {
-          index = treeApi.data.length;
-        }
+        const siblings = parentId
+          ? (treeApi.find(parentId)?.children.map((child) => child.data) ?? [])
+          : treeApi.data;
+        const nextSiblingIndex = siblings.findIndex(
+          (sibling) => sibling.position > unarchivedPage.position,
+        );
+        const index =
+          nextSiblingIndex === -1 ? siblings.length : nextSiblingIndex;
 
         treeApi.create({
           parentId,
