@@ -1,0 +1,24 @@
+apps/client/src/features/editor/components/code-block/code-block-view.tsx
+  s_a9d60861f19c25::t_582cd1acc51aa1 23
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "07e8dea66a94a256e7059dfd1d8b80a46d4f6b14",
+  "prompts": {},
+  "humans": {
+    "h_0612cf7e255131": {
+      "author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  },
+  "sessions": {
+    "s_a9d60861f19c25": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_07376370fffeuLqlD685GsmhXt",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  }
+}
