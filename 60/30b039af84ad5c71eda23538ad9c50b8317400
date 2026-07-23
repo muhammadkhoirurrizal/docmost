@@ -1,0 +1,54 @@
+apps/client/public/locales/de-DE/translation.json
+  s_8e04a44d87c45e::t_b5c6589ee504b2 570-574
+apps/client/public/locales/en-US/translation.json
+  s_44586b0743d2f5::t_b6e5bee5610242 574-577
+apps/client/public/locales/es-ES/translation.json
+  s_8e04a44d87c45e::t_ccf125c337cdb0 572-576
+apps/client/public/locales/fr-FR/translation.json
+  s_8e04a44d87c45e::t_ed849364ea5184 572-576
+apps/client/public/locales/it-IT/translation.json
+  s_8e04a44d87c45e::t_a2cf2525162b4d 572-576
+apps/client/public/locales/ja-JP/translation.json
+  s_8e04a44d87c45e::t_92eaabee86481e 572-576
+apps/client/public/locales/ko-KR/translation.json
+  s_8e04a44d87c45e::t_4a91723d98db22 572-576
+apps/client/public/locales/nl-NL/translation.json
+  s_8e04a44d87c45e::t_7185313046884a 572-576
+apps/client/public/locales/pt-BR/translation.json
+  s_8e04a44d87c45e::t_a224be40dc4ceb 572-576
+apps/client/public/locales/ru-RU/translation.json
+  s_8e04a44d87c45e::t_1977a478dd20dc 572-576
+apps/client/public/locales/uk-UA/translation.json
+  s_8e04a44d87c45e::t_6c696c0c99e1d8 572-576
+apps/client/public/locales/zh-CN/translation.json
+  s_8e04a44d87c45e::t_fe089ede77b07b 572-576
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "6030b039af84ad5c71eda23538ad9c50b8317400",
+  "prompts": {},
+  "humans": {
+    "h_0612cf7e255131": {
+      "author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  },
+  "sessions": {
+    "s_44586b0743d2f5": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_0e862fdabffepUO37wVjnMZThk",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    },
+    "s_8e04a44d87c45e": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_072a833e8ffer4348A2Zy8oZ2j",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  }
+}
