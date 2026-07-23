@@ -569,5 +569,8 @@
   "No answer available": "답변을 제공할 수 없습니다",
   "Background color": "배경 색",
   "Highlight color": "강조 색",
-  "Remove color": "색 제거"
+  "Remove color": "색 제거",
+  "page_mention_header": "Link to a page",
+  "page_mention_empty_hint": "Type a page name…",
+  "mention_tip_pages": "Tip: type @@ to link to a page"
 }

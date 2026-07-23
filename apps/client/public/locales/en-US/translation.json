@@ -571,5 +571,8 @@
   "No answer available": "No answer available",
   "Background color": "Background color",
   "Highlight color": "Highlight color",
-  "Remove color": "Remove color"
+  "Remove color": "Remove color",
+  "page_mention_header": "Link to a page",
+  "page_mention_empty_hint": "Type a page name…",
+  "mention_tip_pages": "Tip: type @@ to link to a page"
 }

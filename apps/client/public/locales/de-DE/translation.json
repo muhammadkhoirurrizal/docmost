@@ -567,5 +567,8 @@
   "No answer available": "Keine Antwort verfügbar",
   "Background color": "Hintergrundfarbe",
   "Highlight color": "Hervorhebungsfarbe",
-  "Remove color": "Farbe entfernen"
+  "Remove color": "Farbe entfernen",
+  "page_mention_header": "Link to a page",
+  "page_mention_empty_hint": "Type a page name…",
+  "mention_tip_pages": "Tip: type @@ to link to a page"
 }

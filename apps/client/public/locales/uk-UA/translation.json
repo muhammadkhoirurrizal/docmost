@@ -569,5 +569,8 @@
   "No answer available": "Відповідь недоступна",
   "Background color": "Колір фону",
   "Highlight color": "Колір підсвічування",
-  "Remove color": "Видалити колір"
+  "Remove color": "Видалити колір",
+  "page_mention_header": "Link to a page",
+  "page_mention_empty_hint": "Type a page name…",
+  "mention_tip_pages": "Tip: type @@ to link to a page"
 }
