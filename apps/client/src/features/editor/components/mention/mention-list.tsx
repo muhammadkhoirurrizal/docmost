@@ -43,6 +43,7 @@ import { useTranslation } from "react-i18next";
 import { useQueryEmit } from "@/features/websocket/use-query-emit";
 import { extractPageSlugId } from "@/lib";
 import { getPageChildren } from "@/features/search/services/search-service";
+import { notifications } from "@mantine/notifications";
 
 const MentionList = forwardRef<any, MentionListProps>((props, ref) => {
   const [selectedIndex, setSelectedIndex] = useState(1);
@@ -60,10 +61,13 @@ const MentionList = forwardRef<any, MentionListProps>((props, ref) => {
   const [expandedPages, setExpandedPages] = useState<Set<string>>(new Set());
   const [loadingPages, setLoadingPages] = useState<Set<string>>(new Set());
 
+  const isPageMode = props.text?.startsWith("@@") ?? false;
+  const searchQuery = isPageMode ? (props.query || "").replace(/^@/, "") : props.query;
+
   const { data: suggestion, isLoading } = useSearchSuggestionsQuery({
-    query: props.query,
-    includeUsers: true,
-    includePages: true,
+    query: searchQuery,
+    includeUsers: !isPageMode,
+    includePages: isPageMode,
     spaceId: space.id,
     limit: 10,
   });
@@ -201,50 +205,52 @@ const MentionList = forwardRef<any, MentionListProps>((props, ref) => {
     if (suggestion && !isLoading) {
       let items: MentionSuggestionItem[] = [];
 
-      if (suggestion?.users?.length > 0) {
-        items.push({ entityType: "header", label: t("Users") });
-
-        items = items.concat(
-          suggestion.users.map((user) => ({
-            id: uuid7(),
-            label: user.name,
-            entityType: "user",
-            entityId: user.id,
-            avatarUrl: user.avatarUrl,
-          })),
-        );
-      }
-
-      if (suggestion?.pages?.length > 0) {
-        items.push({ entityType: "header", label: t("Pages") });
-        items = items.concat(
-          suggestion.pages.map((page) => ({
-            id: uuid7(),
-            label: page.title || "Untitled",
-            entityType: "page",
-            entityId: page.id,
-            slugId: page.slugId,
-            icon: page.icon,
-            hasChildren: page.hasChildren || false,
-            isExpanded: false,
-            depth: 0,
-          })),
-        );
+      if (isPageMode) {
+        if (suggestion?.pages?.length > 0) {
+          items.push({ entityType: "header", label: t("page_mention_header") });
+          items = items.concat(
+            suggestion.pages.map((page) => ({
+              id: uuid7(),
+              label: page.title || "Untitled",
+              entityType: "page",
+              entityId: page.id,
+              slugId: page.slugId,
+              icon: page.icon,
+              hasChildren: page.hasChildren || false,
+              isExpanded: false,
+              depth: 0,
+            })),
+          );
+        }
+      } else {
+        if (suggestion?.users?.length > 0) {
+          items.push({ entityType: "header", label: t("Users") });
+          items = items.concat(
+            suggestion.users.map((user) => ({
+              id: uuid7(),
+              label: user.name,
+              entityType: "user",
+              entityId: user.id,
+              avatarUrl: user.avatarUrl,
+            })),
+          );
+        }
       }
 
       if (props.editor.isEditable) {
-        items.push(createPageItem(props.query));
+        items.push(createPageItem(isPageMode ? searchQuery : props.query));
       }
 
       setRenderItems(items);
       // update editor storage
       props.editor.storage.mentionItems = items;
     }
-  }, [suggestion, isLoading]);
+  }, [suggestion, isLoading, isPageMode, searchQuery]);
 
   const selectItem = useCallback(
     (index: number) => {
       const item = renderItems?.[index];
+      const trigger = isPageMode ? "@@" : "@";
       if (item) {
         if (item.entityType === "user") {
           props.command({
@@ -253,6 +259,7 @@ const MentionList = forwardRef<any, MentionListProps>((props, ref) => {
             entityType: "user",
             entityId: item.entityId,
             creatorId: currentUser?.user.id,
+            trigger,
           });
         }
         if (item.entityType === "page" && item.id!==null) {
@@ -263,6 +270,7 @@ const MentionList = forwardRef<any, MentionListProps>((props, ref) => {
             entityId: item.entityId,
             slugId: item.slugId,
             creatorId: currentUser?.user.id,
+            trigger,
           });
         }
         if (item.entityType === "page" && item.id===null) {
@@ -270,7 +278,7 @@ const MentionList = forwardRef<any, MentionListProps>((props, ref) => {
         }
       }
     },
-    [renderItems],
+    [renderItems, isPageMode],
   );
 
   const upHandler = () => {
@@ -300,6 +308,27 @@ const MentionList = forwardRef<any, MentionListProps>((props, ref) => {
     }
   };
 
+  const rightHandler = () => {
+    const item = renderItems[selectedIndex];
+    if (!item || item.entityType !== "page" || !item.hasChildren) return false;
+    if (item.isExpanded) {
+      setSelectedIndex(selectedIndex + 1);
+      return true;
+    }
+    toggleExpand(item.entityId, selectedIndex);
+    return true;
+  };
+
+  const leftHandler = () => {
+    const item = renderItems[selectedIndex];
+    if (!item || item.entityType !== "page") return false;
+    if (item.isExpanded) {
+      toggleExpand(item.entityId, selectedIndex);
+      return true;
+    }
+    return false;
+  };
+
   useEffect(() => {
     setSelectedIndex(1);
   }, [suggestion]);
@@ -314,6 +343,14 @@ const MentionList = forwardRef<any, MentionListProps>((props, ref) => {
       if (event.key === "ArrowDown") {
         downHandler();
         return true;
+      }
+
+      if (event.key === "ArrowRight") {
+        return rightHandler();
+      }
+
+      if (event.key === "ArrowLeft") {
+        return leftHandler();
       }
 
       if (event.key === "Enter") {
@@ -362,6 +399,7 @@ const MentionList = forwardRef<any, MentionListProps>((props, ref) => {
         entityId: createdPage.id,
         slugId: createdPage.slugId,
         creatorId: currentUser?.user.id,
+        trigger: isPageMode ? "@@" : "@",
       });
 
       setTimeout(() => {
@@ -389,7 +427,28 @@ const MentionList = forwardRef<any, MentionListProps>((props, ref) => {
       ?.scrollIntoView({ block: "nearest" });
   }, [selectedIndex]);
 
+  useEffect(() => {
+    if (!isPageMode && props.query && props.query.length > 0) {
+      const tipShown = localStorage.getItem("mention_tip_pages_shown");
+      if (!tipShown) {
+        notifications.show({
+          message: t("mention_tip_pages"),
+          color: "blue",
+          autoClose: 5000,
+        });
+        localStorage.setItem("mention_tip_pages_shown", "true");
+      }
+    }
+  }, [isPageMode, props.query]);
+
   if (renderItems.length === 0) {
+    if (isPageMode && !searchQuery) {
+      return (
+        <Paper shadow="md" p="xs" withBorder>
+          { t("page_mention_empty_hint") }
+        </Paper>
+      );
+    }
     return (
       <Paper shadow="md" p="xs" withBorder>
         { t("No results") }

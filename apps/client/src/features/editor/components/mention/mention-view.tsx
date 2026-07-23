@@ -1,5 +1,5 @@
 import { NodeViewProps, NodeViewWrapper } from "@tiptap/react";
-import { ActionIcon, Anchor, Text } from "@mantine/core";
+import { ActionIcon, Anchor, Text, Tooltip } from "@mantine/core";
 import { IconFileDescription } from "@tabler/icons-react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { usePageQuery } from "@/features/page/queries/page-query.ts";
@@ -12,7 +12,7 @@ import classes from "./mention.module.css";
 
 export default function MentionView(props: NodeViewProps) {
   const { node } = props;
-  const { label, entityType, entityId: _entityId, slugId, anchorId } = node.attrs;
+  const { label, entityType, entityId: _entityId, slugId, anchorId, trigger } = node.attrs;
   const { spaceSlug, pageSlug } = useParams();
   const { shareId } = useParams();
   const navigate = useNavigate();
@@ -55,34 +55,44 @@ export default function MentionView(props: NodeViewProps) {
       )}
 
       {entityType === "page" && (
-        <Anchor
-          component={Link}
-          fw={500}
-          to={
-            isShareRoute ? shareSlugUrl : buildPageUrl(spaceSlug, slugId, label, anchorId)
-          }
-          onClick={handleClick}
-          underline="never"
-          className={classes.pageMentionLink}
+        <Tooltip
+          label={page ? `${page.title} (${slugId})` : label}
+          withinPortal
+          withArrow
+          openDelay={300}
         >
-          {page?.icon ? (
-            <span style={{ marginRight: "4px" }}>{page.icon}</span>
-          ) : (
-            <ActionIcon
-              variant="transparent"
-              color="gray"
-              component="span"
-              size={18}
-              style={{ verticalAlign: "text-bottom" }}
-            >
-              <IconFileDescription size={18} />
-            </ActionIcon>
-          )}
+          <Anchor
+            component={Link}
+            fw={500}
+            to={
+              isShareRoute ? shareSlugUrl : buildPageUrl(spaceSlug, slugId, label, anchorId)
+            }
+            onClick={handleClick}
+            underline="never"
+            className={classes.pageMentionLink}
+          >
+            {page?.icon ? (
+              <span style={{ marginRight: "4px" }}>{page.icon}</span>
+            ) : (
+              <ActionIcon
+                variant="transparent"
+                color="gray"
+                component="span"
+                size={18}
+                style={{ verticalAlign: "text-bottom" }}
+              >
+                <IconFileDescription size={18} />
+              </ActionIcon>
+            )}
 
-          <span className={classes.pageMentionText}>
-            {anchorId ? label : page?.title || label}
-          </span>
-        </Anchor>
+            <span
+              className={classes.pageMentionText}
+              style={trigger === "@@" ? { color: "var(--mantine-color-blue-5)" } : undefined}
+            >
+              {anchorId ? label : page?.title || label}
+            </span>
+          </Anchor>
+        </Tooltip>
       )}
     </NodeViewWrapper>
   );
