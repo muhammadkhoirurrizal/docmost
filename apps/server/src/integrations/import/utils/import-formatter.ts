@@ -295,6 +295,7 @@ export async function rewriteInternalLinksToMentionHtml(
         'data-label': meta.title,
         'data-slug-id': meta.slugId,
         'data-creator-id': creatorId,
+        'data-trigger': '@@',
       })
       .text(meta.title);
     $a.replaceWith($mention);
