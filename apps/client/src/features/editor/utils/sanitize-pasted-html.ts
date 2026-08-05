@@ -76,5 +76,36 @@ export function sanitizePastedHtml(html: string): string {
     }
   });
 
+  // --- 3. Normalize Toggle Blocks (Details) ---
+  // External apps (Notion, Confluence) use standard <details> and <summary>.
+  // Docmost Tiptap schema STRICTLY requires <summary data-type="detailsSummary"> 
+  // and <div data-type="detailsContent"> as children.
+  const detailsElements = doc.querySelectorAll("details");
+  detailsElements.forEach((details) => {
+    let summary = details.querySelector("summary");
+    if (summary) {
+      summary.setAttribute("data-type", "detailsSummary");
+    } else {
+      summary = doc.createElement("summary");
+      summary.setAttribute("data-type", "detailsSummary");
+      summary.textContent = "Toggle";
+      details.insertBefore(summary, details.firstChild);
+    }
+
+    let contentDiv = details.querySelector('div[data-type="detailsContent"]');
+    if (!contentDiv) {
+      contentDiv = doc.createElement("div");
+      contentDiv.setAttribute("data-type", "detailsContent");
+      
+      const children = Array.from(details.childNodes);
+      children.forEach((child) => {
+        if (child !== summary) {
+          contentDiv.appendChild(child);
+        }
+      });
+      details.appendChild(contentDiv);
+    }
+  });
+
   return doc.body.innerHTML;
 }

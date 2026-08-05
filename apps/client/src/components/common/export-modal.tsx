@@ -10,6 +10,7 @@ import {
 } from "@mantine/core";
 import { exportPage } from "@/features/page/services/page-service.ts";
 import { useRef, useState, useEffect } from "react";
+import { flushSync } from "react-dom";
 import { ExportFormat } from "@/features/page/types/page.types.ts";
 import { notifications } from "@mantine/notifications";
 import { exportSpace } from "@/features/space/services/space-service";
@@ -45,7 +46,12 @@ export default function ExportModal({
     }
   }, [open]);
 
+  const [isExporting, setIsExporting] = useState<boolean>(false);
+  const isExportingRef = useRef<boolean>(false);
+
   const handleExport = async () => {
+    if (isExportingRef.current) return;
+
     if (passwordProtection && password.trim().length < 4) {
       setPasswordError(
         t("Password must contain at least 4 non-whitespace characters."),
@@ -53,6 +59,13 @@ export default function ExportModal({
       passwordInputRef.current?.focus();
       return;
     }
+
+    // Gunakan flushSync untuk memaksa React segera me-render state loading
+    // sebelum thread diblokir oleh pemanggilan async.
+    flushSync(() => {
+      isExportingRef.current = true;
+      setIsExporting(true);
+    });
 
     try {
       if (type === "page") {
@@ -90,6 +103,9 @@ export default function ExportModal({
         message: "Export failed: " + msg,
         color: "red",
       });
+    } finally {
+      isExportingRef.current = false;
+      setIsExporting(false);
     }
   };
 
@@ -100,7 +116,11 @@ export default function ExportModal({
   return (
     <Modal.Root
       opened={open}
-      onClose={onClose}
+      onClose={() => {
+        if (!isExporting) {
+          onClose();
+        }
+      }}
       size={500}
       padding="xl"
       yOffset="10vh"
@@ -112,7 +132,7 @@ export default function ExportModal({
       <Modal.Content style={{ overflow: "hidden" }}>
         <Modal.Header py={0}>
           <Modal.Title fw={500}>{t(`Export ${type}`)}</Modal.Title>
-          <Modal.CloseButton />
+          <Modal.CloseButton disabled={isExporting} />
         </Modal.Header>
         <Modal.Body>
           <Group justify="space-between" wrap="nowrap">
@@ -215,10 +235,12 @@ export default function ExportModal({
           )}
 
           <Group justify="center" mt="md">
-            <Button onClick={onClose} variant="default">
+            <Button onClick={onClose} variant="default" disabled={isExporting}>
               {t("Cancel")}
             </Button>
-            <Button onClick={handleExport}>{t("Export")}</Button>
+            <Button onClick={handleExport} loading={isExporting} disabled={isExporting}>
+              {t("Export")}
+            </Button>
           </Group>
         </Modal.Body>
       </Modal.Content>

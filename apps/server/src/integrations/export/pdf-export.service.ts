@@ -28,7 +28,16 @@ export class PdfExportService {
     }
 
     const pageHtml = jsonToHtml(prosemirrorJson);
-    const fullHtml = this.buildPdfTemplate(title, pageHtml);
+
+    const appUrl = process.env.APP_URL || 'http://localhost:3000';
+    const pageLink = `${appUrl}/p/${page.slugId}`;
+    const pageHtmlWithFooter = pageHtml + `
+      <div class="pdf-caption-link" style="margin-top: 50px; padding-top: 20px; border-top: 1px solid #eee; font-size: 9pt;">
+        <a href="${pageLink}" style="color: #0000ee; text-decoration: underline; font-weight: 500;">Lihat halaman ini di Docmost</a>
+      </div>
+    `;
+
+    const fullHtml = this.buildPdfTemplate(title, pageHtmlWithFooter);
 
     return this.renderHtmlToPdf(fullHtml, title);
   }
@@ -203,7 +212,9 @@ export class PdfExportService {
       border-collapse: collapse;
       margin: 1em 0;
       page-break-inside: auto;
-      table-layout: auto;
+      table-layout: fixed;
+      word-break: break-word;
+      overflow: hidden;
     }
 
     .pdf-content thead {
@@ -269,6 +280,15 @@ export class PdfExportService {
     .pdf-content a {
       color: #0000ee;
       text-decoration: underline;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .pdf-content a {
+        color: #4da6ff;
+      }
+      .pdf-caption-link a {
+        color: #ffffff !important;
+      }
     }
 
     /* Task lists */

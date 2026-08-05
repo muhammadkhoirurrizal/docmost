@@ -145,6 +145,46 @@ export function SpaceSidebar() {
                   SpaceCaslAction.Manage,
                   SpaceCaslSubject.Page
                 ) && (
+                  <>
+                    <UnstyledButton
+                      component={Link}
+                      to={`/s/${spaceSlug}/archive`}
+                      className={clsx(
+                        classes.menu,
+                        location.pathname.toLowerCase() === `/s/${spaceSlug}/archive`.toLowerCase()
+                          ? classes.activeButton
+                          : ""
+                      )}
+                    >
+                      <div className={classes.menuItemInner}>
+                        <IconArchive
+                          size={18}
+                          className={classes.menuItemIcon}
+                          stroke={2}
+                        />
+                        <span>{t("Archive")}</span>
+                      </div>
+                    </UnstyledButton>
+
+                    <UnstyledButton
+                      component={Link}
+                      to={`/s/${spaceSlug}/trash`}
+                      className={clsx(
+                        classes.menu,
+                        location.pathname.toLowerCase() === `/s/${spaceSlug}/trash`.toLowerCase()
+                          ? classes.activeButton
+                          : ""
+                      )}
+                    >
+                      <div className={classes.menuItemInner}>
+                        <IconTrash
+                          size={18}
+                          className={classes.menuItemIcon}
+                          stroke={2}
+                        />
+                        <span>{t("Trash")}</span>
+                      </div>
+                    </UnstyledButton>
                     <Menu shadow="md" width={200} position="right-start" withArrow offset={10}>
                       <Menu.Target>
                         <UnstyledButton className={classes.menu}>
@@ -184,6 +224,7 @@ export function SpaceSidebar() {
                         </Menu.Item>
                       </Menu.Dropdown>
                     </Menu>
+                  </>
                   )}
               </>
             )}

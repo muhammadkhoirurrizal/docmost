@@ -1,4 +1,4 @@
-import { ActionIcon, Badge, Group, Menu, Text, Tooltip } from "@mantine/core";
+import { ActionIcon, Badge, Group, Menu, Text, Tooltip, Loader } from "@mantine/core";
 import {
   IconArchive,
   IconArrowRight,
@@ -14,7 +14,9 @@ import {
   IconTrash,
   IconWifiOff,
 } from "@tabler/icons-react";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { exportPage } from "@/features/page/services/page-service.ts";
+import { ExportFormat } from "@/features/page/types/page.types.ts";
 import useToggleAside from "@/hooks/use-toggle-aside.tsx";
 import { useAtom } from "jotai";
 import { historyAtoms } from "@/features/page-history/atoms/history-atoms.ts";
@@ -158,7 +160,8 @@ interface PageActionMenuProps {
 function PageActionMenu({ readOnly }: PageActionMenuProps) {
   const { t } = useTranslation();
   const [, setHistoryModalOpen] = useAtom(historyAtoms);
-  const { pageSlug, spaceSlug } = useParams();
+  const { spaceSlug, pageSlug } = useParams();
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
   const navigate = useNavigate();
   const { data: page, isLoading: _isLoading } = usePageQuery({
     pageId: extractPageSlugId(pageSlug),
@@ -241,10 +244,35 @@ function PageActionMenu({ readOnly }: PageActionMenuProps) {
     );
   };
 
-  const handlePrint = () => {
-    setTimeout(() => {
-      window.print();
-    }, 250);
+  const handleExportPdfDirect = async () => {
+    if (isExportingPdf) return;
+    setIsExportingPdf(true);
+
+    try {
+      await exportPage({
+        pageId: page.id,
+        format: ExportFormat.PDF,
+        includeChildren: false,
+        includeAttachments: false,
+      });
+    } catch (err: any) {
+      let msg = err.response?.data?.message || err.message;
+      if (err.response?.data instanceof Blob) {
+        try {
+          const text = await err.response.data.text();
+          const parsed = JSON.parse(text);
+          msg = parsed.message || text;
+        } catch {
+          msg = "Export failed";
+        }
+      }
+      notifications.show({
+        message: t("Export failed: ") + msg,
+        color: "red",
+      });
+    } finally {
+      setIsExportingPdf(false);
+    }
   };
 
   const openHistoryModal = () => {
@@ -331,10 +359,11 @@ function PageActionMenu({ readOnly }: PageActionMenuProps) {
               </Menu.Item>
 
               <Menu.Item
-                leftSection={<IconPrinter size={16} />}
-                onClick={handlePrint}
+                leftSection={isExportingPdf ? <Loader size={14} /> : <IconFileExport size={16} />}
+                onClick={handleExportPdfDirect}
+                disabled={isExportingPdf}
               >
-                {t("Print PDF")}
+                {isExportingPdf ? t("Exporting...") : t("Export PDF")}
               </Menu.Item>
 
               {!readOnly && (

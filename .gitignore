@@ -43,3 +43,5 @@ lerna-debug.log*
 .nx/installation
 .nx/cache
 docmost.tar
+
+docs_common

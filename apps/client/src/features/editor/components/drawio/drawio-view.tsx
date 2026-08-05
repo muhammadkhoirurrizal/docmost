@@ -7,7 +7,7 @@ import {
   Text,
   useComputedColorScheme,
 } from "@mantine/core";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { uploadFile } from "@/features/page/services/page-service.ts";
 import { useDisclosure } from "@mantine/hooks";
 import { getDrawioUrl, getFileUrl } from "@/lib/config.ts";
@@ -31,6 +31,29 @@ export default function DrawioView(props: NodeViewProps) {
   const [initialXML, setInitialXML] = useState<string>("");
   const [opened, { open, close }] = useDisclosure(false);
   const computedColorScheme = useComputedColorScheme();
+
+  useEffect(() => {
+    const handlePopState = () => {
+      if (opened) {
+        if (drawioRef.current) {
+          drawioRef.current.exportDiagram({ format: "xmlsvg" });
+        } else {
+          close();
+        }
+      }
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [opened, close]);
+
+  const closeDrawio = () => {
+    close();
+    if (window.history.state?.modal === "drawio") {
+      window.history.back();
+    }
+  };
 
   const handleOpen = async () => {
     if (!editor.isEditable) {
@@ -57,6 +80,7 @@ export default function DrawioView(props: NodeViewProps) {
       console.error(err);
     } finally {
       open();
+      window.history.pushState({ modal: "drawio" }, "");
     }
   };
 
@@ -83,12 +107,12 @@ export default function DrawioView(props: NodeViewProps) {
       attachmentId: attachment.id,
     });
 
-    close();
+    closeDrawio();
   };
 
   return (
     <NodeViewWrapper data-drag-handle>
-      <Modal.Root opened={opened} onClose={close} fullScreen>
+      <Modal.Root opened={opened} onClose={closeDrawio} fullScreen>
         <Modal.Overlay />
         <Modal.Content style={{ overflow: "hidden" }}>
           <Modal.Body>
@@ -103,7 +127,8 @@ export default function DrawioView(props: NodeViewProps) {
                   libraries: true,
                   saveAndExit: true,
                   noSaveBtn: true,
-                }}
+                  pages: 1,
+                } as any}
                 onSave={(data: EventSave) => {
                   // If the save is triggered by another event, then do nothing
                   if (data.parentEvent !== "save") {
@@ -111,12 +136,15 @@ export default function DrawioView(props: NodeViewProps) {
                   }
                   handleSave(data);
                 }}
+                onExport={(data: any) => {
+                  handleSave({ xml: data.data } as any);
+                }}
                 onClose={(data: EventExit) => {
                   // If the exit is triggered by another event, then do nothing
                   if (data.parentEvent) {
                     return;
                   }
-                  close();
+                  closeDrawio();
                 }}
               />
             </div>
