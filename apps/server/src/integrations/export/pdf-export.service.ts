@@ -29,15 +29,7 @@ export class PdfExportService {
 
     const pageHtml = jsonToHtml(prosemirrorJson);
 
-    const appUrl = process.env.APP_URL || 'http://localhost:3000';
-    const pageLink = `${appUrl}/p/${page.slugId}`;
-    const pageHtmlWithFooter = pageHtml + `
-      <div class="pdf-caption-link" style="margin-top: 50px; padding-top: 20px; border-top: 1px solid #eee; font-size: 9pt;">
-        <a href="${pageLink}" style="color: #0000ee; text-decoration: underline; font-weight: 500;">Lihat halaman ini di Docmost</a>
-      </div>
-    `;
-
-    const fullHtml = this.buildPdfTemplate(title, pageHtmlWithFooter);
+    const fullHtml = this.buildPdfTemplate(title, pageHtml);
 
     return this.renderHtmlToPdf(fullHtml, title);
   }
@@ -286,9 +278,21 @@ export class PdfExportService {
       .pdf-content a {
         color: #4da6ff;
       }
-      .pdf-caption-link a {
+      .pdf-fixed-caption a {
         color: #ffffff !important;
       }
+    }
+
+    .pdf-fixed-caption {
+      position: fixed;
+      bottom: -15mm;
+      left: 0;
+      font-size: 8pt;
+      z-index: 1000;
+    }
+    .pdf-fixed-caption a {
+      color: #999;
+      text-decoration: none;
     }
 
     /* Task lists */
@@ -412,10 +416,13 @@ export class PdfExportService {
           </div>
         `,
         footerTemplate: `
-          <div style="font-size: 8pt; color: #999; width: 100%; padding: 0 20mm; display: flex; justify-content: space-between;">
-            <span style="flex: 1; text-align: left;"></span>
-            <span style="flex: 1; text-align: center;" class="pageNumber"></span>
-            <span style="flex: 1; text-align: right;" class="totalPages"></span>
+          <div style="font-size: 8pt; color: #999; width: 100%; padding: 0 20mm; display: flex; justify-content: space-between; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+            <span style="flex: 1; text-align: left;">
+              <span style="color: #4da6ff;">View this page on Docmost</span>
+            </span>
+            <span style="flex: 1; text-align: right;">
+              Page <span class="pageNumber"></span> of <span class="totalPages"></span>
+            </span>
           </div>
         `,
         margin: {
