@@ -69,8 +69,16 @@ export default function EmbedView(props: NodeViewProps) {
 
   // SCROLL JUMP PROTECTION FOR IN-PLACE EDITING
   useEffect(() => {
+    if (!editor?.isEditable) return;
+
     const handleFocus = (e: FocusEvent) => {
       if (e.target === iframeRef.current) {
+        // If scrollPos is exactly 0,0 but we are scrolled down, it means 
+        // handleMouseDown hasn't fired. Don't aggressively scroll to top.
+        if (scrollPosRef.current.x === 0 && scrollPosRef.current.y === 0 && window.scrollY > 0) {
+          return;
+        }
+
         const { x, y } = scrollPosRef.current;
         const start = Date.now();
         const lock = () => {
@@ -85,7 +93,7 @@ export default function EmbedView(props: NodeViewProps) {
 
     window.addEventListener("focus", handleFocus, true);
     return () => window.removeEventListener("focus", handleFocus, true);
-  }, []);
+  }, [editor?.isEditable]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (!editor.isEditable || typeof getPos !== "function") return;

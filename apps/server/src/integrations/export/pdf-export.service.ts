@@ -34,9 +34,9 @@ export class PdfExportService {
     return this.renderHtmlToPdf(fullHtml, title);
   }
 
-  async exportHtmlToPdf(html: string, title: string): Promise<Buffer> {
+  async exportHtmlToPdf(html: string, title: string, pageLink?: string): Promise<Buffer> {
     const fullHtml = this.buildPdfTemplate(title, html);
-    return this.renderHtmlToPdf(fullHtml, title);
+    return this.renderHtmlToPdf(fullHtml, title, pageLink);
   }
 
   /**
@@ -376,7 +376,7 @@ export class PdfExportService {
   /**
    * Render HTML to PDF using Puppeteer.
    */
-  private async renderHtmlToPdf(html: string, title: string): Promise<Buffer> {
+  private async renderHtmlToPdf(html: string, title: string, pageLink?: string): Promise<Buffer> {
     let browser;
     try {
       browser = await puppeteer.launch({
@@ -404,6 +404,10 @@ export class PdfExportService {
         // TOC might be empty, that's okay
       });
 
+      const leftFooter = pageLink 
+        ? `<span style="color: #4da6ff;">${pageLink}</span>` 
+        : ``;
+
       const pdfBuffer = await page.pdf({
         format: 'A4',
         printBackground: true,
@@ -418,7 +422,7 @@ export class PdfExportService {
         footerTemplate: `
           <div style="font-size: 8pt; color: #999; width: 100%; padding: 0 20mm; display: flex; justify-content: space-between; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
             <span style="flex: 1; text-align: left;">
-              <span style="color: #4da6ff;">View this page on Docmost</span>
+              ${leftFooter}
             </span>
             <span style="flex: 1; text-align: right;">
               Page <span class="pageNumber"></span> of <span class="totalPages"></span>

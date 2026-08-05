@@ -90,7 +90,9 @@ export class ExportService {
     }
 
     if (format === ExportFormat.PDF) {
-      return this.pdfExportService.exportHtmlToPdf(pageHtml, getPageTitle(page.title));
+      const appUrl = process.env.APP_URL || 'http://localhost:3000';
+      const pageLink = `${appUrl}/p/${page.slugId}`;
+      return this.pdfExportService.exportHtmlToPdf(pageHtml, getPageTitle(page.title), pageLink);
     }
 
     return;
