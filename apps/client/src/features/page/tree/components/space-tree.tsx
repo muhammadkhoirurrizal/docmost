@@ -492,7 +492,7 @@ function Node({ node, style, dragHandle, tree }: NodeRendererProps<any>) {
                 treeApi={tree}
                 spaceId={node.data.spaceId}
               />
-              {!tree.props.disableEdit && isFolder && (
+              {!tree.props.disableEdit && (
                 <CreateNode
                   node={node}
                   treeApi={tree}

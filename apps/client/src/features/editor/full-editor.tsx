@@ -15,6 +15,7 @@ const MemoizedPageEditor = React.memo(PageEditor);
 
 export interface FullEditorProps {
   pageId: string;
+  spaceId: string;
   slugId: string;
   title: string;
   content: string;
@@ -25,6 +26,7 @@ export interface FullEditorProps {
 
 export function FullEditor({
   pageId,
+  spaceId,
   title,
   slugId,
   content,
@@ -53,6 +55,8 @@ export function FullEditor({
       <TableOfContentsOnPage />
       <MemoizedPageEditor
         pageId={pageId}
+        spaceId={spaceId}
+        spaceSlug={spaceSlug}
         editable={isVisitor ? false : editable}
         content={content}
         canComment={canComment}

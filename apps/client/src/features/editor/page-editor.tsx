@@ -79,6 +79,8 @@ import { DragHandleMenu } from "./components/block-handle-menu/drag-handle-menu"
 
 interface PageEditorProps {
   pageId: string;
+  spaceId: string;
+  spaceSlug: string;
   editable: boolean;
   content: any;
   canComment?: boolean;
@@ -86,6 +88,8 @@ interface PageEditorProps {
 
 export default function PageEditor({
   pageId,
+  spaceId,
+  spaceSlug,
   editable,
   content,
   canComment = false,
@@ -326,6 +330,8 @@ export default function PageEditor({
           // @ts-ignore
           setEditor(editor);
           editor.storage.pageId = pageId;
+          editor.storage.spaceId = spaceId;
+          editor.storage.spaceSlug = spaceSlug;
           handleScrollTo(editor);
           editorCreated.current = true;
         }

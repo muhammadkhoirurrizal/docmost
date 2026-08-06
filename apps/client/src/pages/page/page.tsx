@@ -70,6 +70,7 @@ export default function Page() {
         <MemoizedFullEditor
           key={page.id}
           pageId={page.id}
+          spaceId={page.spaceId}
           title={page.title}
           content={page.content}
           slugId={page.slugId}

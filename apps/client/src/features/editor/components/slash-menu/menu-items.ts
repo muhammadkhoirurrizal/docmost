@@ -23,6 +23,7 @@ import {
   IconMenu4,
   IconCalendar,
   IconAppWindow,
+  IconFileText,
   IconSitemap,
   IconLink,
   IconColumns,
@@ -39,6 +40,7 @@ import {
   CommandProps,
   SlashMenuGroupedItemsType,
 } from "@/features/editor/components/slash-menu/types";
+import { createSubpageAction } from "@/features/editor/components/slash-menu/create-subpage-action";
 import { uploadImageAction } from "@/features/editor/components/image/upload-image-action.tsx";
 import { uploadVideoAction } from "@/features/editor/components/video/upload-video-action.tsx";
 import { uploadAttachmentAction } from "@/features/editor/components/attachment/upload-attachment-action.tsx";
@@ -62,6 +64,20 @@ import {
 
 const CommandGroups: SlashMenuGroupedItemsType = {
   basic: [
+    {
+      title: "Page",
+      description: "Embed a sub-page inside this page.",
+      searchTerms: ["page", "subpage", "new"],
+      icon: IconFileText,
+      command: ({ editor, range }: CommandProps) => {
+        const pageId = editor.storage?.pageId;
+        const spaceId = editor.storage?.spaceId;
+        const spaceSlug = editor.storage?.spaceSlug;
+        if (!pageId || !spaceId || !spaceSlug) return;
+        
+        createSubpageAction(pageId, spaceId, spaceSlug, editor, range);
+      },
+    },
     {
       title: "Text",
       description: "Just start typing with plain text.",
