@@ -59,14 +59,18 @@ export class ExportController {
       `[export] exportPage request: pageId=${dto.pageId}, format=${dto.format}, password=${dto.password ? 'provided' : 'missing'}`,
     );
 
-    if (dto.format === ExportFormat.PDF && !dto.includeChildren && !dto.password) {
-      const pdfBuffer = await this.exportService.exportPage(dto.format, page, true);
-      const fileName = sanitize(page.title || 'untitled') + '.pdf';
+    if ((dto.format === ExportFormat.PDF || dto.format === ExportFormat.DOCX) && !dto.includeChildren && !dto.password) {
+      const isPdf = dto.format === ExportFormat.PDF;
+      const fileBuffer = await this.exportService.exportPage(dto.format, page, true);
+      const extension = isPdf ? '.pdf' : '.docx';
+      const contentType = isPdf ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+      
+      const fileName = sanitize(page.title || 'untitled') + extension;
       res.headers({
-        'Content-Type': 'application/pdf',
+        'Content-Type': contentType,
         'Content-Disposition': 'attachment; filename="' + encodeURIComponent(fileName) + '"',
       });
-      res.send(pdfBuffer);
+      res.send(fileBuffer);
       return;
     }
 

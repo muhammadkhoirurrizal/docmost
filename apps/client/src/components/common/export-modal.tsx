@@ -261,6 +261,7 @@ function ExportFormatSelection({ format, onChange }: ExportFormatSelection) {
         { value: "markdown", label: "Markdown" },
         { value: "html", label: "HTML" },
         { value: "pdf", label: "PDF" },
+        { value: "docx", label: "Word (.docx)" },
       ]}
       defaultValue={format}
       onChange={onChange}

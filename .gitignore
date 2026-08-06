@@ -45,3 +45,5 @@ lerna-debug.log*
 docmost.tar
 
 docs_common
+
+pnpm-lock.*

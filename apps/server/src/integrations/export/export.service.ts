@@ -4,6 +4,8 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
+import * as cheerio from 'cheerio';
+
 import { jsonToHtml, jsonToNode } from '../../collaboration/collaboration.util';
 import { turndown } from './turndown-utils';
 import { ExportFormat } from './dto/export-dto';
@@ -71,18 +73,23 @@ export class ExportService {
 
     const pageHtml = jsonToHtml(prosemirrorJson);
 
+    let finalHtml = pageHtml;
+    if (format === ExportFormat.PDF || format === ExportFormat.DOCX) {
+      finalHtml = await this.prepareHtmlForExport(finalHtml, page.spaceId, format);
+    }
+
     if (format === ExportFormat.HTML) {
       return `<!DOCTYPE html>
       <html>
         <head>
          <title>${getPageTitle(page.title)}</title>
         </head>
-        <body>${pageHtml}</body>
+        <body>${finalHtml}</body>
       </html>`;
     }
 
     if (format === ExportFormat.Markdown) {
-      const newPageHtml = pageHtml.replace(
+      const newPageHtml = finalHtml.replace(
         /<colgroup[^>]*>[\s\S]*?<\/colgroup>/gim,
         '',
       );
@@ -92,10 +99,84 @@ export class ExportService {
     if (format === ExportFormat.PDF) {
       const appUrl = process.env.APP_URL || 'http://localhost:3000';
       const pageLink = `${appUrl}/p/${page.slugId}`;
-      return this.pdfExportService.exportHtmlToPdf(pageHtml, getPageTitle(page.title), pageLink);
+      return this.pdfExportService.exportHtmlToPdf(finalHtml, getPageTitle(page.title), pageLink);
+    }
+
+    if (format === ExportFormat.DOCX) {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const HTMLtoDOCX = require('html-to-docx');
+      const docxHtml = `<!DOCTYPE html>
+      <html>
+        <head>
+         <title>${getPageTitle(page.title)}</title>
+        </head>
+        <body>${finalHtml}</body>
+      </html>`;
+      const docxBuffer = await HTMLtoDOCX(docxHtml, null, {
+        title: getPageTitle(page.title),
+      });
+      return docxBuffer;
     }
 
     return;
+  }
+
+  private async prepareHtmlForExport(html: string, spaceId: string, format: string): Promise<string> {
+    const $ = cheerio.load(html, null, false);
+    
+    if (format === ExportFormat.DOCX) {
+      $('table').css('width', '100%');
+    }
+
+    const images = $('img, div[data-type="drawio"], div[data-type="excalidraw"]').toArray();
+
+    for (const img of images) {
+      const isDiv = img.tagName.toLowerCase() === 'div';
+      const src = isDiv ? $(img).attr('data-src') : $(img).attr('src');
+      let attachmentId = $(img).attr('data-attachment-id');
+
+      if (!attachmentId && src) {
+        const match = src.match(/\/api\/files\/([a-zA-Z0-9-]+)/);
+        if (match) attachmentId = match[1];
+      }
+
+      if (attachmentId) {
+        try {
+          const attachment = await this.db
+            .selectFrom('attachments')
+            .selectAll()
+            .where('id', '=', attachmentId)
+            .where('spaceId', '=', spaceId)
+            .executeTakeFirst();
+            
+          if (attachment) {
+            const fileBuffer = await this.storageService.read(attachment.filePath);
+            const base64 = fileBuffer.toString('base64');
+            let mimeType = 'image/png';
+            if (attachment.fileName.toLowerCase().endsWith('.jpg') || attachment.fileName.toLowerCase().endsWith('.jpeg')) {
+              mimeType = 'image/jpeg';
+            } else if (attachment.fileName.toLowerCase().endsWith('.gif')) {
+              mimeType = 'image/gif';
+            } else if (attachment.fileName.toLowerCase().endsWith('.webp')) {
+              mimeType = 'image/webp';
+            } else if (attachment.fileName.toLowerCase().endsWith('.svg')) {
+              mimeType = 'image/svg+xml';
+            }
+            
+            if (isDiv) {
+              img.tagName = 'img';
+              $(img).removeAttr('data-type');
+              $(img).removeAttr('data-src');
+            }
+            $(img).attr('src', `data:${mimeType};base64,${base64}`);
+          }
+        } catch (err) {
+          this.logger.debug(`Failed to inject base64 image ${attachmentId}`, err);
+        }
+      }
+    }
+
+    return $.html();
   }
 
   async exportPages(

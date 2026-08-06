@@ -24,6 +24,10 @@ export function getExportExtension(format: string) {
   if (format === ExportFormat.PDF) {
     return '.pdf';
   }
+
+  if (format === ExportFormat.DOCX) {
+    return '.docx';
+  }
   return;
 }
 
