@@ -7,6 +7,7 @@ import { useAtom } from "jotai";
 import { userAtom } from "@/features/user/atoms/current-user-atom.ts";
 import useUserRole from "@/hooks/use-user-role";
 import { TableOfContentsOnPage } from "@/features/editor/components/table-of-contents/table-of-contents.tsx";
+import { TocMinimap } from "@/features/editor/components/table-of-contents/toc-minimap";
 import { PrintHeader } from "@/components/common/print-header.tsx";
 
 const MemoizedTitleEditor = React.memo(TitleEditor);
@@ -56,6 +57,7 @@ export function FullEditor({
         content={content}
         canComment={canComment}
       />
+      <TocMinimap />
     </Container>
   );
 }

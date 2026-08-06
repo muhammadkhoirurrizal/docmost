@@ -31,7 +31,7 @@ export type HeadingLink = {
   id: string;
 };
 
-const recalculateLinks = (nodePos: NodePos[]) => {
+export const recalculateLinks = (nodePos: NodePos[]) => {
   const nodes: HTMLElement[] = [];
 
   const links: HeadingLink[] = Array.from(nodePos).reduce<HeadingLink[]>(
