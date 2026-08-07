@@ -15,6 +15,7 @@ async function bootstrap() {
       ignoreTrailingSlash: true,
       ignoreDuplicateSlashes: true,
       maxParamLength: 500,
+      bodyLimit: 10 * 1024 * 1024,
     }),
     {
       logger: new InternalLogFilter(),
