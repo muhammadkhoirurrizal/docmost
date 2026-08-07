@@ -1,0 +1,21 @@
+apps/server/src/main.ts
+  s_a5cb9430629b05::t_e7d0f501e91041 19
+apps/server/src/collaboration/server/collab-main.ts
+  s_a5cb9430629b05::t_f027d9354645fc 18
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "6fddc144deadde90aa9237e224a177ffcb26317a",
+  "prompts": {},
+  "sessions": {
+    "s_a5cb9430629b05": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_025ca8272ffeTmE4zERnnJnI6H",
+        "model": "unknown"
+      },
+      "human_author": "RizukiKano <33799315+rizukikano@users.noreply.github.com>"
+    }
+  }
+}
