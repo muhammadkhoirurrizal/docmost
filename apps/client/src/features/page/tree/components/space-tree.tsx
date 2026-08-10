@@ -37,6 +37,8 @@ import {
   IconLink,
   IconPlus,
   IconPointFilled,
+  IconStar,
+  IconStarFilled,
   IconTrash,
 } from "@tabler/icons-react";
 import {
@@ -83,6 +85,11 @@ import { useToggleSidebar } from "@/components/layouts/global/hooks/hooks/use-to
 import CopyPageModal from "../../components/copy-page-modal.tsx";
 import { duplicatePage } from "../../services/page-service.ts";
 import { useUserRole } from "@/hooks/use-user-role";
+import {
+  useFavoriteIds,
+  useAddFavoriteMutation,
+  useRemoveFavoriteMutation,
+} from "@/features/favorite/queries/favorite-query";
 
 interface SpaceTreeProps {
   spaceId: string;
@@ -597,6 +604,21 @@ function NodeMenu({ node, treeApi, spaceId }: NodeMenuProps) {
   const handleUnarchive = async () => {
     await unarchivePageMutation.mutateAsync(node.id);
   };
+
+  const favoriteIds = useFavoriteIds("page", spaceId);
+  const addFavoriteMutation = useAddFavoriteMutation();
+  const removeFavoriteMutation = useRemoveFavoriteMutation();
+  const isFavorited = favoriteIds.has(node.id);
+
+  const handleToggleFavorite = () => {
+    const params = { type: "page" as const, pageId: node.id };
+    if (isFavorited) {
+      removeFavoriteMutation.mutate(params);
+    } else {
+      addFavoriteMutation.mutate(params);
+    }
+  };
+
   const [data, setData] = useAtom(treeDataAtom);
   const emit = useQueryEmit();
   const [exportOpened, { open: openExportModal, close: closeExportModal }] =
@@ -824,6 +846,23 @@ function NodeMenu({ node, treeApi, spaceId }: NodeMenuProps) {
                 }}
               >
                 {t("Export page")}
+              </Menu.Item>
+
+              <Menu.Item
+                leftSection={
+                  isFavorited ? (
+                    <IconStarFilled size={16} style={{ color: "var(--mantine-color-yellow-filled)" }} />
+                  ) : (
+                    <IconStar size={16} />
+                  )
+                }
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleToggleFavorite();
+                }}
+              >
+                {isFavorited ? t("Remove from favorites") : t("Add to favorites")}
               </Menu.Item>
             </>
           )}
