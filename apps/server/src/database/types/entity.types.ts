@@ -20,6 +20,9 @@ import {
   FileTasks,
   UserMfa as _UserMFA,
   ApiKeys,
+  Notifications,
+  Favorites,
+  Watchers,
 } from './db';
 import { PageEmbeddings } from '@docmost/db/types/embeddings.types';
 
@@ -27,6 +30,21 @@ import { PageEmbeddings } from '@docmost/db/types/embeddings.types';
 export type Workspace = Selectable<Workspaces>;
 export type InsertableWorkspace = Insertable<Workspaces>;
 export type UpdatableWorkspace = Updateable<Omit<Workspaces, 'id'>>;
+
+// Notification
+export type Notification = Selectable<Notifications>;
+export type InsertableNotification = Insertable<Notifications>;
+export type UpdatableNotification = Updateable<Omit<Notifications, 'id'>>;
+
+// Favorite
+export type Favorite = Selectable<Favorites>;
+export type InsertableFavorite = Insertable<Favorites>;
+export type UpdatableFavorite = Updateable<Omit<Favorites, 'id'>>;
+
+// Watcher
+export type Watcher = Selectable<Watchers>;
+export type InsertableWatcher = Insertable<Watchers>;
+export type UpdatableWatcher = Updateable<Omit<Watchers, 'id'>>;
 
 // WorkspaceInvitation
 export type WorkspaceInvitation = Selectable<WorkspaceInvitations>;

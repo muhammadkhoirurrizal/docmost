@@ -5,6 +5,10 @@ import { Page } from '@docmost/db/types/entity.types';
 import { isDeepStrictEqual } from 'node:util';
 
 import { normalizeTiptapJson } from '../collaboration.util';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
+import { QueueJob, QueueName } from '../../integrations/queue/constants';
+import { IPageUpdateNotificationJob } from '../../integrations/queue/constants/queue.interface';
 
 export class UpdatedPageEvent {
   page: Page;
@@ -15,7 +19,10 @@ export class UpdatedPageEvent {
 export class HistoryListener {
   private readonly logger = new Logger(HistoryListener.name);
 
-  constructor(private readonly pageHistoryRepo: PageHistoryRepo) { }
+  constructor(
+    private readonly pageHistoryRepo: PageHistoryRepo,
+    @InjectQueue(QueueName.NOTIFICATION_QUEUE) private notificationQueue: Queue,
+  ) { }
 
   @OnEvent('collab.page.updated')
   async handleCreatePageHistory(event: UpdatedPageEvent) {
@@ -32,6 +39,18 @@ export class HistoryListener {
           ...page,
           content: normalizedContent,
         });
+        
+        if (lastHistory) {
+          await this.notificationQueue.add(QueueJob.PAGE_UPDATED, {
+            pageId: page.id,
+            spaceId: page.spaceId,
+            workspaceId: page.workspaceId,
+            actorIds: [page.lastUpdatedById],
+          } as IPageUpdateNotificationJob).catch(err => {
+            this.logger.error(`Failed to queue page update notification: ${err.message}`);
+          });
+        }
+
         this.logger.debug(`History created for: ${page.id} (force: ${!!forceHistory})`);
         return;
       } catch (err) {

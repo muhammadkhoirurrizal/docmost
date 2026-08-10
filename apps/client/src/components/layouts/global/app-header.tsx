@@ -21,6 +21,7 @@ import {
 import {
   searchSpotlight,
 } from "@/features/search/constants.ts";
+import { NotificationPopover } from "@/features/notification/components/notification-popover.tsx";
 
 const links = [{ link: APP_ROUTE.HOME, label: "Home" }];
 
@@ -109,6 +110,7 @@ export function AppHeader() {
                 : `${trialDaysLeft} days left`}
             </Badge>
           )}
+          <NotificationPopover />
           <TopMenu />
         </Group>
       </Group>

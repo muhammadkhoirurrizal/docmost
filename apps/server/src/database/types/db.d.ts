@@ -189,12 +189,38 @@ export interface Groups {
   workspaceId: string;
 }
 
+export interface Favorites {
+  id: Generated<string>;
+  pageId: string | null;
+  spaceId: string | null;
+  type: string;
+  userId: string;
+  workspaceId: string;
+}
+
 export interface GroupUsers {
   createdAt: Generated<Timestamp>;
   groupId: string;
   id: Generated<string>;
   updatedAt: Generated<Timestamp>;
   userId: string;
+}
+
+export interface Notifications {
+  id: Generated<string>;
+  userId: string;
+  workspaceId: string;
+  type: string;
+  actorId: string | null;
+  pageId: string | null;
+  spaceId: string | null;
+  commentId: string | null;
+  pageVerificationId: string | null;
+  data: Json | null;
+  readAt: Timestamp | null;
+  emailedAt: Timestamp | null;
+  archivedAt: Timestamp | null;
+  createdAt: Generated<Timestamp>;
 }
 
 export interface PageHistory {
@@ -337,6 +363,18 @@ export interface WorkspaceInvitations {
   workspaceId: string;
 }
 
+export interface Watchers {
+  id: Generated<string>;
+  userId: string;
+  pageId: string | null;
+  spaceId: string;
+  workspaceId: string;
+  type: string;
+  addedById: string | null;
+  mutedAt: Timestamp | null;
+  createdAt: Generated<Timestamp>;
+}
+
 export interface Workspaces {
   billingEmail: string | null;
   createdAt: Generated<Timestamp>;
@@ -370,8 +408,10 @@ export interface DB {
   billing: Billing;
   comments: Comments;
   fileTasks: FileTasks;
+  favorites: Favorites;
   groups: Groups;
   groupUsers: GroupUsers;
+  notifications: Notifications;
   pageHistory: PageHistory;
   pages: Pages;
   shares: Shares;
@@ -381,5 +421,6 @@ export interface DB {
   users: Users;
   userTokens: UserTokens;
   workspaceInvitations: WorkspaceInvitations;
+  watchers: Watchers;
   workspaces: Workspaces;
 }

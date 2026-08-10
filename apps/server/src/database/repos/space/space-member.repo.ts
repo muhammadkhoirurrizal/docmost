@@ -257,4 +257,28 @@ export class SpaceMemberRepo {
       perPage: pagination.limit,
     });
   }
+
+  async getUserIdsWithSpaceAccess(
+    userIds: string[],
+    spaceId: string,
+  ): Promise<Set<string>> {
+    if (userIds.length === 0) return new Set();
+
+    const rows = await this.db
+      .selectFrom('spaceMembers')
+      .select('userId')
+      .where('userId', 'in', userIds)
+      .where('spaceId', '=', spaceId)
+      .unionAll(
+        this.db
+          .selectFrom('spaceMembers')
+          .innerJoin('groupUsers', 'groupUsers.groupId', 'spaceMembers.groupId')
+          .select('groupUsers.userId')
+          .where('groupUsers.userId', 'in', userIds)
+          .where('spaceMembers.spaceId', '=', spaceId),
+      )
+      .execute();
+
+    return new Set(rows.map((r) => r.userId));
+  }
 }

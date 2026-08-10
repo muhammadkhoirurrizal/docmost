@@ -20,9 +20,13 @@ import { Queue } from 'bullmq';
 import {
   extractMentions,
   extractPageMentions,
+  extractUserMentions,
 } from '../../common/helpers/prosemirror/utils';
 import { isDeepStrictEqual } from 'node:util';
-import { IPageBacklinkJob } from '../../integrations/queue/constants/queue.interface';
+import {
+  IPageBacklinkJob,
+  IPageMentionNotificationJob,
+} from '../../integrations/queue/constants/queue.interface';
 import { Page } from '@docmost/db/types/entity.types';
 
 @Injectable()
@@ -36,6 +40,7 @@ export class PersistenceExtension implements Extension {
     private eventEmitter: EventEmitter2,
     @InjectQueue(QueueName.GENERAL_QUEUE) private generalQueue: Queue,
     @InjectQueue(QueueName.AI_QUEUE) private aiQueue: Queue,
+    @InjectQueue(QueueName.NOTIFICATION_QUEUE) private notificationQueue: Queue,
   ) {}
 
   async onLoadDocument(data: onLoadDocumentPayload) {
@@ -163,6 +168,26 @@ export class PersistenceExtension implements Extension {
 
       const mentions = extractMentions(tiptapJson);
       const pageMentions = extractPageMentions(mentions);
+      const userMentions = extractUserMentions(mentions);
+      
+      const oldMentions = page.content ? extractMentions(page.content) : [];
+      const oldMentionedUserIds = extractUserMentions(oldMentions).map(
+        (m) => m.entityId,
+      );
+
+      if (userMentions.length > 0) {
+        await this.notificationQueue.add(QueueJob.PAGE_MENTION_NOTIFICATION, {
+          userMentions: userMentions.map((m) => ({
+            userId: m.entityId,
+            mentionId: m.id,
+            creatorId: m.creatorId,
+          })),
+          oldMentionedUserIds,
+          pageId,
+          spaceId: page.spaceId,
+          workspaceId: page.workspaceId,
+        } as IPageMentionNotificationJob);
+      }
 
       await this.generalQueue.add(QueueJob.PAGE_BACKLINKS, {
         pageId: pageId,

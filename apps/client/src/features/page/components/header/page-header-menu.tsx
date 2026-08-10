@@ -13,6 +13,8 @@ import {
   IconPrinter,
   IconTrash,
   IconWifiOff,
+  IconStar,
+  IconStarFilled,
 } from "@tabler/icons-react";
 import React, { useEffect, useState } from "react";
 import { exportPage } from "@/features/page/services/page-service.ts";
@@ -54,6 +56,11 @@ import MovePageModal from "@/features/page/components/move-page-modal.tsx";
 import { useTimeAgo } from "@/hooks/use-time-ago.tsx";
 import ShareModal from "@/features/share/components/share-modal.tsx";
 import { useUserRole } from "@/hooks/use-user-role";
+import {
+  useFavoriteIds,
+  useAddFavoriteMutation,
+  useRemoveFavoriteMutation,
+} from "@/features/favorite/queries/favorite-query";
 
 
 interface PageHeaderMenuProps {
@@ -172,6 +179,21 @@ function PageActionMenu({ readOnly }: PageActionMenuProps) {
   const createPageMutation = useCreatePageMutation();
   const { data: childrenContent, refetch: refetchChildrenContent } =
     useGetChildrenContentQuery(page?.id);
+
+  const favoriteIds = useFavoriteIds("page", page?.spaceId);
+  const addFavoriteMutation = useAddFavoriteMutation();
+  const removeFavoriteMutation = useRemoveFavoriteMutation();
+  const isFavorited = page?.id ? favoriteIds.has(page.id) : false;
+
+  const handleToggleFavorite = () => {
+    if (!page) return;
+    const params = { type: "page" as const, pageId: page.id };
+    if (isFavorited) {
+      removeFavoriteMutation.mutate(params);
+    } else {
+      addFavoriteMutation.mutate(params);
+    }
+  };
 
   const handleArchive = async () => {
     await archivePageMutation.mutateAsync(page.id);
@@ -309,6 +331,23 @@ function PageActionMenu({ readOnly }: PageActionMenuProps) {
             }}
           >
             {t("Copy link")}
+          </Menu.Item>
+
+          <Menu.Item
+            leftSection={
+              isFavorited ? (
+                <IconStarFilled size={16} style={{ color: "var(--mantine-color-yellow-filled)" }} />
+              ) : (
+                <IconStar size={16} />
+              )
+            }
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleToggleFavorite();
+            }}
+          >
+            {isFavorited ? t("Remove from favorites") : t("Add to favorites")}
           </Menu.Item>
 
           {page?.hasChildren && (
