@@ -1,6 +1,8 @@
 import { asideStateAtom } from "@/components/layouts/global/hooks/atoms/sidebar-atom";
 import { useAtom } from "jotai";
 
+export const ASIDE_PANEL_ID = "aside-panel-container";
+
 const useToggleAside = () => {
   const [asideState, setAsideState] = useAtom(asideStateAtom);
 

@@ -29,6 +29,7 @@ import { PageListener } from '@docmost/db/listeners/page.listener';
 import { NotificationRepo } from '@docmost/db/repos/notification/notification.repo';
 import { WatcherRepo } from '@docmost/db/repos/watcher/watcher.repo';
 import { FavoriteRepo } from '@docmost/db/repos/favorite/favorite.repo';
+import { LabelRepo } from '@docmost/db/repos/label/label.repo';
 
 // https://github.com/brianc/node-postgres/issues/811
 types.setTypeParser(types.builtins.INT8, (val) => Number(val));
@@ -84,6 +85,7 @@ types.setTypeParser(types.builtins.INT8, (val) => Number(val));
     NotificationRepo,
     WatcherRepo,
     FavoriteRepo,
+    LabelRepo,
   ],
   exports: [
     WorkspaceRepo,
@@ -102,6 +104,7 @@ types.setTypeParser(types.builtins.INT8, (val) => Number(val));
     NotificationRepo,
     WatcherRepo,
     FavoriteRepo,
+    LabelRepo,
   ],
 })
 export class DatabaseModule

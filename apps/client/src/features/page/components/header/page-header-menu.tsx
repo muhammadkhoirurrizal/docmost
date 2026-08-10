@@ -15,6 +15,7 @@ import {
   IconWifiOff,
   IconStar,
   IconStarFilled,
+  IconInfoCircle,
 } from "@tabler/icons-react";
 import React, { useEffect, useState } from "react";
 import { exportPage } from "@/features/page/services/page-service.ts";
@@ -166,6 +167,7 @@ interface PageActionMenuProps {
 }
 function PageActionMenu({ readOnly }: PageActionMenuProps) {
   const { t } = useTranslation();
+  const toggleAside = useToggleAside();
   const [, setHistoryModalOpen] = useAtom(historyAtoms);
   const { spaceSlug, pageSlug } = useParams();
   const [isExportingPdf, setIsExportingPdf] = useState(false);
@@ -377,6 +379,17 @@ function PageActionMenu({ readOnly }: PageActionMenuProps) {
                 onClick={openHistoryModal}
               >
                 {t("Page history")}
+              </Menu.Item>
+
+              <Menu.Item
+                leftSection={<IconInfoCircle size={16} />}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  toggleAside("details");
+                }}
+              >
+                {t("Page details")}
               </Menu.Item>
 
               <Menu.Divider />

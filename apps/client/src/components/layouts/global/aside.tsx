@@ -7,11 +7,21 @@ import { useTranslation } from "react-i18next";
 import { TableOfContents } from "@/features/editor/components/table-of-contents/table-of-contents.tsx";
 import { useAtomValue } from "jotai";
 import { pageEditorAtom } from "@/features/editor/atoms/editor-atoms.ts";
+import { PageDetailsAside } from "@/features/page-details/components/page-details-aside.tsx";
+import { ActionIcon, Group, Title, Tooltip } from "@mantine/core";
+import { IconX } from "@tabler/icons-react";
+import { ASIDE_PANEL_ID } from "@/hooks/use-toggle-aside.tsx";
 
 export default function Aside() {
-  const [{ tab }] = useAtom(asideStateAtom);
+  const [{ tab, isAsideOpen }, setAsideState] = useAtom(asideStateAtom);
   const { t } = useTranslation();
   const pageEditor = useAtomValue(pageEditorAtom);
+  const closeAside = () => setAsideState((s) => ({ ...s, isAsideOpen: false }));
+
+  React.useEffect(() => {
+    if (!isAsideOpen) return;
+    document.getElementById(ASIDE_PANEL_ID)?.focus();
+  }, [isAsideOpen, tab]);
 
   let title: string;
   let component: ReactNode;
@@ -25,18 +35,32 @@ export default function Aside() {
       component = <TableOfContents editor={pageEditor} />;
       title = "Table of contents";
       break;
+    case "details":
+      component = <PageDetailsAside />;
+      title = "Details";
+      break;
     default:
       component = null;
       title = null;
   }
 
   return (
-    <Box p="md">
+    <Box p="md" style={{ height: "100%", display: "flex", flexDirection: "column" }}>
       {component && (
         <>
-          <Text mb="md" fw={500}>
-            {t(title)}
-          </Text>
+          <Group justify="space-between" wrap="nowrap" mb="md">
+            <Title order={2} size="h6" fw={500}>{t(title)}</Title>
+            <Tooltip label={t("Close")} withArrow>
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                onClick={closeAside}
+                aria-label={t("Close")}
+              >
+                <IconX size={18} />
+              </ActionIcon>
+            </Tooltip>
+          </Group>
 
           {tab === "comments" ? (
             <CommentListWithTabs />

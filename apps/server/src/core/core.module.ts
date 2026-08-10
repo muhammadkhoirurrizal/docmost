@@ -18,6 +18,7 @@ import { DomainMiddleware } from '../common/middlewares/domain.middleware';
 import { ShareModule } from './share/share.module';
 import { NotificationModule } from './notification/notification.module';
 import { FavoriteModule } from './favorite/favorite.module';
+import { LabelModule } from './label/label.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { FavoriteModule } from './favorite/favorite.module';
     ShareModule,
     NotificationModule,
     FavoriteModule,
+    LabelModule,
   ],
 })
 export class CoreModule implements NestModule {

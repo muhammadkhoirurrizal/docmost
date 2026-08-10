@@ -23,6 +23,8 @@ import {
   Notifications,
   Favorites,
   Watchers,
+  Labels,
+  PageLabels,
 } from './db';
 import { PageEmbeddings } from '@docmost/db/types/embeddings.types';
 
@@ -144,6 +146,16 @@ export type UpdatableUserMFA = Updateable<Omit<_UserMFA, 'id'>>;
 export type ApiKey = Selectable<ApiKeys>;
 export type InsertableApiKey = Insertable<ApiKeys>;
 export type UpdatableApiKey = Updateable<Omit<ApiKeys, 'id'>>;
+
+// Label
+export type Label = Selectable<Labels>;
+export type InsertableLabel = Insertable<Labels>;
+export type UpdatableLabel = Updateable<Omit<Labels, 'id'>>;
+
+// PageLabel
+export type PageLabel = Selectable<PageLabels>;
+export type InsertablePageLabel = Insertable<PageLabels>;
+export type UpdatablePageLabel = Updateable<Omit<PageLabels, 'id'>>;
 
 // Page Embedding
 export type PageEmbedding = Selectable<PageEmbeddings>;

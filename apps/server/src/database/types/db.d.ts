@@ -375,6 +375,22 @@ export interface Watchers {
   createdAt: Generated<Timestamp>;
 }
 
+export interface Labels {
+  id: Generated<string>;
+  name: string;
+  type: Generated<string>;
+  workspaceId: string;
+  createdAt: Generated<Timestamp>;
+  updatedAt: Generated<Timestamp>;
+}
+
+export interface PageLabels {
+  id: Generated<string>;
+  pageId: string;
+  labelId: string;
+  createdAt: Generated<Timestamp>;
+}
+
 export interface Workspaces {
   billingEmail: string | null;
   createdAt: Generated<Timestamp>;
@@ -411,8 +427,10 @@ export interface DB {
   favorites: Favorites;
   groups: Groups;
   groupUsers: GroupUsers;
+  labels: Labels;
   notifications: Notifications;
   pageHistory: PageHistory;
+  pageLabels: PageLabels;
   pages: Pages;
   shares: Shares;
   spaceMembers: SpaceMembers;

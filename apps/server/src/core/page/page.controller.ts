@@ -35,6 +35,8 @@ import { PageRepo } from '@docmost/db/repos/page/page.repo';
 import { RecentPageDto } from './dto/recent-page.dto';
 import { DuplicatePageDto } from './dto/duplicate-page.dto';
 import { DeletedPageDto } from './dto/deleted-page.dto';
+import { LabelService } from '../label/label.service';
+import { AddLabelsDto, RemoveLabelDto } from '../label/dto/label.dto';
 
 @UseGuards(JwtAuthGuard)
 @Controller('pages')
@@ -44,6 +46,7 @@ export class PageController {
     private readonly pageRepo: PageRepo,
     private readonly pageHistoryService: PageHistoryService,
     private readonly spaceAbility: SpaceAbilityFactory,
+    private readonly labelService: LabelService,
   ) {}
 
   @HttpCode(HttpStatus.OK)
@@ -477,5 +480,73 @@ export class PageController {
       throw new ForbiddenException();
     }
     return this.pageService.getPageBreadCrumbs(page.id);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('labels')
+  async getPageLabels(
+    @Body() dto: PageIdDto,
+    @Body() pagination: PaginationOptions,
+    @AuthUser() user: User,
+  ) {
+    const page = await this.pageRepo.findById(dto.pageId);
+    if (!page) {
+      throw new NotFoundException('Page not found');
+    }
+
+    const ability = await this.spaceAbility.createForUser(user, page.spaceId);
+    if (ability.cannot(SpaceCaslAction.Read, SpaceCaslSubject.Page)) {
+      throw new ForbiddenException();
+    }
+
+    return this.labelService.getPageLabels(page.id, pagination);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('labels/add')
+  async addPageLabels(
+    @Body() dto: AddLabelsDto,
+    @AuthUser() user: User,
+    @AuthWorkspace() workspace: Workspace,
+  ) {
+    const page = await this.pageRepo.findById(dto.pageId);
+    if (!page || page.deletedAt) {
+      throw new NotFoundException('Page not found');
+    }
+
+    const ability = await this.spaceAbility.createForUser(user, page.spaceId);
+    if (ability.cannot(SpaceCaslAction.Edit, SpaceCaslSubject.Page)) {
+      throw new ForbiddenException();
+    }
+
+    return this.labelService.addLabelsToPage(
+      page.id,
+      dto.names,
+      workspace.id,
+    );
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('labels/remove')
+  async removePageLabel(
+    @Body() dto: RemoveLabelDto,
+    @AuthUser() user: User,
+  ) {
+    const page = await this.pageRepo.findById(dto.pageId);
+    if (!page || page.deletedAt) {
+      throw new NotFoundException('Page not found');
+    }
+
+    const ability = await this.spaceAbility.createForUser(user, page.spaceId);
+    if (ability.cannot(SpaceCaslAction.Edit, SpaceCaslSubject.Page)) {
+      throw new ForbiddenException();
+    }
+
+    await this.labelService.removeLabelFromPage(
+      page.id,
+      dto.labelId,
+      user.id,
+    );
+    return true;
   }
 }
