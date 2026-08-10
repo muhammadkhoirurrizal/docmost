@@ -25,6 +25,7 @@ import {
   Watchers,
   Labels,
   PageLabels,
+  UserSessions,
 } from './db';
 import { PageEmbeddings } from '@docmost/db/types/embeddings.types';
 
@@ -37,6 +38,11 @@ export type UpdatableWorkspace = Updateable<Omit<Workspaces, 'id'>>;
 export type Notification = Selectable<Notifications>;
 export type InsertableNotification = Insertable<Notifications>;
 export type UpdatableNotification = Updateable<Omit<Notifications, 'id'>>;
+
+// UserSession
+export type UserSession = Selectable<UserSessions>;
+export type InsertableUserSession = Insertable<UserSessions>;
+export type UpdatableUserSession = Updateable<Omit<UserSessions, 'id'>>;
 
 // Favorite
 export type Favorite = Selectable<Favorites>;

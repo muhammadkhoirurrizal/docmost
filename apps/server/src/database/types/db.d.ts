@@ -3,18 +3,13 @@
  * Please do not edit it manually.
  */
 
-import type { ColumnType } from 'kysely';
+import type { ColumnType } from "kysely";
 
-export type Generated<T> =
-  T extends ColumnType<infer S, infer I, infer U>
-    ? ColumnType<S, I | undefined, U>
-    : ColumnType<T, T | undefined, T>;
+export type Generated<T> = T extends ColumnType<infer S, infer I, infer U>
+  ? ColumnType<S, I | undefined, U>
+  : ColumnType<T, T | undefined, T>;
 
-export type Int8 = ColumnType<
-  string,
-  bigint | number | string,
-  bigint | number | string
->;
+export type Int8 = ColumnType<string, bigint | number | string, bigint | number | string>;
 
 export type Json = JsonValue;
 
@@ -32,13 +27,13 @@ export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
 export interface ApiKeys {
   createdAt: Generated<Timestamp>;
+  creatorId: string;
   deletedAt: Timestamp | null;
   expiresAt: Timestamp | null;
   id: Generated<string>;
   lastUsedAt: Timestamp | null;
   name: string | null;
   updatedAt: Generated<Timestamp>;
-  creatorId: string;
   workspaceId: string;
 }
 
@@ -77,25 +72,25 @@ export interface AuthProviders {
   createdAt: Generated<Timestamp>;
   creatorId: string | null;
   deletedAt: Timestamp | null;
+  groupSync: Generated<boolean>;
   id: Generated<string>;
   isEnabled: Generated<boolean>;
-  groupSync: Generated<boolean>;
   ldapBaseDn: string | null;
   ldapBindDn: string | null;
   ldapBindPassword: string | null;
+  ldapConfig: Generated<Json | null>;
   ldapTlsCaCert: string | null;
   ldapTlsEnabled: Generated<boolean | null>;
   ldapUrl: string | null;
-  ldapUserAttributes: Json | null;
+  ldapUserAttributes: Generated<Json | null>;
   ldapUserSearchFilter: string | null;
-  ldapConfig: Json | null;
-  settings: Json | null;
   name: string;
   oidcClientId: string | null;
   oidcClientSecret: string | null;
   oidcIssuer: string | null;
   samlCertificate: string | null;
   samlUrl: string | null;
+  settings: Generated<Json | null>;
   type: string;
   updatedAt: Generated<Timestamp>;
   workspaceId: string;
@@ -159,6 +154,16 @@ export interface Comments {
   workspaceId: string;
 }
 
+export interface Favorites {
+  createdAt: Generated<Timestamp>;
+  id: Generated<string>;
+  pageId: string | null;
+  spaceId: string | null;
+  type: string;
+  userId: string;
+  workspaceId: string;
+}
+
 export interface FileTasks {
   createdAt: Generated<Timestamp>;
   creatorId: string | null;
@@ -189,15 +194,6 @@ export interface Groups {
   workspaceId: string;
 }
 
-export interface Favorites {
-  id: Generated<string>;
-  pageId: string | null;
-  spaceId: string | null;
-  type: string;
-  userId: string;
-  workspaceId: string;
-}
-
 export interface GroupUsers {
   createdAt: Generated<Timestamp>;
   groupId: string;
@@ -206,21 +202,29 @@ export interface GroupUsers {
   userId: string;
 }
 
-export interface Notifications {
+export interface Labels {
+  createdAt: Generated<Timestamp>;
   id: Generated<string>;
+  name: string;
+  type: Generated<string>;
+  updatedAt: Generated<Timestamp>;
+  workspaceId: string;
+}
+
+export interface Notifications {
+  actorId: string | null;
+  archivedAt: Timestamp | null;
+  commentId: string | null;
+  createdAt: Generated<Timestamp>;
+  data: Json | null;
+  emailedAt: Timestamp | null;
+  id: Generated<string>;
+  pageId: string | null;
+  readAt: Timestamp | null;
+  spaceId: string | null;
+  type: string;
   userId: string;
   workspaceId: string;
-  type: string;
-  actorId: string | null;
-  pageId: string | null;
-  spaceId: string | null;
-  commentId: string | null;
-  pageVerificationId: string | null;
-  data: Json | null;
-  readAt: Timestamp | null;
-  emailedAt: Timestamp | null;
-  archivedAt: Timestamp | null;
-  createdAt: Generated<Timestamp>;
 }
 
 export interface PageHistory {
@@ -240,13 +244,20 @@ export interface PageHistory {
   workspaceId: string;
 }
 
+export interface PageLabels {
+  createdAt: Generated<Timestamp>;
+  id: Generated<string>;
+  labelId: string;
+  pageId: string;
+}
+
 export interface Pages {
+  archivedAt: Timestamp | null;
   content: Json | null;
   contributorIds: Generated<string[] | null>;
   coverPhoto: string | null;
   createdAt: Generated<Timestamp>;
   creatorId: string | null;
-  archivedAt: Timestamp | null;
   deletedAt: Timestamp | null;
   deletedById: string | null;
   icon: string | null;
@@ -325,12 +336,12 @@ export interface Users {
   deletedAt: Timestamp | null;
   email: string;
   emailVerifiedAt: Timestamp | null;
+  hasGeneratedPassword: Generated<boolean>;
   id: Generated<string>;
   invitedById: string | null;
   lastActiveAt: Timestamp | null;
   lastLoginAt: Timestamp | null;
   locale: string | null;
-  hasGeneratedPassword: Generated<boolean | null>;
   name: string | null;
   password: string | null;
   role: string | null;
@@ -338,6 +349,21 @@ export interface Users {
   timezone: string | null;
   updatedAt: Generated<Timestamp>;
   workspaceId: string | null;
+}
+
+export interface UserSessions {
+  createdAt: Generated<Timestamp>;
+  deviceName: string | null;
+  expiresAt: Timestamp;
+  geoLocation: string | null;
+  id: Generated<string>;
+  ipAddress: string | null;
+  lastActiveAt: Generated<Timestamp>;
+  metadata: Json | null;
+  revokedAt: Timestamp | null;
+  userAgent: string | null;
+  userId: string;
+  workspaceId: string;
 }
 
 export interface UserTokens {
@@ -351,6 +377,18 @@ export interface UserTokens {
   workspaceId: string | null;
 }
 
+export interface Watchers {
+  addedById: string | null;
+  createdAt: Generated<Timestamp>;
+  id: Generated<string>;
+  mutedAt: Timestamp | null;
+  pageId: string | null;
+  spaceId: string;
+  type: string;
+  userId: string;
+  workspaceId: string;
+}
+
 export interface WorkspaceInvitations {
   createdAt: Generated<Timestamp>;
   email: string | null;
@@ -361,34 +399,6 @@ export interface WorkspaceInvitations {
   token: string;
   updatedAt: Generated<Timestamp>;
   workspaceId: string;
-}
-
-export interface Watchers {
-  id: Generated<string>;
-  userId: string;
-  pageId: string | null;
-  spaceId: string;
-  workspaceId: string;
-  type: string;
-  addedById: string | null;
-  mutedAt: Timestamp | null;
-  createdAt: Generated<Timestamp>;
-}
-
-export interface Labels {
-  id: Generated<string>;
-  name: string;
-  type: Generated<string>;
-  workspaceId: string;
-  createdAt: Generated<Timestamp>;
-  updatedAt: Generated<Timestamp>;
-}
-
-export interface PageLabels {
-  id: Generated<string>;
-  pageId: string;
-  labelId: string;
-  createdAt: Generated<Timestamp>;
 }
 
 export interface Workspaces {
@@ -423,8 +433,8 @@ export interface DB {
   backlinks: Backlinks;
   billing: Billing;
   comments: Comments;
-  fileTasks: FileTasks;
   favorites: Favorites;
+  fileTasks: FileTasks;
   groups: Groups;
   groupUsers: GroupUsers;
   labels: Labels;
@@ -437,8 +447,9 @@ export interface DB {
   spaces: Spaces;
   userMfa: UserMfa;
   users: Users;
+  userSessions: UserSessions;
   userTokens: UserTokens;
-  workspaceInvitations: WorkspaceInvitations;
   watchers: Watchers;
+  workspaceInvitations: WorkspaceInvitations;
   workspaces: Workspaces;
 }

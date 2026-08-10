@@ -30,6 +30,7 @@ import { NotificationRepo } from '@docmost/db/repos/notification/notification.re
 import { WatcherRepo } from '@docmost/db/repos/watcher/watcher.repo';
 import { FavoriteRepo } from '@docmost/db/repos/favorite/favorite.repo';
 import { LabelRepo } from '@docmost/db/repos/label/label.repo';
+import { UserSessionRepo } from '@docmost/db/repos/session/user-session.repo';
 
 // https://github.com/brianc/node-postgres/issues/811
 types.setTypeParser(types.builtins.INT8, (val) => Number(val));
@@ -86,6 +87,7 @@ types.setTypeParser(types.builtins.INT8, (val) => Number(val));
     WatcherRepo,
     FavoriteRepo,
     LabelRepo,
+    UserSessionRepo,
   ],
   exports: [
     WorkspaceRepo,
@@ -105,6 +107,7 @@ types.setTypeParser(types.builtins.INT8, (val) => Number(val));
     WatcherRepo,
     FavoriteRepo,
     LabelRepo,
+    UserSessionRepo,
   ],
 })
 export class DatabaseModule

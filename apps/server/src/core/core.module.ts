@@ -19,6 +19,7 @@ import { ShareModule } from './share/share.module';
 import { NotificationModule } from './notification/notification.module';
 import { FavoriteModule } from './favorite/favorite.module';
 import { LabelModule } from './label/label.module';
+import { SessionModule } from './session/session.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { LabelModule } from './label/label.module';
     NotificationModule,
     FavoriteModule,
     LabelModule,
+    SessionModule,
   ],
 })
 export class CoreModule implements NestModule {
