@@ -31,6 +31,7 @@ import {
   IconRectangle,
   IconAt,
   IconDeviceGamepad,
+  IconBrandGoogleDrive,
 } from "@tabler/icons-react";
 import { modals } from "@mantine/modals";
 import { DatePickerValue } from "../date-picker/utils";
@@ -725,6 +726,20 @@ const CommandGroups: SlashMenuGroupedItemsType = {
           .focus()
           .deleteRange(range)
           .setEmbed({ provider: "framer" })
+          .run();
+      },
+    },
+    {
+      title: "Google Drive (Media/PDF)",
+      description: "Embed public video, image, or PDF from Drive",
+      searchTerms: ["google drive", "gdrive", "drive", "video", "pdf", "image"],
+      icon: IconBrandGoogleDrive,
+      command: ({ editor, range }: CommandProps) => {
+        editor
+          .chain()
+          .focus()
+          .deleteRange(range)
+          .setEmbed({ provider: "gdrive" })
           .run();
       },
     },

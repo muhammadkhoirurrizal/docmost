@@ -88,6 +88,15 @@ export const embedProviders: IEmbedProvider[] = [
     },
   },
   {
+    id: "gdrive",
+    name: "Google Drive (Media/PDF)",
+    regex:
+      /^((?:https?:)?\/\/)?((?:www|m)\.)?(drive\.google\.com)\/(?:file\/d\/|open\?id=)([a-zA-Z0-9_-]+)(?:\/.*|&.*)?$/,
+    getEmbedUrl: (match) => {
+      return `https://drive.google.com/file/d/${match[4]}/preview`;
+    },
+  },
+  {
     id: "gsheets",
     name: "Google Sheets",
     regex:

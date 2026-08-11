@@ -129,8 +129,12 @@ export default function EmbedView(props: NodeViewProps) {
       if (embedProvider.regex.test(data.url)) {
         updateAttributes({ src: sanitizeUrl(data.url) });
       } else {
+        let errorMessage = t("Invalid {{provider}} embed link", { provider: embedProvider.name });
+        if (embedProvider.id === "gdrive") {
+          errorMessage = t("Invalid Drive link. Ensure it is a public file (video/image/pdf), not a folder.");
+        }
         notifications.show({
-          message: t("Invalid {{provider}} embed link", { provider: embedProvider.name }),
+          message: errorMessage,
           position: "top-right",
           color: "red",
         });
