@@ -18,6 +18,9 @@ import { formattedDate } from "@/lib/time.ts";
 import { useTimeAgo } from "@/hooks/use-time-ago.tsx";
 import { CustomAvatar } from "@/components/ui/custom-avatar.tsx";
 import { LabelsSection } from "@/features/label/components/labels-section.tsx";
+import { useEditorState } from "@tiptap/react";
+import { useQuery } from "@tanstack/react-query";
+import { getBacklinksCount } from "@/features/page-details/services/backlinks-service.ts";
 
 export function PageDetailsAside() {
   const { pageSlug } = useParams();
@@ -28,10 +31,15 @@ export function PageDetailsAside() {
 
   if (!page) return null;
 
-  const wordCount: number =
-    pageEditor?.storage?.characterCount?.words?.() ?? 0;
-  const characterCount: number =
-    pageEditor?.storage?.characterCount?.characters?.() ?? 0;
+  const wordCount = useEditorState({
+    editor: pageEditor,
+    selector: ({ editor }) => editor?.storage?.characterCount?.words?.() ?? 0,
+  }) ?? 0;
+
+  const characterCount = useEditorState({
+    editor: pageEditor,
+    selector: ({ editor }) => editor?.storage?.characterCount?.characters?.() ?? 0,
+  }) ?? 0;
 
   return (
     <>
@@ -49,6 +57,10 @@ export function PageDetailsAside() {
           createdAt={page.createdAt}
           updatedAt={page.updatedAt}
         />
+
+        <Divider />
+
+        <BacklinksSection pageId={page.id} />
 
         <Divider />
 
@@ -147,5 +159,23 @@ function StatRow({ label, value }: { label: string; value: string }) {
       </Text>
       <Text size="sm">{value}</Text>
     </Group>
+  );
+}
+
+function BacklinksSection({ pageId }: { pageId: string }) {
+  const { t } = useTranslation();
+  const { data } = useQuery({
+    queryKey: ["backlinks-count", pageId],
+    queryFn: () => getBacklinksCount(pageId),
+  });
+
+  return (
+    <Stack gap="xs">
+      <Text size="xs" fw={500} c="dimmed">
+        {t("Backlinks")}
+      </Text>
+      <StatRow label={t("Incoming links")} value={String(data?.incoming ?? 0)} />
+      <StatRow label={t("Outgoing links")} value={String(data?.outgoing ?? 0)} />
+    </Stack>
   );
 }

@@ -1,4 +1,5 @@
 import { ActionIcon, Badge, Group, Menu, Text, Tooltip, Loader } from "@mantine/core";
+import { useEditorState } from "@tiptap/react";
 import {
   IconArchive,
   IconArrowRight,
@@ -17,11 +18,12 @@ import {
   IconStarFilled,
   IconInfoCircle,
 } from "@tabler/icons-react";
+import { WebSocketStatus } from "@hocuspocus/provider";
 import React, { useEffect, useState } from "react";
 import { exportPage } from "@/features/page/services/page-service.ts";
 import { ExportFormat } from "@/features/page/types/page.types.ts";
 import useToggleAside from "@/hooks/use-toggle-aside.tsx";
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { historyAtoms } from "@/features/page-history/atoms/history-atoms.ts";
 import {
   useDisclosure,
@@ -215,9 +217,14 @@ function PageActionMenu({ readOnly }: PageActionMenuProps) {
     movePageModalOpened,
     { open: openMovePageModal, close: closeMoveSpaceModal },
   ] = useDisclosure(false);
-  const [pageEditor] = useAtom(pageEditorAtom);
-  const pageUpdatedAt = useTimeAgo(page?.updatedAt);
+  const pageEditor = useAtomValue(pageEditorAtom);
+  const wordCount = useEditorState({
+    editor: pageEditor,
+    selector: ({ editor }) => editor?.storage?.characterCount?.words?.() ?? 0,
+  }) ?? 0;
+  const isOnline = useAtomValue(yjsConnectionStatusAtom) === WebSocketStatus.Connected;
   const userRole = useUserRole();
+  const pageUpdatedAt = useTimeAgo(page?.updatedAt);
 
   const handleCopyLink = async () => {
     const pageUrl =
@@ -463,7 +470,7 @@ function PageActionMenu({ readOnly }: PageActionMenuProps) {
                 <div style={{ width: 210 }}>
                   <Text size="xs" c="dimmed" truncate="end">
                     {t("Word count: {{wordCount}}", {
-                      wordCount: pageEditor?.storage?.characterCount?.words(),
+                      wordCount: wordCount,
                     })}
                   </Text>
 
