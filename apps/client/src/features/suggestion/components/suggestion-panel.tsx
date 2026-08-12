@@ -11,6 +11,10 @@ import {
 import { userAtom } from '@/features/user/atoms/current-user-atom';
 import { useAtomValue } from 'jotai';
 import { SuggestionCard } from './suggestion-card';
+import { usePageQuery } from '@/features/page/queries/page-query';
+import { useGetSpaceBySlugQuery } from '@/features/space/queries/space-query';
+import { useSpaceAbility } from '@/features/space/permissions/use-space-ability';
+import { SpaceCaslAction, SpaceCaslSubject } from '@/features/space/permissions/permissions.type';
 
 interface SuggestionPanelProps {
   pageId: string;
@@ -80,12 +84,13 @@ function applyAcceptToEditor(
   const range = findTextRange(editor, originalText);
   if (!range) return;
 
-  editor
-    .chain()
-    .focus()
-    .deleteRange({ from: range.start, to: range.end })
-    .insertContentAt(range.start, suggestedText)
-    .run();
+  // Dispatch ProseMirror transaction directly to bypass Tiptap's isEditable=false lock
+  // This allows the Owner to accept suggestions even when in "Viewing" mode
+  editor.view.dispatch(
+    editor.state.tr
+      .delete(range.start, range.end)
+      .insert(range.start, editor.schema.text(suggestedText))
+  );
 }
 
 /**
@@ -98,7 +103,14 @@ export default function SuggestionPanel({ pageId, editor }: SuggestionPanelProps
   const updateMutation = useUpdateSuggestionMutation();
   const deleteMutation = useDeleteSuggestionMutation();
   const currentUser = useAtomValue(userAtom);
-  const isEditor = editor ? editor.isEditable : false;
+
+  const { data: page } = usePageQuery({ pageId });
+  const { data: space } = useGetSpaceBySlugQuery(page?.space?.slug);
+  const spaceAbility = useSpaceAbility(space?.membership?.permissions);
+
+  const isEditor =
+    spaceAbility.can(SpaceCaslAction.Manage, SpaceCaslSubject.Page) ||
+    spaceAbility.can(SpaceCaslAction.Edit, SpaceCaslSubject.Page);
 
   const pendingSuggestions = (suggestions ?? []).filter(
     (s) => s.status === SuggestionStatus.PENDING,

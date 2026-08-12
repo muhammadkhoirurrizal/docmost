@@ -8,6 +8,10 @@ import { SuggestionStatus } from '../types/suggestion.types';
 import { userAtom } from '@/features/user/atoms/current-user-atom';
 import { useAtomValue } from 'jotai';
 import { IconTrash, IconX } from '@tabler/icons-react';
+import { usePageQuery } from '@/features/page/queries/page-query';
+import { useGetSpaceBySlugQuery } from '@/features/space/queries/space-query';
+import { useSpaceAbility } from '@/features/space/permissions/use-space-ability';
+import { SpaceCaslAction, SpaceCaslSubject } from '@/features/space/permissions/permissions.type';
 
 interface Props {
   editor: ReturnType<typeof useEditor>;
@@ -52,12 +56,13 @@ function applyAcceptedTextToEditor(
   const position = findLivePosition(editor, originalText);
   if (!position) return;
 
-  editor
-    .chain()
-    .focus()
-    .deleteRange({ from: position.start, to: position.end })
-    .insertContentAt(position.start, suggestedText)
-    .run();
+  // Dispatch ProseMirror transaction directly to bypass Tiptap's isEditable=false lock
+  // This allows the Owner to accept suggestions even when in "Viewing" mode
+  editor.view.dispatch(
+    editor.state.tr
+      .delete(position.start, position.end)
+      .insert(position.start, editor.schema.text(suggestedText))
+  );
 }
 
 /**
@@ -73,6 +78,14 @@ export default function SuggestionFloatingMenu({ editor, pageId, editable }: Pro
   const updateMutation = useUpdateSuggestionMutation();
   const deleteMutation = useDeleteSuggestionMutation();
   const currentUser = useAtomValue(userAtom);
+
+  const { data: page } = usePageQuery({ pageId });
+  const { data: space } = useGetSpaceBySlugQuery(page?.space?.slug);
+  const spaceAbility = useSpaceAbility(space?.membership?.permissions);
+
+  const hasEditPermission =
+    spaceAbility.can(SpaceCaslAction.Manage, SpaceCaslSubject.Page) ||
+    spaceAbility.can(SpaceCaslAction.Edit, SpaceCaslSubject.Page);
 
   if (!selectedId || !suggestions || !editor) return null;
 
@@ -177,8 +190,8 @@ export default function SuggestionFloatingMenu({ editor, pageId, editable }: Pro
         {suggestion.suggestedText}
       </Text>
 
-      {/* Only editors (non-visitors) can Accept/Reject */}
-      {editable && (
+      {/* Only users with Edit permission can Accept/Reject (even if currently in View mode) */}
+      {hasEditPermission && (
         <Group justify="flex-end">
           <Button variant="outline" color="red" size="xs" onClick={handleReject} loading={updateMutation.isPending}>
             {t('Reject')}
@@ -190,7 +203,7 @@ export default function SuggestionFloatingMenu({ editor, pageId, editable }: Pro
       )}
 
       {/* Visitors who are creators can only Withdraw their own suggestion */}
-      {!editable && isCreator && (
+      {!hasEditPermission && isCreator && (
         <Group justify="flex-end">
           <Button
             variant="subtle"
@@ -206,7 +219,7 @@ export default function SuggestionFloatingMenu({ editor, pageId, editable }: Pro
       )}
 
       {/* Visitor who is NOT the creator — just show info, no actions */}
-      {!editable && !isCreator && (
+      {!hasEditPermission && !isCreator && (
         <Text size="xs" c="dimmed" ta="center">
           {t('You can only view this suggestion')}
         </Text>
