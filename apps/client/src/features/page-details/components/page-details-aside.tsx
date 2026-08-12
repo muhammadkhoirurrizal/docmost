@@ -1,13 +1,9 @@
 import {
   Divider,
   Group,
-  Skeleton,
   Stack,
   Text,
-  UnstyledButton,
 } from "@mantine/core";
-import { IconChevronRight } from "@tabler/icons-react";
-import { useDisclosure } from "@mantine/hooks";
 import { useAtomValue } from "jotai";
 import { useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -29,8 +25,6 @@ export function PageDetailsAside() {
   });
   const pageEditor = useAtomValue(pageEditorAtom);
 
-  if (!page) return null;
-
   const wordCount = useEditorState({
     editor: pageEditor,
     selector: ({ editor }) => editor?.storage?.characterCount?.words?.() ?? 0,
@@ -40,6 +34,8 @@ export function PageDetailsAside() {
     editor: pageEditor,
     selector: ({ editor }) => editor?.storage?.characterCount?.characters?.() ?? 0,
   }) ?? 0;
+
+  if (!page) return null;
 
   return (
     <>
