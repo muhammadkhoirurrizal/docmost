@@ -4,14 +4,10 @@ import { showSuggestionPopupAtom, suggestionRangeAtom } from '../atoms/suggestio
 import { useState } from 'react';
 import { useCreateSuggestionMutation } from '../queries/suggestion-query';
 import { useTranslation } from 'react-i18next';
-import { useParams } from 'react-router-dom';
-import { extractPageSlugId } from '@/lib';
 import { usePageQuery } from '@/features/page/queries/page-query';
 
-export default function SuggestionDialog() {
+export default function SuggestionDialog({ pageId }: { pageId: string }) {
   const { t } = useTranslation();
-  const { pageSlug } = useParams();
-  const pageId = extractPageSlugId(pageSlug);
 
   const [opened, setOpened] = useAtom(showSuggestionPopupAtom);
   const [range, setRange] = useAtom(suggestionRangeAtom);

@@ -5,17 +5,14 @@ import { usePageSuggestionsQuery, useUpdateSuggestionMutation } from '../queries
 import { useTranslation } from 'react-i18next';
 import { useEditor } from '@tiptap/react';
 import { SuggestionStatus } from '../types/suggestion.types';
-import { useParams } from 'react-router-dom';
-import { extractPageSlugId } from '@/lib';
 
 interface Props {
   editor: ReturnType<typeof useEditor>;
+  pageId: string;
 }
 
-export default function SuggestionFloatingMenu({ editor }: Props) {
+export default function SuggestionFloatingMenu({ editor, pageId }: Props) {
   const { t } = useTranslation();
-  const { pageSlug } = useParams();
-  const pageId = extractPageSlugId(pageSlug);
 
   const [selectedId, setSelectedId] = useAtom(selectedSuggestionIdAtom);
   const { data: suggestions } = usePageSuggestionsQuery(pageId);
