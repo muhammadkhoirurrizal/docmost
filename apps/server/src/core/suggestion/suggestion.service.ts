@@ -81,4 +81,12 @@ export class SuggestionService {
 
     return result;
   }
+
+  async deleteSuggestion(id: string): Promise<void> {
+    const suggestion = await this.suggestionRepo.findById(id);
+    if (!suggestion) {
+      throw new NotFoundException('Suggestion not found');
+    }
+    await this.suggestionRepo.delete(id);
+  }
 }

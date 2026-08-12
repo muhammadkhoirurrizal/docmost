@@ -3,6 +3,7 @@ import {
   createSuggestion,
   getPageSuggestions,
   updateSuggestion,
+  deleteSuggestion,
 } from '../services/suggestion-service';
 import { ICreateSuggestionPayload, IUpdateSuggestionPayload } from '../types/suggestion.types';
 
@@ -17,6 +18,8 @@ export const usePageSuggestionsQuery = (pageId?: string) => {
     queryKey: suggestionKeys.list(pageId as string),
     queryFn: () => getPageSuggestions(pageId as string),
     enabled: !!pageId,
+    refetchInterval: 5000,
+    refetchIntervalInBackground: true,
   });
 };
 
@@ -42,6 +45,19 @@ export const useUpdateSuggestionMutation = () => {
     onSuccess: (data) => {
       queryClient.invalidateQueries({
         queryKey: suggestionKeys.list(data.pageId),
+      });
+    },
+  });
+};
+
+export const useDeleteSuggestionMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => deleteSuggestion(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: suggestionKeys.lists(),
       });
     },
   });

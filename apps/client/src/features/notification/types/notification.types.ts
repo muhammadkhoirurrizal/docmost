@@ -4,7 +4,9 @@ export type NotificationType =
   | "comment.resolved"
   | "page.user_mention"
   | "page.permission_granted"
-  | "page.updated";
+  | "page.updated"
+  | "suggestion.created"
+  | "suggestion.resolved";
 
 export type INotification = {
   id: string;

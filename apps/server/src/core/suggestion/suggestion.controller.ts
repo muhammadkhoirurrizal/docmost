@@ -8,6 +8,7 @@ import {
   Patch,
   Param,
   Get,
+  Delete,
 } from '@nestjs/common';
 import { SuggestionService } from './suggestion.service';
 import { CreateSuggestionDto } from './dto/create-suggestion.dto';
@@ -71,5 +72,26 @@ export class SuggestionController {
     }
 
     return this.suggestionService.updateSuggestion(id, user.id, updateDto);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Delete(':id')
+  async remove(@Param('id') id: string, @AuthUser() user: User) {
+    const suggestion = await this.suggestionService.getSuggestionById(id);
+    if (!suggestion) throw new NotFoundException('Suggestion not found');
+    
+    // Only creator or Page Editor can delete
+    const isCreator = suggestion.creatorId === user.id;
+    if (!isCreator) {
+      const page = await this.pageRepo.findById(suggestion.pageId);
+      if (!page) throw new NotFoundException('Page not found');
+      
+      const ability = await this.spaceAbility.createForUser(user, page.spaceId);
+      if (ability.cannot(SpaceCaslAction.Edit, SpaceCaslSubject.Page)) {
+        throw new ForbiddenException();
+      }
+    }
+
+    return this.suggestionService.deleteSuggestion(id);
   }
 }

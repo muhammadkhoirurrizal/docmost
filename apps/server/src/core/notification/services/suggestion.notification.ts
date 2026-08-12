@@ -37,16 +37,22 @@ export class SuggestionNotificationService {
 
     const { actor, pageTitle, pageUrl } = context;
 
-    // Notify all watchers of the page (usually WRITERs/GDs)
     const watcherIds = await this.watcherRepo.getPageWatcherIds(pageId);
+    
+    // Also notify the page creator if not already a watcher
+    const pageCreator = await this.db.selectFrom('pages').select('creatorId').where('id', '=', pageId).executeTakeFirst();
+    const recipientIds = new Set<string>(watcherIds);
+    if (pageCreator?.creatorId) {
+      recipientIds.add(pageCreator.creatorId);
+    }
 
     const usersWithSpaceAccess = await this.spaceMemberRepo.getUserIdsWithSpaceAccess(
-      watcherIds,
+      Array.from(recipientIds),
       spaceId,
     );
     const usersWithAccess = new Set(usersWithSpaceAccess);
 
-    for (const recipientId of watcherIds) {
+    for (const recipientId of recipientIds) {
       if (recipientId === actorId) continue;
       if (!usersWithAccess.has(recipientId)) continue;
 

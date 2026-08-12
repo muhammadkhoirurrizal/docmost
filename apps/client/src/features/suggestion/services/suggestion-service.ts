@@ -26,3 +26,7 @@ export const updateSuggestion = async (
   const response = await api.patch(`/suggestions/${id}`, payload);
   return response.data;
 };
+
+export const deleteSuggestion = async (id: string): Promise<void> => {
+  await api.delete(`/suggestions/${id}`);
+};

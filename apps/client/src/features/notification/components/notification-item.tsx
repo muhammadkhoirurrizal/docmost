@@ -53,6 +53,10 @@ export function NotificationItem({
           : "<bold>{{name}}</bold> gave you view access to a page";
       case "page.updated":
         return "<bold>{{name}}</bold> updated a page";
+      case "suggestion.created":
+        return "<bold>{{name}}</bold> suggested an edit on a page";
+      case "suggestion.resolved":
+        return "<bold>{{name}}</bold> resolved your suggested edit";
 
       default:
         return "";

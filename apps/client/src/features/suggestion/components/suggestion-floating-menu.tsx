@@ -1,10 +1,14 @@
 import { Box, Button, Group, Text, Badge } from '@mantine/core';
 import { useAtom } from 'jotai';
 import { selectedSuggestionIdAtom } from '../atoms/suggestion-atom';
-import { usePageSuggestionsQuery, useUpdateSuggestionMutation } from '../queries/suggestion-query';
+import { usePageSuggestionsQuery, useUpdateSuggestionMutation, useDeleteSuggestionMutation } from '../queries/suggestion-query';
 import { useTranslation } from 'react-i18next';
 import { useEditor } from '@tiptap/react';
 import { SuggestionStatus } from '../types/suggestion.types';
+import { userAtom } from '@/features/user/atoms/current-user-atom';
+import { useAtomValue } from 'jotai';
+import { IconTrash } from '@tabler/icons-react';
+import { ActionIcon } from '@mantine/core';
 
 interface Props {
   editor: ReturnType<typeof useEditor>;
@@ -18,6 +22,8 @@ export default function SuggestionFloatingMenu({ editor, pageId, editable }: Pro
   const [selectedId, setSelectedId] = useAtom(selectedSuggestionIdAtom);
   const { data: suggestions } = usePageSuggestionsQuery(pageId);
   const updateMutation = useUpdateSuggestionMutation();
+  const deleteMutation = useDeleteSuggestionMutation();
+  const currentUser = useAtomValue(userAtom);
 
   if (!selectedId || !suggestions || !editor) return null;
 
@@ -48,6 +54,13 @@ export default function SuggestionFloatingMenu({ editor, pageId, editable }: Pro
     });
     handleClose();
   };
+
+  const handleDelete = async () => {
+    await deleteMutation.mutateAsync(suggestion.id);
+    handleClose();
+  };
+
+  const isCreator = currentUser?.id === suggestion.creatorId;
 
   return (
     <Box
@@ -101,6 +114,13 @@ export default function SuggestionFloatingMenu({ editor, pageId, editable }: Pro
           </Button>
           <Button color="green" onClick={handleAccept} loading={updateMutation.isPending}>
             {t('Accept')}
+          </Button>
+        </Group>
+      )}
+      {!editable && isCreator && (
+        <Group justify="flex-end">
+          <Button variant="subtle" color="red" onClick={handleDelete} loading={deleteMutation.isPending} leftSection={<IconTrash size={16} />}>
+            {t('Withdraw Suggestion')}
           </Button>
         </Group>
       )}
