@@ -21,6 +21,8 @@ import { useMarkReadMutation } from "../queries/notification-query";
 import { buildPageUrl, getPageTitle } from "@/features/page/page.utils";
 import { formatRelativeTime } from "../notification.utils";
 import classes from "../notification.module.css";
+import { useSetAtom } from "jotai";
+import { asideStateAtom } from "@/components/layouts/global/hooks/atoms/sidebar-atom";
 
 type NotificationItemProps = {
   notification: INotification;
@@ -34,6 +36,7 @@ export function NotificationItem({
   const { t } = useTranslation();
   const markRead = useMarkReadMutation();
   const [hovered, setHovered] = useState(false);
+  const setAsideState = useSetAtom(asideStateAtom);
 
   const isUnread = !notification.readAt;
 
@@ -80,6 +83,16 @@ export function NotificationItem({
 
   const handleClick = () => {
     markReadIfNeeded();
+    // For suggestion notifications, also open the suggestions panel
+    if (
+      notification.type === "suggestion.created" ||
+      notification.type === "suggestion.resolved"
+    ) {
+      // Delay so navigation completes first before opening aside
+      setTimeout(() => {
+        setAsideState({ tab: "suggestions", isAsideOpen: true });
+      }, 300);
+    }
     onNavigate();
   };
 

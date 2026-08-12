@@ -11,12 +11,18 @@ import { PageDetailsAside } from "@/features/page-details/components/page-detail
 import { ActionIcon, Group, Title, Tooltip } from "@mantine/core";
 import { IconX } from "@tabler/icons-react";
 import { ASIDE_PANEL_ID } from "@/hooks/use-toggle-aside.tsx";
+import SuggestionPanel from "@/features/suggestion/components/suggestion-panel";
+import { useParams } from "react-router-dom";
+import { extractPageSlugId } from "@/lib";
+import { usePageQuery } from "@/features/page/queries/page-query";
 
 export default function Aside() {
   const [{ tab, isAsideOpen }, setAsideState] = useAtom(asideStateAtom);
   const { t } = useTranslation();
   const pageEditor = useAtomValue(pageEditorAtom);
   const closeAside = () => setAsideState((s) => ({ ...s, isAsideOpen: false }));
+  const { pageSlug } = useParams();
+  const pageId = usePageQuery({ pageId: extractPageSlugId(pageSlug ?? '') }).data?.id;
 
   React.useEffect(() => {
     if (!isAsideOpen) return;
@@ -38,6 +44,10 @@ export default function Aside() {
     case "details":
       component = <PageDetailsAside />;
       title = "Details";
+      break;
+    case "suggestions":
+      component = pageId ? <SuggestionPanel pageId={pageId} editor={pageEditor} /> : null;
+      title = "Suggestions";
       break;
     default:
       component = null;
@@ -64,6 +74,8 @@ export default function Aside() {
 
           {tab === "comments" ? (
             <CommentListWithTabs />
+          ) : tab === "suggestions" ? (
+            component
           ) : (
             <ScrollArea
               style={{ height: "85vh" }}

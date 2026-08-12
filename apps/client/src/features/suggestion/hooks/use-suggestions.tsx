@@ -103,15 +103,17 @@ function dispatchSuggestionDecorations(
  * 2. Resolve each suggestion's position by finding its `originalText` in the live document
  * 3. Register click handlers on the extension
  * 4. Dispatch decorations to draw the green highlights
+ *
+ * Also re-draws on editor 'create' so highlights appear immediately on page load.
  */
 export const useSuggestions = (editor: ReturnType<typeof useEditor>, pageId: string) => {
   const { data: suggestions } = usePageSuggestionsQuery(pageId);
   const setSelectedSuggestionId = useSetAtom(selectedSuggestionIdAtom);
 
-  useEffect(() => {
-    if (!editor || !suggestions) return;
+  const drawDecorations = (currentSuggestions: ISuggestion[]) => {
+    if (!editor) return;
 
-    const resolvedSuggestions = resolveAllSuggestionPositions(suggestions, editor.state.doc);
+    const resolvedSuggestions = resolveAllSuggestionPositions(currentSuggestions, editor.state.doc);
 
     const handleSuggestionClick = (suggestion: ISuggestion) => {
       setSelectedSuggestionId(suggestion.id);
@@ -119,5 +121,23 @@ export const useSuggestions = (editor: ReturnType<typeof useEditor>, pageId: str
 
     registerSuggestionClickHandler(editor, resolvedSuggestions, handleSuggestionClick);
     dispatchSuggestionDecorations(editor, resolvedSuggestions);
+  };
+
+  // Re-draw when data changes (polling hits)
+  useEffect(() => {
+    if (!editor || !suggestions) return;
+    drawDecorations(suggestions);
   }, [editor, suggestions, setSelectedSuggestionId]);
+
+  // Also draw immediately when editor finishes mounting (avoids "pancing" issue)
+  useEffect(() => {
+    if (!editor || !suggestions) return;
+
+    const handleCreate = () => drawDecorations(suggestions);
+    editor.on('create', handleCreate);
+
+    return () => {
+      editor.off('create', handleCreate);
+    };
+  }, [editor, suggestions]);
 };

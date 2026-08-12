@@ -4,6 +4,7 @@ import {
   IconArchive,
   IconArrowRight,
   IconArrowsHorizontal,
+  IconBulb,
   IconDots,
   IconFileExport,
   IconFiles,
@@ -64,6 +65,8 @@ import {
   useAddFavoriteMutation,
   useRemoveFavoriteMutation,
 } from "@/features/favorite/queries/favorite-query";
+import { usePageSuggestionsQuery } from "@/features/suggestion/queries/suggestion-query";
+import { SuggestionStatus } from "@/features/suggestion/types/suggestion.types";
 
 
 interface PageHeaderMenuProps {
@@ -82,6 +85,10 @@ export default function PageHeaderMenu({ readOnly }: PageHeaderMenuProps) {
   const showSavedIndicator = lastSavedPage?.id === currentPageId;
   const savedPageTitle = showSavedIndicator ? lastSavedPage.title : "";
   const savedAt = showSavedIndicator ? lastSavedPage.savedAt : undefined;
+  const { data: suggestions } = usePageSuggestionsQuery(currentPageId);
+  const pendingCount = (suggestions ?? []).filter(
+    (s) => s.status === SuggestionStatus.PENDING,
+  ).length;
 
   useEffect(() => {
     if (!savedAt) return;
@@ -147,6 +154,34 @@ export default function PageHeaderMenu({ readOnly }: PageHeaderMenuProps) {
           onClick={() => toggleAside("comments")}
         >
           <IconMessage size={20} stroke={2} />
+        </ActionIcon>
+      </Tooltip>
+
+      <Tooltip label={t("Suggestions")} openDelay={250} withArrow>
+        <ActionIcon
+          variant="default"
+          style={{ border: "none", position: "relative" }}
+          onClick={() => toggleAside("suggestions")}
+        >
+          <IconBulb size={20} stroke={2} />
+          {pendingCount > 0 && (
+            <Badge
+              size="xs"
+              color="yellow"
+              variant="filled"
+              style={{
+                position: "absolute",
+                top: -4,
+                right: -4,
+                minWidth: 16,
+                height: 16,
+                padding: "0 3px",
+                pointerEvents: "none",
+              }}
+            >
+              {pendingCount}
+            </Badge>
+          )}
         </ActionIcon>
       </Tooltip>
 
