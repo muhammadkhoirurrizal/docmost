@@ -14,3 +14,15 @@
 @import "./ordered-list.css";
 @import "./highlight.css";
 @import "./columns.css";
+
+.suggestion-highlight {
+  background-color: #d3f9d8;
+  border-bottom: 2px dashed #40c057;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.suggestion-highlight:hover {
+  background-color: #b2f2bb;
+}
+

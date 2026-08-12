@@ -14,6 +14,7 @@ import { Color } from "@tiptap/extension-color";
 import GlobalDragHandle from "tiptap-extension-global-drag-handle";
 import { Youtube } from "@tiptap/extension-youtube";
 import SlashCommand from "@/features/editor/extensions/slash-command";
+import { SuggestionExtension } from "@/features/editor/extensions/suggestion";
 import { Collaboration, isChangeOrigin } from "@tiptap/extension-collaboration";
 import { CollaborationCursor } from "@tiptap/extension-collaboration-cursor";
 import { HocuspocusProvider } from "@hocuspocus/provider";
@@ -174,6 +175,7 @@ export const baseExtensions = [
   Color,
   SlashCommand,
   EmojiCommand,
+  SuggestionExtension,
   Comment.configure({
     HTMLAttributes: {
       class: "comment-mark",
