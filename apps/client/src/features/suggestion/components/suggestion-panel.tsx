@@ -19,40 +19,78 @@ interface SuggestionPanelProps {
 }
 
 /**
- * Scrolls the editor view to the location of a suggestion's originalText.
- * Single responsibility: handle scroll-to-text navigation.
+ * Finds the start/end ProseMirror positions of a text string in the document.
+ * Returns null if text is not found.
  */
-function scrollToSuggestion(
+function findTextRange(
+  editor: ReturnType<typeof useEditor>,
+  searchText: string,
+): { start: number; end: number } | null {
+  if (!editor) return null;
+
+  let found: { start: number; end: number } | null = null;
+
+  editor.state.doc.descendants((node, pos) => {
+    if (found) return false;
+    if (!node.isText || !node.text) return;
+
+    const idx = node.text.indexOf(searchText);
+    if (idx !== -1) {
+      found = { start: pos + idx, end: pos + idx + searchText.length };
+    }
+  });
+
+  return found;
+}
+
+/**
+ * Scrolls to and highlights the originalText of a suggestion in the editor.
+ * Single responsibility: focus + select + scroll to the suggestion text.
+ */
+function focusSuggestionInEditor(
   editor: ReturnType<typeof useEditor>,
   suggestion: ISuggestion,
 ) {
   if (!editor) return;
 
-  let found = false;
-  editor.state.doc.descendants((node, pos) => {
-    if (found) return false;
-    if (!node.isText || !node.text) return;
+  const range = findTextRange(editor, suggestion.originalText);
+  if (!range) return;
 
-    const idx = node.text.indexOf(suggestion.originalText);
-    if (idx !== -1) {
-      const start = pos + idx;
-      editor.chain().focus().setTextSelection(start).run();
+  // Select the text range so it's visually highlighted
+  editor.chain().focus().setTextSelection({ from: range.start, to: range.end }).run();
 
-      // Give time for focus to settle, then scroll to selection
-      requestAnimationFrame(() => {
-        const { view } = editor;
-        const coords = view.coordsAtPos(start);
-        window.scrollTo({ top: coords.top + window.scrollY - 120, behavior: 'smooth' });
-      });
-
-      found = true;
-    }
+  // Scroll to the selected range
+  requestAnimationFrame(() => {
+    const coords = editor.view.coordsAtPos(range.start);
+    window.scrollTo({ top: coords.top + window.scrollY - 120, behavior: 'smooth' });
   });
 }
 
 /**
+ * Applies the accepted suggestion text in-place using live document positions.
+ * Single responsibility: replace originalText with suggestedText in the editor.
+ */
+function applyAcceptToEditor(
+  editor: ReturnType<typeof useEditor>,
+  originalText: string,
+  suggestedText: string,
+) {
+  if (!editor) return;
+
+  const range = findTextRange(editor, originalText);
+  if (!range) return;
+
+  editor
+    .chain()
+    .focus()
+    .deleteRange({ from: range.start, to: range.end })
+    .insertContentAt(range.start, suggestedText)
+    .run();
+}
+
+/**
  * Aside panel listing all pending suggestions for the current page.
- * Editors see Accept/Reject. Creators see Withdraw.
+ * Editors see Accept/Reject. Creators (visitors) see Withdraw.
  */
 export default function SuggestionPanel({ pageId, editor }: SuggestionPanelProps) {
   const { t } = useTranslation();
@@ -66,8 +104,13 @@ export default function SuggestionPanel({ pageId, editor }: SuggestionPanelProps
     (s) => s.status === SuggestionStatus.PENDING,
   );
 
-  const handleAccept = (suggestion: ISuggestion) => {
-    updateMutation.mutate({ id: suggestion.id, payload: { status: SuggestionStatus.ACCEPTED } });
+  const handleAccept = async (suggestion: ISuggestion) => {
+    await updateMutation.mutateAsync({
+      id: suggestion.id,
+      payload: { status: SuggestionStatus.ACCEPTED },
+    });
+    // Apply the text change to the editor after DB confirms
+    applyAcceptToEditor(editor, suggestion.originalText, suggestion.suggestedText);
   };
 
   const handleReject = (suggestion: ISuggestion) => {
@@ -79,7 +122,7 @@ export default function SuggestionPanel({ pageId, editor }: SuggestionPanelProps
   };
 
   const handleFocus = (suggestion: ISuggestion) => {
-    scrollToSuggestion(editor, suggestion);
+    focusSuggestionInEditor(editor, suggestion);
   };
 
   if (pendingSuggestions.length === 0) {

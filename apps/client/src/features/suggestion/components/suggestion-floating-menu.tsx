@@ -1,4 +1,4 @@
-import { Box, Button, Group, Text, Badge } from '@mantine/core';
+import { Box, Button, Group, Text, Badge, ActionIcon } from '@mantine/core';
 import { useAtom } from 'jotai';
 import { selectedSuggestionIdAtom } from '../atoms/suggestion-atom';
 import { usePageSuggestionsQuery, useUpdateSuggestionMutation, useDeleteSuggestionMutation } from '../queries/suggestion-query';
@@ -7,8 +7,7 @@ import { useEditor } from '@tiptap/react';
 import { SuggestionStatus } from '../types/suggestion.types';
 import { userAtom } from '@/features/user/atoms/current-user-atom';
 import { useAtomValue } from 'jotai';
-import { IconTrash } from '@tabler/icons-react';
-import { ActionIcon } from '@mantine/core';
+import { IconTrash, IconX } from '@tabler/icons-react';
 
 interface Props {
   editor: ReturnType<typeof useEditor>;
@@ -16,6 +15,56 @@ interface Props {
   editable: boolean;
 }
 
+/**
+ * Finds the actual ProseMirror position of a text string inside the document.
+ * Returns { start, end } or null if not found.
+ */
+function findLivePosition(
+  editor: ReturnType<typeof useEditor>,
+  originalText: string,
+): { start: number; end: number } | null {
+  if (!editor) return null;
+
+  let found: { start: number; end: number } | null = null;
+
+  editor.state.doc.descendants((node, pos) => {
+    if (found) return false;
+    if (!node.isText || !node.text) return;
+
+    const idx = node.text.indexOf(originalText);
+    if (idx !== -1) {
+      found = { start: pos + idx, end: pos + idx + originalText.length };
+    }
+  });
+
+  return found;
+}
+
+/**
+ * Applies the accepted suggestion text to the editor document.
+ * Uses live position lookup (not stale DB index) for accuracy.
+ */
+function applyAcceptedTextToEditor(
+  editor: ReturnType<typeof useEditor>,
+  originalText: string,
+  suggestedText: string,
+) {
+  const position = findLivePosition(editor, originalText);
+  if (!position) return;
+
+  editor
+    .chain()
+    .focus()
+    .deleteRange({ from: position.start, to: position.end })
+    .insertContentAt(position.start, suggestedText)
+    .run();
+}
+
+/**
+ * Floating popup that appears when user clicks a suggestion highlight.
+ * Shows Accept/Reject for editors, Withdraw + Close for creators.
+ * Always shows a Close (X) button so it can be dismissed.
+ */
 export default function SuggestionFloatingMenu({ editor, pageId, editable }: Props) {
   const { t } = useTranslation();
 
@@ -30,27 +79,23 @@ export default function SuggestionFloatingMenu({ editor, pageId, editable }: Pro
   const suggestion = suggestions.find(s => s.id === selectedId);
   if (!suggestion || suggestion.status !== SuggestionStatus.PENDING) return null;
 
-  const handleClose = () => {
-    setSelectedId('');
-  };
+  const isCreator = currentUser?.id === suggestion.creatorId;
+
+  const handleClose = () => setSelectedId('');
 
   const handleAccept = async () => {
     await updateMutation.mutateAsync({
       id: suggestion.id,
-      payload: { status: SuggestionStatus.ACCEPTED }
+      payload: { status: SuggestionStatus.ACCEPTED },
     });
-
-    // Apply the edit to the document
-    const { startIndex, endIndex, suggestedText } = suggestion;
-    
-    editor.chain().focus().deleteRange({ from: startIndex, to: endIndex }).insertContentAt(startIndex, suggestedText).run();
+    applyAcceptedTextToEditor(editor, suggestion.originalText, suggestion.suggestedText);
     handleClose();
   };
 
   const handleReject = async () => {
     await updateMutation.mutateAsync({
       id: suggestion.id,
-      payload: { status: SuggestionStatus.REJECTED }
+      payload: { status: SuggestionStatus.REJECTED },
     });
     handleClose();
   };
@@ -60,69 +105,100 @@ export default function SuggestionFloatingMenu({ editor, pageId, editable }: Pro
     handleClose();
   };
 
-  const isCreator = currentUser?.id === suggestion.creatorId;
-
   return (
     <Box
       style={{
         position: 'fixed',
-        top: '100px', // or position it based on the selection coordinates, but for now fixed is simpler
+        top: '100px',
         right: '20px',
         width: '320px',
-        background: 'white',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-        borderRadius: '8px',
+        background: 'var(--mantine-color-body)',
+        boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
+        borderRadius: 'var(--mantine-radius-md)',
         padding: '16px',
         zIndex: 1000,
-        border: '1px solid #e9ecef',
+        border: '1px solid var(--mantine-color-default-border)',
       }}
     >
-      <Group justify="space-between" mb="xs">
-        <Text fw={500}>{t('Suggested Edit')}</Text>
-        <Badge color="blue">{t('Pending')}</Badge>
+      {/* Header row — always has a Close button (fix problem 4) */}
+      <Group justify="space-between" mb="xs" wrap="nowrap">
+        <Group gap={6}>
+          <Text fw={500} size="sm">{t('Suggested Edit')}</Text>
+          <Badge size="xs" color="yellow" variant="light">{t('Pending')}</Badge>
+        </Group>
+        <ActionIcon
+          variant="subtle"
+          color="gray"
+          size="sm"
+          onClick={handleClose}
+          aria-label={t('Close')}
+        >
+          <IconX size={14} />
+        </ActionIcon>
       </Group>
-      
-      <Text size="sm" color="dimmed" mb="xs">
-        {t('Original:')}
-      </Text>
-      <Text size="sm" style={{ 
-        background: '#ffe3e3',
-        padding: '4px 8px',
-        borderRadius: '4px',
-        textDecoration: 'line-through',
-        marginBottom: '8px'
-      }}>
+
+      <Text size="xs" c="dimmed" mb={4}>{t('Original:')}</Text>
+      <Text
+        size="sm"
+        mb="xs"
+        style={{
+          background: 'rgba(250, 82, 82, 0.1)',
+          padding: '4px 8px',
+          borderRadius: 'var(--mantine-radius-sm)',
+          textDecoration: 'line-through',
+          color: 'var(--mantine-color-text)',
+        }}
+      >
         {suggestion.originalText}
       </Text>
 
-      <Text size="sm" color="dimmed" mb="xs">
-        {t('Suggestion:')}
-      </Text>
-      <Text size="sm" style={{ 
-        background: '#d3f9d8',
-        padding: '4px 8px',
-        borderRadius: '4px',
-        marginBottom: '16px'
-      }}>
+      <Text size="xs" c="dimmed" mb={4}>{t('Suggestion:')}</Text>
+      <Text
+        size="sm"
+        mb="md"
+        style={{
+          background: 'rgba(64, 192, 87, 0.1)',
+          padding: '4px 8px',
+          borderRadius: 'var(--mantine-radius-sm)',
+          color: 'var(--mantine-color-text)',
+        }}
+      >
         {suggestion.suggestedText}
       </Text>
 
+      {/* Only editors (non-visitors) can Accept/Reject */}
       {editable && (
         <Group justify="flex-end">
-          <Button variant="outline" color="red" onClick={handleReject} loading={updateMutation.isPending}>
+          <Button variant="outline" color="red" size="xs" onClick={handleReject} loading={updateMutation.isPending}>
             {t('Reject')}
           </Button>
-          <Button color="green" onClick={handleAccept} loading={updateMutation.isPending}>
+          <Button color="green" size="xs" onClick={handleAccept} loading={updateMutation.isPending}>
             {t('Accept')}
           </Button>
         </Group>
       )}
+
+      {/* Visitors who are creators can only Withdraw their own suggestion */}
       {!editable && isCreator && (
         <Group justify="flex-end">
-          <Button variant="subtle" color="red" onClick={handleDelete} loading={deleteMutation.isPending} leftSection={<IconTrash size={16} />}>
-            {t('Withdraw Suggestion')}
+          <Button
+            variant="subtle"
+            color="red"
+            size="xs"
+            onClick={handleDelete}
+            loading={deleteMutation.isPending}
+            leftSection={<IconTrash size={14} />}
+          >
+            {t('Withdraw')}
           </Button>
         </Group>
+      )}
+
+      {/* Visitor who is NOT the creator — just show info, no actions */}
+      {!editable && !isCreator && (
+        <Text size="xs" c="dimmed" ta="center">
+          {t('You can only view this suggestion')}
+        </Text>
       )}
     </Box>
   );
