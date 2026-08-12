@@ -298,6 +298,24 @@ export const EditorBubbleMenu: FC<EditorBubbleMenuProps> = (props) => {
         >
           <IconMessage size={16} stroke={2} />
         </ActionIcon>
+
+        {props.canComment && !props.editor.isEditable && (
+          <Tooltip label={t(suggestItem.name)} withArrow>
+            <ActionIcon
+              variant="default"
+              size="lg"
+              radius="0"
+              aria-label={t(suggestItem.name)}
+              className={clsx({
+                [classes.active]: suggestItem.isActive(),
+              })}
+              style={{ border: "none" }}
+              onClick={suggestItem.command}
+            >
+              <suggestItem.icon size={16} stroke={2} />
+            </ActionIcon>
+          </Tooltip>
+        )}
       </div>
     </BubbleMenu>
   );

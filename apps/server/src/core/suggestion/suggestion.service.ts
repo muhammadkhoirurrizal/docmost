@@ -48,6 +48,10 @@ export class SuggestionService {
     return this.suggestionRepo.getPageSuggestions(pageId);
   }
 
+  async getSuggestionById(id: string): Promise<SuggestionModel | undefined> {
+    return this.suggestionRepo.findById(id);
+  }
+
   async updateSuggestion(
     id: string,
     userId: string,

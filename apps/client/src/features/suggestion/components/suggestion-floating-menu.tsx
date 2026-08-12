@@ -9,9 +9,10 @@ import { SuggestionStatus } from '../types/suggestion.types';
 interface Props {
   editor: ReturnType<typeof useEditor>;
   pageId: string;
+  editable: boolean;
 }
 
-export default function SuggestionFloatingMenu({ editor, pageId }: Props) {
+export default function SuggestionFloatingMenu({ editor, pageId, editable }: Props) {
   const { t } = useTranslation();
 
   const [selectedId, setSelectedId] = useAtom(selectedSuggestionIdAtom);
@@ -93,14 +94,16 @@ export default function SuggestionFloatingMenu({ editor, pageId }: Props) {
         {suggestion.suggestedText}
       </Text>
 
-      <Group justify="flex-end">
-        <Button variant="outline" color="red" onClick={handleReject} loading={updateMutation.isPending}>
-          {t('Reject')}
-        </Button>
-        <Button color="green" onClick={handleAccept} loading={updateMutation.isPending}>
-          {t('Accept')}
-        </Button>
-      </Group>
+      {editable && (
+        <Group justify="flex-end">
+          <Button variant="outline" color="red" onClick={handleReject} loading={updateMutation.isPending}>
+            {t('Reject')}
+          </Button>
+          <Button color="green" onClick={handleAccept} loading={updateMutation.isPending}>
+            {t('Accept')}
+          </Button>
+        </Group>
+      )}
     </Box>
   );
 }

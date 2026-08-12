@@ -589,7 +589,7 @@ export default function PageEditor({
         )}
         {showCommentPopup && <CommentDialog editor={editor} pageId={pageId} />}
         <SuggestionDialog pageId={pageId} />
-        <SuggestionFloatingMenu editor={editor} pageId={pageId} />
+        <SuggestionFloatingMenu editor={editor} pageId={pageId} editable={editable} />
       </div>
       <div
         onClick={() => editor?.commands.focus("end")}
