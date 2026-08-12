@@ -41,7 +41,8 @@ export class SuggestionController {
   async update(
     @Param('id') id: string,
     @Body() updateDto: UpdateSuggestionDto,
+    @AuthUser() user: User,
   ) {
-    return this.suggestionService.updateSuggestion(id, updateDto);
+    return this.suggestionService.updateSuggestion(id, user.id, updateDto);
   }
 }

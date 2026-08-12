@@ -10,6 +10,8 @@ export const NotificationType = {
   PAGE_VERIFIED: 'page.verified',
   PAGE_APPROVAL_REQUESTED: 'page.approval_requested',
   PAGE_APPROVAL_REJECTED: 'page.approval_rejected',
+  SUGGESTION_CREATED: 'suggestion.created',
+  SUGGESTION_RESOLVED: 'suggestion.resolved',
 } as const;
 
 export type NotificationType =
@@ -20,7 +22,9 @@ export type NotificationSettingKey =
   | 'page.userMention'
   | 'comment.userMention'
   | 'comment.created'
-  | 'comment.resolved';
+  | 'comment.resolved'
+  | 'suggestion.created'
+  | 'suggestion.resolved';
 
 export const NotificationTypeToSettingKey: Partial<
   Record<NotificationType, NotificationSettingKey>
@@ -30,6 +34,8 @@ export const NotificationTypeToSettingKey: Partial<
   [NotificationType.COMMENT_USER_MENTION]: 'comment.userMention',
   [NotificationType.COMMENT_CREATED]: 'comment.created',
   [NotificationType.COMMENT_RESOLVED]: 'comment.resolved',
+  [NotificationType.SUGGESTION_CREATED]: 'suggestion.created',
+  [NotificationType.SUGGESTION_RESOLVED]: 'suggestion.resolved',
 };
 
 export type NotificationTab = 'direct' | 'updates' | 'all';
@@ -40,6 +46,8 @@ export const DIRECT_NOTIFICATION_TYPES: NotificationType[] = [
   NotificationType.COMMENT_RESOLVED,
   NotificationType.PAGE_USER_MENTION,
   NotificationType.PAGE_PERMISSION_GRANTED,
+  NotificationType.SUGGESTION_CREATED,
+  NotificationType.SUGGESTION_RESOLVED,
 ];
 
 export const UPDATES_NOTIFICATION_TYPES: NotificationType[] = [

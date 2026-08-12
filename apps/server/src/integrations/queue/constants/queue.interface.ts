@@ -53,6 +53,24 @@ export interface ICommentResolvedNotificationJob {
   actorId: string;
 }
 
+export interface ISuggestionNotificationJob {
+  suggestionId: string;
+  pageId: string;
+  spaceId: string;
+  workspaceId: string;
+  actorId: string;
+}
+
+export interface ISuggestionResolvedNotificationJob {
+  suggestionId: string;
+  suggestionCreatorId: string;
+  pageId: string;
+  spaceId: string;
+  workspaceId: string;
+  actorId: string;
+  status: string;
+}
+
 export interface IPageMentionNotificationJob {
   userMentions: { userId: string; mentionId: string; creatorId: string }[];
   oldMentionedUserIds: string[];

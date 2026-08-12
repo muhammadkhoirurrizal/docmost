@@ -13,9 +13,12 @@ import {
   IPageMentionNotificationJob,
   IPageUpdateNotificationJob,
   IPermissionGrantedNotificationJob,
+  ISuggestionNotificationJob,
+  ISuggestionResolvedNotificationJob,
 } from '../../integrations/queue/constants/queue.interface';
 import { CommentNotificationService } from './services/comment.notification';
 import { PageNotificationService } from './services/page.notification';
+import { SuggestionNotificationService } from './services/suggestion.notification';
 import { DomainService } from '../../integrations/environment/domain.service';
 
 @Processor(QueueName.NOTIFICATION_QUEUE)
@@ -28,6 +31,7 @@ export class NotificationProcessor
   constructor(
     private readonly commentNotificationService: CommentNotificationService,
     private readonly pageNotificationService: PageNotificationService,
+    private readonly suggestionNotificationService: SuggestionNotificationService,
     private readonly domainService: DomainService,
     private readonly moduleRef: ModuleRef,
     @InjectKysely() private readonly db: KyselyDB,
@@ -41,7 +45,9 @@ export class NotificationProcessor
       | ICommentResolvedNotificationJob
       | IPageMentionNotificationJob
       | IPageUpdateNotificationJob
-      | IPermissionGrantedNotificationJob,
+      | IPermissionGrantedNotificationJob
+      | ISuggestionNotificationJob
+      | ISuggestionResolvedNotificationJob,
       void
     >,
   ): Promise<void> {
@@ -54,6 +60,22 @@ export class NotificationProcessor
         case QueueJob.COMMENT_NOTIFICATION: {
           await this.commentNotificationService.processComment(
             job.data as ICommentNotificationJob,
+            appUrl,
+          );
+          break;
+        }
+
+        case QueueJob.SUGGESTION_NOTIFICATION: {
+          await this.suggestionNotificationService.processSuggestion(
+            job.data as ISuggestionNotificationJob,
+            appUrl,
+          );
+          break;
+        }
+
+        case QueueJob.SUGGESTION_RESOLVED_NOTIFICATION: {
+          await this.suggestionNotificationService.processResolved(
+            job.data as ISuggestionResolvedNotificationJob,
             appUrl,
           );
           break;

@@ -4,6 +4,7 @@ import { NotificationController } from './notification.controller';
 import { NotificationProcessor } from './notification.processor';
 import { CommentNotificationService } from './services/comment.notification';
 import { PageNotificationService } from './services/page.notification';
+import { SuggestionNotificationService } from './services/suggestion.notification';
 
 import { PageUpdateEmailRateLimiter } from './services/page-update-email-rate-limiter';
 
@@ -19,6 +20,7 @@ import { QueueName } from '../../integrations/queue/constants';
   controllers: [NotificationController],
   providers: [
     NotificationService,
+    SuggestionNotificationService,
     NotificationProcessor,
     CommentNotificationService,
     PageNotificationService,

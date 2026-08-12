@@ -62,6 +62,10 @@ export enum QueueJob {
 
   COMMENT_NOTIFICATION = 'comment-notification',
   COMMENT_RESOLVED_NOTIFICATION = 'comment-resolved-notification',
+
+  SUGGESTION_NOTIFICATION = 'suggestion-notification',
+  SUGGESTION_RESOLVED_NOTIFICATION = 'suggestion-resolved-notification',
+
   PAGE_MENTION_NOTIFICATION = 'page-mention-notification',
   PAGE_PERMISSION_GRANTED = 'page-permission-granted',
   PAGE_UPDATE_DIGEST = 'page-update-digest',
