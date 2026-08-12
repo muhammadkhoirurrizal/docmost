@@ -276,6 +276,19 @@ export interface Pages {
   ydoc: Buffer | null;
 }
 
+export interface PageSuggestions {
+  createdAt: Generated<Timestamp>;
+  creatorId: string;
+  endIndex: number;
+  id: Generated<string>;
+  originalText: string | null;
+  pageId: string;
+  startIndex: number;
+  status: Generated<string>;
+  suggestedText: string;
+  updatedAt: Generated<Timestamp>;
+}
+
 export interface Shares {
   createdAt: Generated<Timestamp>;
   creatorId: string | null;
@@ -442,6 +455,7 @@ export interface DB {
   pageHistory: PageHistory;
   pageLabels: PageLabels;
   pages: Pages;
+  pageSuggestions: PageSuggestions;
   shares: Shares;
   spaceMembers: SpaceMembers;
   spaces: Spaces;

@@ -7,6 +7,7 @@ import {
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { WorkspaceModule } from './workspace/workspace.module';
+import { SuggestionModule } from './suggestion/suggestion.module';
 import { PageModule } from './page/page.module';
 import { AttachmentModule } from './attachment/attachment.module';
 import { CommentModule } from './comment/comment.module';
@@ -28,6 +29,7 @@ import { SessionModule } from './session/session.module';
     WorkspaceModule,
     PageModule,
     AttachmentModule,
+    SuggestionModule,
     CommentModule,
     SearchModule,
     SpaceModule,
