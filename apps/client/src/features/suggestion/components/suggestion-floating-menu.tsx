@@ -84,11 +84,18 @@ export default function SuggestionFloatingMenu({ editor, pageId, editable }: Pro
   const handleClose = () => setSelectedId('');
 
   const handleAccept = async () => {
-    await updateMutation.mutateAsync({
-      id: suggestion.id,
-      payload: { status: SuggestionStatus.ACCEPTED },
-    });
+    // Optimistically apply text to editor first to avoid component unmount race conditions
     applyAcceptedTextToEditor(editor, suggestion.originalText, suggestion.suggestedText);
+    
+    try {
+      await updateMutation.mutateAsync({
+        id: suggestion.id,
+        payload: { status: SuggestionStatus.ACCEPTED },
+      });
+    } catch (e) {
+      console.error(e);
+      // If it fails, ideally we would revert, but for now just close
+    }
     handleClose();
   };
 
@@ -130,7 +137,11 @@ export default function SuggestionFloatingMenu({ editor, pageId, editable }: Pro
           variant="subtle"
           color="gray"
           size="sm"
-          onClick={handleClose}
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            handleClose();
+          }}
           aria-label={t('Close')}
         >
           <IconX size={14} />

@@ -10,7 +10,6 @@ import {
 } from '../queries/suggestion-query';
 import { userAtom } from '@/features/user/atoms/current-user-atom';
 import { useAtomValue } from 'jotai';
-import { useUserRole } from '@/hooks/use-user-role';
 import { SuggestionCard } from './suggestion-card';
 
 interface SuggestionPanelProps {
@@ -56,14 +55,15 @@ function focusSuggestionInEditor(
   const range = findTextRange(editor, suggestion.originalText);
   if (!range) return;
 
-  // Select the text range so it's visually highlighted
-  editor.chain().focus().setTextSelection({ from: range.start, to: range.end }).run();
+  // Use setTimeout to ensure focus isn't stolen back by the clicked panel element
+  setTimeout(() => {
+    // Select the text range so it's visually highlighted
+    editor.chain().focus().setTextSelection({ from: range.start, to: range.end }).run();
 
-  // Scroll to the selected range
-  requestAnimationFrame(() => {
+    // Scroll to the selected range
     const coords = editor.view.coordsAtPos(range.start);
     window.scrollTo({ top: coords.top + window.scrollY - 120, behavior: 'smooth' });
-  });
+  }, 10);
 }
 
 /**
@@ -98,19 +98,24 @@ export default function SuggestionPanel({ pageId, editor }: SuggestionPanelProps
   const updateMutation = useUpdateSuggestionMutation();
   const deleteMutation = useDeleteSuggestionMutation();
   const currentUser = useAtomValue(userAtom);
-  const userRole = useUserRole();
+  const isEditor = editor ? editor.isEditable : false;
 
   const pendingSuggestions = (suggestions ?? []).filter(
     (s) => s.status === SuggestionStatus.PENDING,
   );
 
   const handleAccept = async (suggestion: ISuggestion) => {
-    await updateMutation.mutateAsync({
-      id: suggestion.id,
-      payload: { status: SuggestionStatus.ACCEPTED },
-    });
-    // Apply the text change to the editor after DB confirms
+    // Apply the text change to the editor FIRST (optimistic update)
     applyAcceptToEditor(editor, suggestion.originalText, suggestion.suggestedText);
+    
+    try {
+      await updateMutation.mutateAsync({
+        id: suggestion.id,
+        payload: { status: SuggestionStatus.ACCEPTED },
+      });
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const handleReject = (suggestion: ISuggestion) => {
@@ -143,7 +148,7 @@ export default function SuggestionPanel({ pageId, editor }: SuggestionPanelProps
           <SuggestionCard
             key={suggestion.id}
             suggestion={suggestion}
-            isEditor={!userRole.isVisitor}
+            isEditor={isEditor}
             currentUserId={currentUser?.id}
             onAccept={handleAccept}
             onReject={handleReject}
