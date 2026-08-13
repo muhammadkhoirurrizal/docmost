@@ -1,4 +1,4 @@
-import { Table, TextInput, UnstyledButton } from "@mantine/core";
+import { Table, UnstyledButton } from "@mantine/core";
 import { DatabaseItem, DatabaseProperty } from "@docmost/editor-ext";
 import { useTranslation } from "react-i18next";
 import dayjs from "dayjs";
@@ -41,6 +41,13 @@ export default function TableView({ items, properties, onUpdateItem, onOpenItem 
           {option.label}
         </div>
       ) : "";
+    }
+
+    if (prop.type === "user") {
+      if (typeof value === "object" && value !== null) {
+        return value.name || "";
+      }
+      return value || "";
     }
 
     return value || "";
