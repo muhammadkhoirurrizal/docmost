@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import { DatabaseItem } from "@docmost/editor-ext";
 import dayjs from "dayjs";
 
-export const DAY_WIDTH = 60;
 export const ROW_HEIGHT = 44;
 export const ROW_GAP = 8;
 export const TOP_PAD = 10;
@@ -12,17 +11,22 @@ interface TimelineCardProps {
   startDate: dayjs.Dayjs;
   rowIndex: number;
   statusColor: string;
+  columnWidth: number;
+  unit: any;
   onUpdateDates: (itemId: string, newStart: dayjs.Dayjs, newEnd: dayjs.Dayjs) => void;
   onOpenItem: (itemId: string) => void;
 }
 
-export default function TimelineCard({ item, startDate, rowIndex, statusColor, onUpdateDates, onOpenItem }: TimelineCardProps) {
+export default function TimelineCard({ item, startDate, rowIndex, statusColor, columnWidth, unit, onUpdateDates, onOpenItem }: TimelineCardProps) {
   const dateProp = item.properties.date as { start?: string, end?: string } | string | null;
   const startStr = typeof dateProp === 'object' && dateProp?.start ? dateProp.start : (typeof dateProp === 'string' ? dateProp : null);
   const endStr = typeof dateProp === 'object' && dateProp?.end ? dateProp.end : startStr;
 
-  const itemStart = startStr ? dayjs(startStr).startOf("day") : dayjs().startOf("day");
-  const itemEnd = endStr ? dayjs(endStr).startOf("day") : itemStart;
+  // We snap everything to the start of the current scale's unit
+  const itemStart = startStr ? dayjs(startStr).startOf(unit === 'week' ? 'isoWeek' : unit) : dayjs().startOf(unit === 'week' ? 'isoWeek' : unit);
+  let itemEnd = endStr ? dayjs(endStr).startOf(unit === 'week' ? 'isoWeek' : unit) : itemStart;
+
+  if (itemEnd.isBefore(itemStart)) itemEnd = itemStart;
 
   const [dragState, setDragState] = useState<{
     mode: 'move' | 'resize-left' | 'resize-right' | null;
@@ -42,18 +46,18 @@ export default function TimelineCard({ item, startDate, rowIndex, statusColor, o
     const handleMouseMove = (e: MouseEvent) => {
       e.preventDefault();
       const dx = e.clientX - dragState.startX;
-      const deltaDays = Math.round(dx / DAY_WIDTH);
+      const deltaUnits = Math.round(dx / columnWidth);
       let newStart = dragState.originStart;
       let newEnd = dragState.originEnd;
 
       if (dragState.mode === 'move') {
-        newStart = dragState.originStart.add(deltaDays, "day");
-        newEnd = dragState.originEnd.add(deltaDays, "day");
+        newStart = dragState.originStart.add(deltaUnits, unit);
+        newEnd = dragState.originEnd.add(deltaUnits, unit);
       } else if (dragState.mode === 'resize-left') {
-        newStart = dragState.originStart.add(deltaDays, "day");
+        newStart = dragState.originStart.add(deltaUnits, unit);
         if (newStart.isAfter(newEnd)) newStart = newEnd;
       } else if (dragState.mode === 'resize-right') {
-        newEnd = dragState.originEnd.add(deltaDays, "day");
+        newEnd = dragState.originEnd.add(deltaUnits, unit);
         if (newEnd.isBefore(newStart)) newEnd = newStart;
       }
 
@@ -67,7 +71,8 @@ export default function TimelineCard({ item, startDate, rowIndex, statusColor, o
 
     const handleMouseUp = () => {
       if (dragState.moved && (dragState.currentStart.valueOf() !== dragState.originStart.valueOf() || dragState.currentEnd.valueOf() !== dragState.originEnd.valueOf())) {
-        onUpdateDates(item.id, dragState.currentStart, dragState.currentEnd);
+        // We ensure we save full ISO strings
+        onUpdateDates(item.id, dragState.currentStart, dragState.currentEnd.endOf(unit === 'week' ? 'isoWeek' : unit));
       } else if (!dragState.moved && dragState.mode === 'move') {
         onOpenItem(item.id);
       }
@@ -80,7 +85,7 @@ export default function TimelineCard({ item, startDate, rowIndex, statusColor, o
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [dragState, item.id, onUpdateDates, onOpenItem]);
+  }, [dragState, item.id, onUpdateDates, onOpenItem, columnWidth, unit]);
 
   const onDown = (e: React.MouseEvent, mode: 'move' | 'resize-left' | 'resize-right') => {
     e.preventDefault();
@@ -99,14 +104,13 @@ export default function TimelineCard({ item, startDate, rowIndex, statusColor, o
   const currentStart = dragState ? dragState.currentStart : itemStart;
   const currentEnd = dragState ? dragState.currentEnd : itemEnd;
 
-  const startIdx = currentStart.diff(startDate, "day");
-  const endIdx = currentEnd.diff(startDate, "day");
+  const startIdx = currentStart.diff(startDate, unit);
+  const endIdx = currentEnd.diff(startDate, unit);
   
-  const left = startIdx * DAY_WIDTH + 2;
-  const width = (endIdx - startIdx + 1) * DAY_WIDTH - 4;
+  const left = startIdx * columnWidth + 2;
+  const width = (endIdx - startIdx + 1) * columnWidth - 4;
   const top = TOP_PAD + rowIndex * (ROW_HEIGHT + ROW_GAP);
 
-  // Colors
   const bgColor = dragState ? "var(--mantine-color-dark-4)" : "var(--mantine-color-dark-6)";
   const shadow = dragState ? "0 8px 20px rgba(0,0,0,0.5)" : "0 1px 2px rgba(0,0,0,0.3)";
 
@@ -127,7 +131,7 @@ export default function TimelineCard({ item, startDate, rowIndex, statusColor, o
         alignItems: "center",
         padding: "0 10px",
         fontSize: "13px",
-        color: "white", // Force white for Notion dark-theme clone card
+        color: "white",
         cursor: dragState ? "grabbing" : "grab",
         userSelect: "none",
         boxShadow: shadow,
@@ -141,16 +145,13 @@ export default function TimelineCard({ item, startDate, rowIndex, statusColor, o
       <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: statusColor, marginRight: "8px", flexShrink: 0 }} />
       <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{item.properties.title || "Untitled"}</span>
 
-      {/* Handles */}
       <div 
         onMouseDown={(e) => onDown(e, 'resize-left')}
         style={{ position: "absolute", top: 0, bottom: 0, left: 0, width: "8px", cursor: "ew-resize", zIndex: 5 }} 
-        title="Resize Left"
       />
       <div 
         onMouseDown={(e) => onDown(e, 'resize-right')}
         style={{ position: "absolute", top: 0, bottom: 0, right: 0, width: "8px", cursor: "ew-resize", zIndex: 5 }} 
-        title="Resize Right"
       />
     </div>
   );
