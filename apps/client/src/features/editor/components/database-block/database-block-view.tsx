@@ -10,7 +10,7 @@ import TableView from "./views/table-view";
 import CalendarView from "./views/calendar-view";
 import TimelineCanvas from "./views/timeline-canvas";
 import DatabaseItemDrawer from "./database-item-drawer";
-import { DatabaseItem, DatabaseProperty, DatabaseView } from "@docmost/editor-ext";
+import { DatabaseItem, DatabaseProperty, DatabaseView, createDefaultProperty, DatabasePropertyType } from "@docmost/editor-ext";
 import dayjs from "dayjs";
 
 const VIEW_ICONS: Record<string, JSX.Element> = {
@@ -178,12 +178,16 @@ export default function DatabaseBlockView(props: NodeViewProps) {
         onClose={() => setSelectedItem(null)}
         onUpdate={updateItem}
         onAddProperty={(type) => {
-          const newProp: DatabaseProperty = {
-            id: `prop-${Date.now()}`,
-            name: `New ${type}`,
-            type: type as any,
-          };
+          const newProp = createDefaultProperty(type as DatabasePropertyType);
           props.updateAttributes({ properties: [...properties, newProp] });
+        }}
+        onUpdatePropertySchema={(propId, updatedProp) => {
+          const newProps = properties.map(p => p.id === propId ? updatedProp : p);
+          props.updateAttributes({ properties: newProps });
+        }}
+        onDeletePropertySchema={(propId) => {
+          const newProps = properties.filter(p => p.id !== propId);
+          props.updateAttributes({ properties: newProps });
         }}
         parentEditor={props.editor}
       />

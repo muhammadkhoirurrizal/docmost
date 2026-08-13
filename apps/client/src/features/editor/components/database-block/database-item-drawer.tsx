@@ -14,7 +14,12 @@ import { EditorContent, useEditor } from "@tiptap/react";
 import { mainExtensions } from "@/features/editor/extensions/extensions";
 import { EditorBubbleMenu } from "@/features/editor/components/bubble-menu/bubble-menu";
 import { parseDateProp } from "./date-prop-utils";
+import DatabasePropertyMenu from "./database-property-menu";
 import classes from "./database-item-drawer.module.css";
+import { useParams } from "react-router-dom";
+import { useSpaceQuery } from "@/features/space/queries/space-query";
+import { useSearchSuggestionsQuery } from "@/features/search/queries/search-query";
+import { CustomAvatar } from "@/components/ui/custom-avatar";
 
 interface DatabaseItemDrawerProps {
   item: DatabaseItem | null;
@@ -23,16 +28,30 @@ interface DatabaseItemDrawerProps {
   onClose: () => void;
   onUpdate: (item: DatabaseItem) => void;
   onAddProperty?: (type: string) => void;
+  onUpdatePropertySchema?: (propId: string, updatedProp: DatabaseProperty) => void;
+  onDeletePropertySchema?: (propId: string) => void;
   parentEditor?: any;
 }
 
 export default function DatabaseItemDrawer({
-  item, properties, opened, onClose, onUpdate, onAddProperty, parentEditor
+  item, properties, opened, onClose, onUpdate, onAddProperty, onUpdatePropertySchema, onDeletePropertySchema, parentEditor
 }: DatabaseItemDrawerProps) {
 
   const itemRef = useRef<DatabaseItem | null>(null);
   itemRef.current = item;
   const [commentText, setCommentText] = useState("");
+
+  const { spaceSlug } = useParams();
+  const { data: space } = useSpaceQuery(spaceSlug);
+  const [userSearchQuery, setUserSearchQuery] = useState("");
+  
+  const { data: suggestion, isLoading: isLoadingUsers } = useSearchSuggestionsQuery({
+    query: userSearchQuery,
+    includeUsers: true,
+    includePages: false,
+    spaceId: space?.id,
+    limit: 20,
+  });
 
   const bodyEditor = useEditor({
     extensions: mainExtensions,
@@ -187,7 +206,7 @@ export default function DatabaseItemDrawer({
       case "select": return renderStatusProp(prop);
       case "user":
         return (
-          <Menu withinPortal position="bottom-start" width={220}>
+          <Menu withinPortal position="bottom-start" width={220} onClose={() => setUserSearchQuery("")}>
             <Menu.Target>
               <UnstyledButton style={{
                 display: "flex", alignItems: "center", gap: 6,
@@ -197,24 +216,35 @@ export default function DatabaseItemDrawer({
               }}>
                 {value ? (
                   <div style={{ display: "flex", alignItems: "center", gap: 6, background: "var(--mantine-color-dark-6)", padding: "2px 6px", borderRadius: 4 }}>
-                    <Avatar size={16} radius="xl" color="blue" /> {value}
+                    <CustomAvatar size={16} name={value.name} avatarUrl={value.avatarUrl} /> {value.name}
                   </div>
                 ) : "Empty"}
               </UnstyledButton>
             </Menu.Target>
             <Menu.Dropdown>
-              <div style={{ padding: "4px 8px", fontSize: 12, color: "var(--mantine-color-dimmed)" }}>Search person or group...</div>
+              <div style={{ padding: "4px 8px" }}>
+                <input 
+                  type="text"
+                  placeholder="Search person or group..." 
+                  value={userSearchQuery}
+                  onChange={e => setUserSearchQuery(e.target.value)}
+                  style={{ width: "100%", border: "none", background: "transparent", outline: "none", fontSize: 13, color: "var(--mantine-color-text)" }}
+                />
+              </div>
               <Menu.Divider />
-              {/* Dummy data for functionality demonstration */}
-              <Menu.Item onClick={() => updateProperty(prop.id, "Jane Doe")}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}><Avatar size={20} radius="xl" color="blue" /> Jane Doe</div>
-              </Menu.Item>
-              <Menu.Item onClick={() => updateProperty(prop.id, "John Smith")}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}><Avatar size={20} radius="xl" color="green" /> John Smith</div>
-              </Menu.Item>
-              <Menu.Item onClick={() => updateProperty(prop.id, "Alice Cooper")}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}><Avatar size={20} radius="xl" color="red" /> Alice Cooper</div>
-              </Menu.Item>
+              {isLoadingUsers ? (
+                <div style={{ padding: "8px", fontSize: 12, color: "var(--mantine-color-dimmed)", textAlign: "center" }}>Loading...</div>
+              ) : suggestion?.users?.length ? (
+                suggestion.users.map((user: any) => (
+                  <Menu.Item key={user.id} onClick={() => updateProperty(prop.id, { id: user.id, name: user.name, avatarUrl: user.avatarUrl })}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <CustomAvatar size={20} name={user.name} avatarUrl={user.avatarUrl} /> {user.name}
+                    </div>
+                  </Menu.Item>
+                ))
+              ) : (
+                <div style={{ padding: "8px", fontSize: 12, color: "var(--mantine-color-dimmed)", textAlign: "center" }}>No users found</div>
+              )}
             </Menu.Dropdown>
           </Menu>
         );
@@ -295,10 +325,16 @@ export default function DatabaseItemDrawer({
           {properties.filter(p => p.id !== "title").map(prop => (
             <div key={prop.id} style={{ display: "flex", alignItems: "center", minHeight: 32 }}>
               {/* Left Column (160px Fixed) */}
-              <div style={{ width: 160, display: "flex", alignItems: "center", gap: 8, color: "var(--mantine-color-dimmed)", fontSize: 13, flexShrink: 0 }}>
-                {propIcon(prop.type)}
-                <span>{prop.name}</span>
-              </div>
+              <DatabasePropertyMenu
+                property={prop}
+                onUpdate={(updatedProp) => onUpdatePropertySchema?.(prop.id, updatedProp)}
+                onDelete={() => onDeletePropertySchema?.(prop.id)}
+              >
+                <div style={{ width: 160, display: "flex", alignItems: "center", gap: 8, color: "var(--mantine-color-dimmed)", fontSize: 13, flexShrink: 0, padding: "4px 4px", borderRadius: 4, marginLeft: -4 }} className="hover-bg-gray">
+                  {propIcon(prop.type)}
+                  <span>{prop.name}</span>
+                </div>
+              </DatabasePropertyMenu>
               {/* Right Column (Flex Grow) */}
               <div style={{ flex: 1, display: "flex", alignItems: "center", borderRadius: 4, cursor: "text", minHeight: 28, padding: "0 6px", marginLeft: -6, transition: "background 0.1s" }} className="hover-bg-gray">
                 {renderPropValue(prop)}
