@@ -155,10 +155,7 @@ export default function TimelineCanvas({ items, properties, onUpdateItem, onOpen
                 />
               ))}
               
-              {/* New Item Area */}
-              <div style={{ position: "absolute", top: `${TOP_PAD + (maxRow + 1) * (ROW_HEIGHT + ROW_GAP)}px`, left: "4px", display: "flex", alignItems: "center", gap: "6px", padding: "10px", fontSize: "13px", color: "var(--mantine-color-dimmed)", cursor: "pointer" }}>
-                <Text size="sm" c="dimmed" onClick={() => {/* parent handles new item */}}>+ New</Text>
-              </div>
+
             </div>
 
           </div>

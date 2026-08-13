@@ -1,6 +1,6 @@
 import { DatabaseItem, DatabaseProperty } from "@docmost/editor-ext";
-import { Drawer, UnstyledButton, Text, Group, ActionIcon, Textarea } from "@mantine/core";
-import { IconX, IconShare, IconStar, IconDots, IconCalendar, IconUser, IconCircleDot, IconPlus } from "@tabler/icons-react";
+import { Drawer, Text, Group, ActionIcon, Textarea, Tooltip } from "@mantine/core";
+import { IconX, IconShare, IconStar, IconDots, IconCalendar, IconUser, IconCircleDot, IconPlus, IconMaximize, IconFileText } from "@tabler/icons-react";
 import dayjs from "dayjs";
 
 interface DatabaseItemDrawerProps {
@@ -44,7 +44,7 @@ export default function DatabaseItemDrawer({ item, properties, opened, onClose, 
         const endStr = typeof dateVal === 'object' && dateVal?.end ? dateVal.end : startStr;
         
         return (
-          <Group gap="xs" align="center" style={{ width: '100%' }}>
+          <Group gap="xs" align="center" style={{ width: '100%', flexWrap: 'nowrap' }}>
             <input
               type="date"
               value={startStr ? dayjs(startStr).format('YYYY-MM-DD') : ""}
@@ -62,18 +62,24 @@ export default function DatabaseItemDrawer({ item, properties, opened, onClose, 
         );
       case "status":
       case "select":
+        const activeOption = prop.options?.find(o => o.id === value);
         return (
           <select
             value={value || ""}
             onChange={(e) => updateProperty(prop.id, e.target.value)}
             style={{
-              border: 'none', background: 'var(--mantine-color-dark-6)',
-              color: 'inherit', outline: 'none', fontFamily: 'inherit', fontSize: '13px',
-              padding: '3px 8px', borderRadius: '4px', cursor: 'pointer'
+              border: 'none', background: activeOption ? `var(--mantine-color-${activeOption.color}-filled, var(--mantine-color-dark-4))` : 'transparent',
+              color: activeOption ? 'white' : 'var(--mantine-color-text)',
+              outline: 'none', fontFamily: 'inherit', fontSize: '13px',
+              padding: '2px 6px', borderRadius: '4px', cursor: 'pointer',
+              fontWeight: 500
             }}
           >
+            <option value="" disabled style={{ background: "var(--mantine-color-dark-6)", color: "var(--mantine-color-text)" }}>Empty</option>
             {prop.options?.map(opt => (
-              <option key={opt.id} value={opt.id}>● {opt.label}</option>
+              <option key={opt.id} value={opt.id} style={{ background: "var(--mantine-color-dark-6)", color: "var(--mantine-color-text)" }}>
+                {opt.label}
+              </option>
             ))}
           </select>
         );
@@ -91,7 +97,7 @@ export default function DatabaseItemDrawer({ item, properties, opened, onClose, 
       case 'date': return <IconCalendar size={14} />;
       case 'user': return <IconUser size={14} />;
       case 'status': return <IconCircleDot size={14} />;
-      default: return <IconCircleDot size={14} />;
+      default: return <IconFileText size={14} />;
     }
   };
 
@@ -100,74 +106,84 @@ export default function DatabaseItemDrawer({ item, properties, opened, onClose, 
       opened={opened}
       onClose={onClose}
       position="right"
-      size={440}
+      size={540} // Wider to match Notion's side peek
       padding={0}
       withCloseButton={false}
-      overlayProps={{ opacity: 0.5, blur: 0 }}
-      styles={{ content: { background: "var(--mantine-color-dark-7)", borderLeft: "1px solid var(--mantine-color-default-border)" } }}
+      overlayProps={{ opacity: 0.3, blur: 0 }}
+      styles={{ content: { background: "var(--mantine-color-body)", borderLeft: "1px solid var(--mantine-color-default-border)", boxShadow: "-4px 0 24px rgba(0,0,0,0.15)" } }}
     >
-      {/* Top Bar */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", height: "44px", borderBottom: "1px solid var(--mantine-color-default-border)" }}>
-        <ActionIcon variant="subtle" size="sm" onClick={onClose} c="dimmed"><IconX size={16} /></ActionIcon>
+      {/* Top Bar (Notion Style) */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", borderBottom: "1px solid transparent", transition: "border-bottom 0.2s ease" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-          <ActionIcon variant="subtle" size="sm" c="dimmed"><IconShare size={15} /></ActionIcon>
-          <ActionIcon variant="subtle" size="sm" c="dimmed"><IconStar size={15} /></ActionIcon>
-          <ActionIcon variant="subtle" size="sm" c="dimmed"><IconDots size={15} /></ActionIcon>
+          <Tooltip label="Open as page" position="bottom" withArrow>
+            <ActionIcon variant="subtle" size="md" c="dimmed"><IconMaximize size={16} /></ActionIcon>
+          </Tooltip>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+          <ActionIcon variant="subtle" size="md" c="dimmed"><IconShare size={16} /></ActionIcon>
+          <ActionIcon variant="subtle" size="md" c="dimmed"><IconStar size={16} /></ActionIcon>
+          <ActionIcon variant="subtle" size="md" c="dimmed"><IconDots size={16} /></ActionIcon>
+          <div style={{ width: "1px", height: "16px", background: "var(--mantine-color-default-border)", margin: "0 4px" }} />
+          <ActionIcon variant="subtle" size="md" onClick={onClose} c="dimmed"><IconX size={16} /></ActionIcon>
         </div>
       </div>
 
-      <div style={{ padding: "32px 40px 16px", height: "calc(100vh - 44px)", overflowY: "auto" }}>
-        {/* Title */}
+      {/* Main Scrollable Content */}
+      <div style={{ padding: "32px 56px 40px 56px", height: "calc(100vh - 48px)", overflowY: "auto" }}>
+        
+        {/* Title Input */}
         <input 
           type="text" 
           value={item.properties.title || ""} 
           onChange={(e) => updateProperty('title', e.target.value)}
           placeholder="Untitled" 
-          style={{ fontSize: "28px", fontWeight: 700, color: "var(--mantine-color-text)", background: "transparent", border: "none", outline: "none", width: "100%", marginBottom: "24px" }} 
+          style={{ fontSize: "32px", fontWeight: 700, color: "var(--mantine-color-text)", background: "transparent", border: "none", outline: "none", width: "100%", marginBottom: "16px", lineHeight: 1.2 }} 
         />
 
-        {/* Properties List */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+        {/* Properties Grid */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "2px", marginBottom: "16px" }}>
           {properties.filter(p => p.id !== 'title').map(prop => (
-            <div key={prop.id} style={{ display: "flex", alignItems: "center", padding: "7px 0" }}>
-              <div style={{ width: "110px", display: "flex", alignItems: "center", gap: "8px", color: "var(--mantine-color-dimmed)", fontSize: "13px", flexShrink: 0 }}>
+            <div key={prop.id} style={{ display: "flex", alignItems: "flex-start", padding: "6px 0", minHeight: "32px" }}>
+              {/* Property Label */}
+              <div style={{ width: "140px", display: "flex", alignItems: "center", gap: "8px", color: "var(--mantine-color-dimmed)", fontSize: "14px", flexShrink: 0, paddingTop: "2px" }}>
                 {getPropIcon(prop.type)}
                 {prop.name}
               </div>
-              <div style={{ flex: 1, padding: "2px 6px", borderRadius: "4px" }} className="hover-bg-gray">
+              {/* Property Value */}
+              <div style={{ flex: 1, display: "flex", alignItems: "center", minHeight: "24px", padding: "0 6px", marginLeft: "-6px", borderRadius: "4px", transition: "background 0.1s ease" }}>
                 {renderPropertyInput(prop)}
               </div>
             </div>
           ))}
-        </div>
-
-        <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "8px", padding: "6px 0", fontSize: "13px", color: "var(--mantine-color-dimmed)", cursor: "pointer" }}>
-          <IconPlus size={13} /> Add a property
-        </div>
-
-        {/* Comments Section */}
-        <div style={{ marginTop: "32px", paddingTop: "20px", borderTop: "1px solid var(--mantine-color-default-border)" }}>
-          <div style={{ fontSize: "13px", marginBottom: "12px", color: "var(--mantine-color-dimmed)" }}>Comments</div>
-          <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
-            <div style={{ width: "24px", height: "24px", borderRadius: "50%", flexShrink: 0, background: "linear-gradient(135deg,#6f6ff5,#a86ff5)" }} />
-            <input 
-              type="text" 
-              placeholder="Add a comment..." 
-              style={{ flex: 1, background: "transparent", border: "none", outline: "none", fontSize: "14px", color: "var(--mantine-color-text)" }} 
-            />
+          
+          {/* Add Property Button */}
+          <div style={{ display: "flex", alignItems: "center", padding: "6px 0", marginTop: "4px" }}>
+            <div style={{ width: "140px" }} /> {/* Spacer */}
+            <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", color: "var(--mantine-color-dimmed)", cursor: "pointer", padding: "2px 6px", marginLeft: "-6px", borderRadius: "4px" }}>
+              <IconPlus size={14} /> Add a property
+            </div>
           </div>
         </div>
 
-        {/* Description Section */}
-        <div style={{ marginTop: "32px", fontSize: "14px", color: "var(--mantine-color-dimmed)" }}>
+        <div style={{ height: "1px", background: "var(--mantine-color-default-border)", width: "100%", margin: "16px 0 24px 0" }} />
+
+        {/* Page Content / Body (MVP: Textarea) */}
+        <div style={{ color: "var(--mantine-color-text)", fontFamily: "inherit" }}>
           <Textarea
-            placeholder="Press 'enter' to continue with an empty page, or create a template"
+            placeholder="Press Enter to continue with an empty page, or create a template"
             autosize
-            minRows={4}
+            minRows={10}
             variant="unstyled"
             value={item.properties.description || ""}
             onChange={(e) => updateProperty('description', e.target.value)}
-            styles={{ input: { fontSize: '15px' } }}
+            styles={{ 
+              input: { 
+                fontSize: '15px', 
+                lineHeight: 1.6, 
+                padding: 0, 
+                color: "var(--mantine-color-text)" 
+              } 
+            }}
           />
         </div>
       </div>
