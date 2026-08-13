@@ -1,122 +1,124 @@
 import { NodeViewWrapper, NodeViewProps } from "@tiptap/react";
+import { useTranslation } from "react-i18next";
+import { ActionIcon, Menu, UnstyledButton } from "@mantine/core";
+import { IconDots, IconTable, IconCalendar, IconTimeline, IconPlus, IconShare, IconStar } from "@tabler/icons-react";
 import { useState } from "react";
-import { Tabs, Group, TextInput, ActionIcon, Menu, Button, Text } from "@mantine/core";
-import { IconTable, IconCalendarEvent, IconPlus, IconDots, IconTimeline } from "@tabler/icons-react";
-import TimelineView from "./views/timeline-view";
 import TableView from "./views/table-view";
 import CalendarView from "./views/calendar-view";
-import { DatabaseItem, DatabaseProperty, DatabaseView } from "@docmost/editor-ext";
+import TimelineCanvas from "./views/timeline-canvas";
 import DatabaseItemDrawer from "./database-item-drawer";
+import { DatabaseItem, DatabaseProperty, DatabaseView } from "@docmost/editor-ext";
 
 export default function DatabaseBlockView(props: NodeViewProps) {
-  const { node, updateAttributes, editor } = props;
-  
-  const title = node.attrs.title as string;
-  const views = node.attrs.views as DatabaseView[];
-  const activeViewId = node.attrs.activeViewId as string;
-  const properties = node.attrs.properties as DatabaseProperty[];
-  const items = node.attrs.items as DatabaseItem[];
+  const { t } = useTranslation();
+  const [selectedItem, setSelectedItem] = useState<DatabaseItem | null>(null);
 
-  const [drawerItemId, setDrawerItemId] = useState<string | null>(null);
+  const attrs = props.node.attrs;
+  const properties = attrs.properties as DatabaseProperty[];
+  const items = attrs.items as DatabaseItem[];
+  const views = attrs.views as DatabaseView[];
+  const activeViewId = attrs.activeViewId as string;
 
-  const updateTitle = (newTitle: string) => updateAttributes({ title: newTitle });
-  
-  const setActiveView = (viewId: string) => updateAttributes({ activeViewId: viewId });
+  const activeView = views.find(v => v.id === activeViewId) || views[0];
 
-  const handleCreateItem = () => {
+  const updateItem = (updatedItem: DatabaseItem) => {
+    const newItems = items.map(item => item.id === updatedItem.id ? updatedItem : item);
+    props.updateAttributes({ items: newItems });
+  };
+
+  const addItem = () => {
     const newItem: DatabaseItem = {
-      id: `item-${Date.now()}`,
+      id: Math.random().toString(36).substr(2, 9),
       properties: {
-        title: "Untitled",
-        status: "todo",
-        date: new Date().toISOString(),
-      },
-      content: "",
+        title: "",
+        status: "not-started",
+        date: new Date().toISOString()
+      }
     };
-    updateAttributes({ items: [...items, newItem] });
-    setDrawerItemId(newItem.id);
-  };
-
-  const handleUpdateItem = (updatedItem: DatabaseItem) => {
-    const newItems = items.map((item) => (item.id === updatedItem.id ? updatedItem : item));
-    updateAttributes({ items: newItems });
-  };
-
-  const handleUpdateProperties = (newProps: DatabaseProperty[]) => {
-    updateAttributes({ properties: newProps });
-  };
-
-  const activeView = views.find((v) => v.id === activeViewId) || views[0];
-
-  const getIconForViewType = (type: string) => {
-    switch (type) {
-      case "table": return <IconTable size={16} />;
-      case "timeline": return <IconTimeline size={16} />;
-      case "calendar": return <IconCalendarEvent size={16} />;
-      default: return <IconTable size={16} />;
-    }
+    props.updateAttributes({ items: [...items, newItem] });
+    setSelectedItem(newItem);
   };
 
   return (
-    <NodeViewWrapper className="docmost-database-block" style={{ margin: "24px 0", border: "1px solid var(--mantine-color-default-border)", borderRadius: "var(--mantine-radius-md)", overflow: "hidden" }}>
-      <div style={{ padding: "16px 24px", borderBottom: "1px solid var(--mantine-color-default-border)", background: "var(--mantine-color-body)" }}>
-        <TextInput
-          variant="unstyled"
-          size="lg"
-          styles={{ input: { fontSize: "24px", fontWeight: 700, padding: 0, minHeight: "auto" } }}
-          value={title}
-          onChange={(e) => updateTitle(e.currentTarget.value)}
-          placeholder="New Database"
-        />
+    <NodeViewWrapper className="database-block" data-drag-handle="true" style={{ width: '100%', margin: '2rem 0', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}>
+      <div style={{ display: "flex", flexDirection: "column", background: "var(--mantine-color-body)", border: "1px solid var(--mantine-color-default-border)", borderRadius: "var(--mantine-radius-md)", overflow: "hidden" }}>
         
-        <Group justify="space-between" mt="md">
-          <Tabs value={activeViewId} onChange={(val) => val && setActiveView(val)} variant="pills" radius="sm">
-            <Tabs.List>
-              {views.map((view) => (
-                <Tabs.Tab key={view.id} value={view.id} leftSection={getIconForViewType(view.type)}>
-                  {view.name}
-                </Tabs.Tab>
-              ))}
-            </Tabs.List>
-          </Tabs>
-
-          <Group gap="xs">
-            <Button size="xs" variant="light" leftSection={<IconPlus size={14} />} onClick={handleCreateItem}>
-              New
-            </Button>
-            <Menu>
+        {/* Top Breadcrumb Bar */}
+        <div style={{ height: "44px", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", borderBottom: "1px solid var(--mantine-color-default-border)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", color: "var(--mantine-color-dimmed)" }}>
+            <span style={{ cursor: "pointer" }}>Bumi Studio's HQ</span>
+            <span style={{ opacity: 0.5 }}>/</span>
+            <span style={{ cursor: "pointer", color: "var(--mantine-color-text)" }}>Test Timeline</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+            <ActionIcon variant="subtle" size="sm" c="dimmed"><IconShare size={15} /></ActionIcon>
+            <ActionIcon variant="subtle" size="sm" c="dimmed"><IconStar size={15} /></ActionIcon>
+            <Menu withinPortal position="bottom-end" shadow="sm">
               <Menu.Target>
-                <ActionIcon variant="subtle" color="gray"><IconDots size={16} /></ActionIcon>
+                <ActionIcon variant="subtle" size="sm" c="dimmed"><IconDots size={15} /></ActionIcon>
               </Menu.Target>
               <Menu.Dropdown>
                 <Menu.Item>Add View</Menu.Item>
                 <Menu.Item color="red" onClick={() => (props as any).deleteNode()}>Delete Database</Menu.Item>
               </Menu.Dropdown>
             </Menu>
-          </Group>
-        </Group>
-      </div>
+          </div>
+        </div>
 
-      <div style={{ background: "var(--mantine-color-body)" }}>
-        {activeView?.type === "timeline" && (
-          <TimelineView items={items} properties={properties} onUpdateItem={handleUpdateItem} onOpenItem={setDrawerItemId} />
-        )}
-        {activeView?.type === "table" && (
-          <TableView items={items} properties={properties} onUpdateItem={handleUpdateItem} onOpenItem={setDrawerItemId} />
-        )}
-        {activeView?.type === "calendar" && (
-          <CalendarView items={items} properties={properties} onUpdateItem={handleUpdateItem} onOpenItem={setDrawerItemId} />
-        )}
+        {/* Page Title */}
+        <div style={{ padding: "28px 40px 4px" }}>
+          <input 
+            type="text" 
+            value={attrs.title} 
+            onChange={(e) => props.updateAttributes({ title: e.target.value })}
+            placeholder="New database" 
+            style={{ fontSize: "28px", fontWeight: 700, color: "var(--mantine-color-text)", background: "transparent", border: "none", outline: "none", width: "100%" }} 
+          />
+        </div>
+
+        {/* Views Tabs (Notion Style) */}
+        <div style={{ display: "flex", alignItems: "center", gap: "2px", padding: "8px 40px", borderBottom: "1px solid var(--mantine-color-default-border)" }}>
+          {views.map(view => (
+            <UnstyledButton
+              key={view.id}
+              onClick={() => props.updateAttributes({ activeViewId: view.id })}
+              style={{
+                display: "flex", alignItems: "center", gap: "6px",
+                padding: "6px 10px",
+                borderRadius: "6px",
+                fontSize: "14px",
+                color: activeViewId === view.id ? "var(--mantine-color-text)" : "var(--mantine-color-dimmed)",
+                background: activeViewId === view.id ? "var(--mantine-color-dark-6)" : "transparent",
+                fontWeight: activeViewId === view.id ? 500 : 400
+              }}
+            >
+              {view.type === "table" && <IconTable size={16} />}
+              {view.type === "timeline" && <IconTimeline size={16} />}
+              {view.type === "calendar" && <IconCalendar size={16} />}
+              {view.name}
+            </UnstyledButton>
+          ))}
+          <div style={{ width: "1px", height: "16px", background: "var(--mantine-color-default-border)", margin: "0 8px" }} />
+          <UnstyledButton style={{ display: "flex", alignItems: "center", gap: "6px", padding: "6px 10px", borderRadius: "6px", fontSize: "14px", color: "var(--mantine-color-dimmed)" }}>
+            <IconPlus size={16} /> Add View
+          </UnstyledButton>
+        </div>
+
+        {/* View Content */}
+        <div style={{ minHeight: "400px" }}>
+          {activeView.type === "table" && <TableView items={items} properties={properties} onUpdateItem={updateItem} onOpenItem={(id) => setSelectedItem(items.find(i => i.id === id) || null)} />}
+          {activeView.type === "calendar" && <CalendarView items={items} properties={properties} onUpdateItem={updateItem} onOpenItem={(id) => setSelectedItem(items.find(i => i.id === id) || null)} />}
+          {activeView.type === "timeline" && <TimelineCanvas items={items} properties={properties} onUpdateItem={updateItem} onOpenItem={(id) => setSelectedItem(items.find(i => i.id === id) || null)} />}
+        </div>
+
       </div>
 
       <DatabaseItemDrawer
-        isOpen={!!drawerItemId}
-        onClose={() => setDrawerItemId(null)}
-        itemId={drawerItemId}
-        items={items}
+        item={selectedItem}
         properties={properties}
-        onUpdateItem={handleUpdateItem}
-        onUpdateProperties={handleUpdateProperties}
+        opened={!!selectedItem}
+        onClose={() => setSelectedItem(null)}
+        onUpdate={updateItem}
       />
     </NodeViewWrapper>
   );
