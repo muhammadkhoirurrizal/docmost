@@ -59,13 +59,26 @@ export default function DatabaseItemDrawer({
           />
         );
       case "date":
+        const dateVal = value as { start?: string, end?: string } | string | null;
+        const startStr = typeof dateVal === 'object' && dateVal?.start ? dateVal.start : (typeof dateVal === 'string' ? dateVal : null);
+        const endStr = typeof dateVal === 'object' && dateVal?.end ? dateVal.end : startStr;
+        
         return (
-          <input
-            type="date"
-            value={value ? dayjs(value).format('YYYY-MM-DD') : ""}
-            onChange={(e) => updateProperty(prop.id, e.target.value ? new Date(e.target.value).toISOString() : null)}
-            style={{ border: 'none', background: 'transparent', color: 'inherit', outline: 'none', fontFamily: 'inherit', fontSize: '14px' }}
-          />
+          <Group gap="xs" align="center">
+            <input
+              type="date"
+              value={startStr ? dayjs(startStr).format('YYYY-MM-DD') : ""}
+              onChange={(e) => updateProperty(prop.id, { start: e.target.value ? new Date(e.target.value).toISOString() : null, end: endStr })}
+              style={{ border: 'none', background: 'transparent', color: 'inherit', outline: 'none', fontFamily: 'inherit', fontSize: '13px' }}
+            />
+            <Text size="sm" c="dimmed">→</Text>
+            <input
+              type="date"
+              value={endStr ? dayjs(endStr).format('YYYY-MM-DD') : ""}
+              onChange={(e) => updateProperty(prop.id, { start: startStr, end: e.target.value ? new Date(e.target.value).toISOString() : null })}
+              style={{ border: 'none', background: 'transparent', color: 'inherit', outline: 'none', fontFamily: 'inherit', fontSize: '13px' }}
+            />
+          </Group>
         );
       case "status":
       case "select":

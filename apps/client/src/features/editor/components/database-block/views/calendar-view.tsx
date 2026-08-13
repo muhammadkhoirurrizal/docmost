@@ -13,8 +13,16 @@ interface CalendarViewProps {
 export default function CalendarView({ items, properties, onOpenItem }: CalendarViewProps) {
   const { t } = useTranslation();
   
-  // Sort items by date
-  const itemsWithDate = items.filter(i => i.properties.date).sort((a, b) => dayjs(a.properties.date).valueOf() - dayjs(b.properties.date).valueOf());
+  const itemsWithDate = items.filter(i => {
+    const dateVal = i.properties.date as { start?: string } | string | null;
+    return typeof dateVal === 'object' ? !!dateVal?.start : !!dateVal;
+  }).sort((a, b) => {
+    const dateValA = a.properties.date as { start?: string } | string;
+    const startA = typeof dateValA === 'object' ? dateValA.start : dateValA;
+    const dateValB = b.properties.date as { start?: string } | string;
+    const startB = typeof dateValB === 'object' ? dateValB.start : dateValB;
+    return dayjs(startA).valueOf() - dayjs(startB).valueOf();
+  });
 
   return (
     <div style={{ padding: "16px 24px" }}>
@@ -28,7 +36,15 @@ export default function CalendarView({ items, properties, onOpenItem }: Calendar
               <UnstyledButton onClick={() => onOpenItem(item.id)} fw={500}>
                 {item.properties.title || "Untitled"}
               </UnstyledButton>
-              <Text size="sm" c="dimmed">{dayjs(item.properties.date).format("MMM D, YYYY")}</Text>
+              <Text size="sm" c="dimmed">
+                {(() => {
+                  const dateVal = item.properties.date as { start?: string, end?: string } | string | null;
+                  const startStr = typeof dateVal === 'object' && dateVal?.start ? dateVal.start : (typeof dateVal === 'string' ? dateVal : null);
+                  const endStr = typeof dateVal === 'object' && dateVal?.end ? dateVal.end : startStr;
+                  if (startStr === endStr) return dayjs(startStr).format("MMM D, YYYY");
+                  return `${dayjs(startStr).format('MMM D')} - ${dayjs(endStr).format('MMM D, YYYY')}`;
+                })()}
+              </Text>
             </Group>
           ))}
         </div>

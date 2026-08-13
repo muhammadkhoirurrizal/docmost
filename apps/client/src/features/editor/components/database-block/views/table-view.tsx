@@ -25,7 +25,13 @@ export default function TableView({ items, properties, onUpdateItem, onOpenItem 
     }
 
     if (prop.type === "date") {
-      return value ? dayjs(value).format('MMM D, YYYY') : "";
+      const dateVal = value as { start?: string, end?: string } | string | null;
+      const startStr = typeof dateVal === 'object' && dateVal?.start ? dateVal.start : (typeof dateVal === 'string' ? dateVal : null);
+      const endStr = typeof dateVal === 'object' && dateVal?.end ? dateVal.end : startStr;
+      
+      if (!startStr) return "";
+      if (startStr === endStr) return dayjs(startStr).format('MMM D, YYYY');
+      return `${dayjs(startStr).format('MMM D')} - ${dayjs(endStr).format('MMM D, YYYY')}`;
     }
 
     if (prop.type === "status") {
