@@ -1,7 +1,16 @@
 import { DatabaseItem, DatabaseProperty } from "@docmost/editor-ext";
-import { Drawer, Text, Group, ActionIcon, Textarea, Tooltip } from "@mantine/core";
-import { IconX, IconShare, IconStar, IconDots, IconCalendar, IconUser, IconCircleDot, IconPlus, IconMaximize, IconFileText } from "@tabler/icons-react";
+import { Drawer, Text, Group, ActionIcon, Tooltip, Loader } from "@mantine/core";
+import {
+  IconX, IconShare, IconStar, IconDots, IconCalendar, IconUser,
+  IconCircleDot, IconPlus, IconMaximize, IconFileText, IconTextSize
+} from "@tabler/icons-react";
 import dayjs from "dayjs";
+import { useEffect, useRef } from "react";
+import { EditorContent, useEditor } from "@tiptap/react";
+import { mainExtensions } from "@/features/editor/extensions/extensions";
+import { EditorBubbleMenu } from "@/features/editor/components/bubble-menu/bubble-menu";
+import { parseDateProp } from "./date-prop-utils";
+import classes from "./database-item-drawer.module.css";
 
 interface DatabaseItemDrawerProps {
   item: DatabaseItem | null;
@@ -9,96 +18,127 @@ interface DatabaseItemDrawerProps {
   opened: boolean;
   onClose: () => void;
   onUpdate: (item: DatabaseItem) => void;
+  parentEditor?: any; // Parent Tiptap editor to inherit pageId
 }
 
-export default function DatabaseItemDrawer({ item, properties, opened, onClose, onUpdate }: DatabaseItemDrawerProps) {
+export default function DatabaseItemDrawer({
+  item, properties, opened, onClose, onUpdate, parentEditor
+}: DatabaseItemDrawerProps) {
+
+  const itemRef = useRef<DatabaseItem | null>(null);
+  itemRef.current = item;
+
+  // Mini Tiptap editor — same pattern as data-table-view.tsx row editor
+  const bodyEditor = useEditor({
+    extensions: mainExtensions,
+    content: item?.content ?? "",
+    immediatelyRender: false,
+    onCreate({ editor: e }) {
+      // Inherit pageId from parent editor so slash command image uploads etc work
+      if (parentEditor?.storage?.pageId) {
+        queueMicrotask(() => {
+          // @ts-ignore
+          e.storage.pageId = parentEditor.storage.pageId;
+        });
+      }
+    },
+    onUpdate: ({ editor: e }) => {
+      const current = itemRef.current;
+      if (!current) return;
+      onUpdate({ ...current, content: e.getJSON() });
+    },
+  }, [item?.id]); // Re-create editor when switching cards
+
+  // Load content whenever the item changes
+  useEffect(() => {
+    if (!bodyEditor || bodyEditor.isDestroyed) return;
+    if (!item) return;
+    const newContent = item.content ?? "";
+    const currentJSON = JSON.stringify(bodyEditor.getJSON());
+    const newJSON = JSON.stringify(newContent);
+    if (currentJSON !== newJSON) {
+      bodyEditor.commands.setContent(newContent);
+    }
+  }, [item?.id, item?.content]);
+
   if (!item) return null;
 
   const updateProperty = (propId: string, value: any) => {
-    onUpdate({
-      ...item,
-      properties: {
-        ...item.properties,
-        [propId]: value
-      }
-    });
+    onUpdate({ ...item, properties: { ...item.properties, [propId]: value } });
   };
 
-  const renderPropertyInput = (prop: DatabaseProperty) => {
+  // --- Property Renderers ---
+  const renderDateProp = (propId: string) => {
+    const { start, end } = parseDateProp(item.properties[propId]);
+    const fmtStart = start ? dayjs(start).format("MMM D, YYYY") : null;
+    const fmtEnd = end ? dayjs(end).format("MMM D, YYYY") : null;
+
+    const displayLabel = !fmtStart
+      ? <span style={{ color: "var(--mantine-color-dimmed)", fontSize: 14 }}>Empty</span>
+      : fmtStart === fmtEnd
+        ? <span style={{ fontSize: 14 }}>{fmtStart}</span>
+        : <span style={{ fontSize: 14 }}>{fmtStart} → {fmtEnd}</span>;
+
+    return (
+      <Group gap={4} align="center" wrap="nowrap">
+        {displayLabel}
+        <Group gap={4} wrap="nowrap" style={{ opacity: 0, transition: "opacity .15s" }} className={classes.dateInputsHover}>
+          <input type="date" value={start ? dayjs(start).format("YYYY-MM-DD") : ""}
+            onChange={e => updateProperty(propId, { start: e.target.value ? new Date(e.target.value).toISOString() : null, end })}
+            style={{ border: "none", background: "transparent", color: "inherit", outline: "none", fontSize: 13, colorScheme: "dark" }} />
+          <Text size="xs" c="dimmed">→</Text>
+          <input type="date" value={end ? dayjs(end).format("YYYY-MM-DD") : ""}
+            onChange={e => updateProperty(propId, { start, end: e.target.value ? new Date(e.target.value).toISOString() : null })}
+            style={{ border: "none", background: "transparent", color: "inherit", outline: "none", fontSize: 13, colorScheme: "dark" }} />
+        </Group>
+      </Group>
+    );
+  };
+
+  const renderStatusProp = (prop: DatabaseProperty) => {
     const value = item.properties[prop.id];
+    const active = prop.options?.find(o => o.id === value);
+    return (
+      <select value={value || ""} onChange={e => updateProperty(prop.id, e.target.value)}
+        style={{
+          border: "none", borderRadius: 4, padding: "2px 8px", fontSize: 13, fontWeight: 500,
+          cursor: "pointer", outline: "none", fontFamily: "inherit",
+          background: active ? `var(--mantine-color-${active.color}-light)` : "var(--mantine-color-dark-5)",
+          color: active ? `var(--mantine-color-${active.color}-filled)` : "var(--mantine-color-dimmed)",
+        }}>
+        <option value="" style={{ background: "var(--mantine-color-dark-6)", color: "var(--mantine-color-text)" }}>Empty</option>
+        {prop.options?.map(opt => (
+          <option key={opt.id} value={opt.id} style={{ background: "var(--mantine-color-dark-6)", color: "var(--mantine-color-text)" }}>{opt.label}</option>
+        ))}
+      </select>
+    );
+  };
 
+  const renderPropValue = (prop: DatabaseProperty) => {
+    const value = item.properties[prop.id];
     switch (prop.type) {
-      case "text":
-        return (
-          <input
-            type="text"
-            value={value || ""}
-            onChange={(e) => updateProperty(prop.id, e.target.value)}
-            style={{ border: 'none', background: 'transparent', color: 'inherit', outline: 'none', fontFamily: 'inherit', fontSize: '14px', width: '100%' }}
-            placeholder="Empty"
-          />
-        );
-      case "date":
-        const dateVal = value as { start?: string, end?: string } | string | null;
-        const startStr = typeof dateVal === 'object' && dateVal?.start ? dateVal.start : (typeof dateVal === 'string' ? dateVal : null);
-        const endStr = typeof dateVal === 'object' && dateVal?.end ? dateVal.end : startStr;
-        
-        return (
-          <Group gap="xs" align="center" style={{ width: '100%', flexWrap: 'nowrap' }}>
-            <input
-              type="date"
-              value={startStr ? dayjs(startStr).format('YYYY-MM-DD') : ""}
-              onChange={(e) => updateProperty(prop.id, { start: e.target.value ? new Date(e.target.value).toISOString() : null, end: endStr })}
-              style={{ border: 'none', background: 'transparent', color: 'inherit', outline: 'none', fontFamily: 'inherit', fontSize: '13px', colorScheme: 'dark' }}
-            />
-            <Text size="sm" c="dimmed">→</Text>
-            <input
-              type="date"
-              value={endStr ? dayjs(endStr).format('YYYY-MM-DD') : ""}
-              onChange={(e) => updateProperty(prop.id, { start: startStr, end: e.target.value ? new Date(e.target.value).toISOString() : null })}
-              style={{ border: 'none', background: 'transparent', color: 'inherit', outline: 'none', fontFamily: 'inherit', fontSize: '13px', colorScheme: 'dark' }}
-            />
-          </Group>
-        );
+      case "date": return renderDateProp(prop.id);
       case "status":
-      case "select":
-        const activeOption = prop.options?.find(o => o.id === value);
-        return (
-          <select
-            value={value || ""}
-            onChange={(e) => updateProperty(prop.id, e.target.value)}
-            style={{
-              border: 'none', background: activeOption ? `var(--mantine-color-${activeOption.color}-filled, var(--mantine-color-dark-4))` : 'transparent',
-              color: activeOption ? 'white' : 'var(--mantine-color-text)',
-              outline: 'none', fontFamily: 'inherit', fontSize: '13px',
-              padding: '2px 6px', borderRadius: '4px', cursor: 'pointer',
-              fontWeight: 500
-            }}
-          >
-            <option value="" disabled style={{ background: "var(--mantine-color-dark-6)", color: "var(--mantine-color-text)" }}>Empty</option>
-            {prop.options?.map(opt => (
-              <option key={opt.id} value={opt.id} style={{ background: "var(--mantine-color-dark-6)", color: "var(--mantine-color-text)" }}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        );
+      case "select": return renderStatusProp(prop);
       case "user":
-        return (
-          <div style={{ fontSize: '13px', color: 'var(--mantine-color-dimmed)' }}>Empty</div>
-        );
+        return <span style={{ fontSize: 14, color: "var(--mantine-color-dimmed)" }}>Empty</span>;
+      case "text":
       default:
-        return null;
+        return (
+          <input type="text" value={value || ""} onChange={e => updateProperty(prop.id, e.target.value)}
+            placeholder="Empty"
+            style={{ border: "none", background: "transparent", color: "inherit", outline: "none", fontFamily: "inherit", fontSize: 14, width: "100%" }} />
+        );
     }
   };
 
-  const getPropIcon = (type: string) => {
-    switch (type) {
-      case 'date': return <IconCalendar size={14} />;
-      case 'user': return <IconUser size={14} />;
-      case 'status': return <IconCircleDot size={14} />;
-      default: return <IconFileText size={14} />;
-    }
+  const propIcon = (type: string) => {
+    const icons: Record<string, JSX.Element> = {
+      date: <IconCalendar size={14} />, user: <IconUser size={14} />,
+      status: <IconCircleDot size={14} />, select: <IconCircleDot size={14} />,
+      text: <IconTextSize size={14} />,
+    };
+    return icons[type] ?? <IconFileText size={14} />;
   };
 
   return (
@@ -106,86 +146,84 @@ export default function DatabaseItemDrawer({ item, properties, opened, onClose, 
       opened={opened}
       onClose={onClose}
       position="right"
-      size={540} // Wider to match Notion's side peek
+      size={560}
       padding={0}
       withCloseButton={false}
-      overlayProps={{ opacity: 0.3, blur: 0 }}
-      styles={{ content: { background: "var(--mantine-color-body)", borderLeft: "1px solid var(--mantine-color-default-border)", boxShadow: "-4px 0 24px rgba(0,0,0,0.15)" } }}
+      overlayProps={{ opacity: 0.25 }}
+      styles={{
+        content: {
+          background: "var(--mantine-color-body)",
+          borderLeft: "1px solid var(--mantine-color-default-border)",
+          boxShadow: "-8px 0 32px rgba(0,0,0,0.18)",
+          display: "flex", flexDirection: "column",
+        }
+      }}
     >
-      {/* Top Bar (Notion Style) */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", borderBottom: "1px solid transparent", transition: "border-bottom 0.2s ease" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-          <Tooltip label="Open as page" position="bottom" withArrow>
+      {/* Top Bar */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", flexShrink: 0 }}>
+        <Group gap={4}>
+          <Tooltip label="Expand" position="bottom" withArrow>
             <ActionIcon variant="subtle" size="md" c="dimmed"><IconMaximize size={16} /></ActionIcon>
           </Tooltip>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+        </Group>
+        <Group gap={4}>
           <ActionIcon variant="subtle" size="md" c="dimmed"><IconShare size={16} /></ActionIcon>
           <ActionIcon variant="subtle" size="md" c="dimmed"><IconStar size={16} /></ActionIcon>
           <ActionIcon variant="subtle" size="md" c="dimmed"><IconDots size={16} /></ActionIcon>
-          <div style={{ width: "1px", height: "16px", background: "var(--mantine-color-default-border)", margin: "0 4px" }} />
+          <div style={{ width: 1, height: 16, background: "var(--mantine-color-default-border)", margin: "0 4px" }} />
           <ActionIcon variant="subtle" size="md" onClick={onClose} c="dimmed"><IconX size={16} /></ActionIcon>
-        </div>
+        </Group>
       </div>
 
-      {/* Main Scrollable Content */}
-      <div style={{ padding: "32px 56px 40px 56px", height: "calc(100vh - 48px)", overflowY: "auto" }}>
-        
-        {/* Title Input */}
-        <input 
-          type="text" 
-          value={item.properties.title || ""} 
-          onChange={(e) => updateProperty('title', e.target.value)}
-          placeholder="Untitled" 
-          style={{ fontSize: "32px", fontWeight: 700, color: "var(--mantine-color-text)", background: "transparent", border: "none", outline: "none", width: "100%", marginBottom: "16px", lineHeight: 1.2 }} 
+      {/* Scrollable body */}
+      <div style={{ flex: 1, overflowY: "auto", padding: "20px 56px 60px" }}>
+
+        {/* Title */}
+        <input
+          type="text"
+          value={item.properties.title || ""}
+          onChange={e => updateProperty("title", e.target.value)}
+          placeholder="Untitled"
+          style={{ fontSize: 32, fontWeight: 700, color: "var(--mantine-color-text)", background: "transparent", border: "none", outline: "none", width: "100%", marginBottom: 24, lineHeight: 1.2 }}
         />
 
-        {/* Properties Grid */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "2px", marginBottom: "16px" }}>
-          {properties.filter(p => p.id !== 'title').map(prop => (
-            <div key={prop.id} style={{ display: "flex", alignItems: "flex-start", padding: "6px 0", minHeight: "32px" }}>
-              {/* Property Label */}
-              <div style={{ width: "140px", display: "flex", alignItems: "center", gap: "8px", color: "var(--mantine-color-dimmed)", fontSize: "14px", flexShrink: 0, paddingTop: "2px" }}>
-                {getPropIcon(prop.type)}
-                {prop.name}
+        {/* Properties */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 2, marginBottom: 8 }}>
+          {properties.filter(p => p.id !== "title").map(prop => (
+            <div key={prop.id} style={{ display: "flex", alignItems: "center", minHeight: 34, padding: "2px 0" }}>
+              <div style={{ width: 130, display: "flex", alignItems: "center", gap: 7, color: "var(--mantine-color-dimmed)", fontSize: 14, flexShrink: 0 }}>
+                {propIcon(prop.type)}
+                <span>{prop.name}</span>
               </div>
-              {/* Property Value */}
-              <div style={{ flex: 1, display: "flex", alignItems: "center", minHeight: "24px", padding: "0 6px", marginLeft: "-6px", borderRadius: "4px", transition: "background 0.1s ease" }}>
-                {renderPropertyInput(prop)}
+              <div style={{ flex: 1, padding: "2px 8px", borderRadius: 4, cursor: "text" }}>
+                {renderPropValue(prop)}
               </div>
             </div>
           ))}
-          
-          {/* Add Property Button */}
-          <div style={{ display: "flex", alignItems: "center", padding: "6px 0", marginTop: "4px" }}>
-            <div style={{ width: "140px" }} /> {/* Spacer */}
-            <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", color: "var(--mantine-color-dimmed)", cursor: "pointer", padding: "2px 6px", marginLeft: "-6px", borderRadius: "4px" }}>
-              <IconPlus size={14} /> Add a property
-            </div>
-          </div>
         </div>
 
-        <div style={{ height: "1px", background: "var(--mantine-color-default-border)", width: "100%", margin: "16px 0 24px 0" }} />
-
-        {/* Page Content / Body (MVP: Textarea) */}
-        <div style={{ color: "var(--mantine-color-text)", fontFamily: "inherit" }}>
-          <Textarea
-            placeholder="Press Enter to continue with an empty page, or create a template"
-            autosize
-            minRows={10}
-            variant="unstyled"
-            value={item.properties.description || ""}
-            onChange={(e) => updateProperty('description', e.target.value)}
-            styles={{ 
-              input: { 
-                fontSize: '15px', 
-                lineHeight: 1.6, 
-                padding: 0, 
-                color: "var(--mantine-color-text)" 
-              } 
-            }}
-          />
+        {/* Add property */}
+        <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 0 4px 0", marginBottom: 8, cursor: "pointer", color: "var(--mantine-color-dimmed)", fontSize: 13 }}>
+          <IconPlus size={14} /> Add a property
         </div>
+
+        <div style={{ height: 1, background: "var(--mantine-color-default-border)", margin: "16px 0 20px" }} />
+
+        {/* Real Tiptap Editor for body content */}
+        <div style={{ minHeight: 200, cursor: "text" }} onClick={() => bodyEditor?.commands.focus()}>
+          {!bodyEditor ? (
+            <div style={{ display: "flex", justifyContent: "center", padding: 24 }}><Loader size="sm" /></div>
+          ) : (
+            <>
+              {bodyEditor && <EditorBubbleMenu editor={bodyEditor} />}
+              <EditorContent
+                editor={bodyEditor}
+                style={{ fontSize: 15, lineHeight: 1.6 }}
+              />
+            </>
+          )}
+        </div>
+
       </div>
     </Drawer>
   );

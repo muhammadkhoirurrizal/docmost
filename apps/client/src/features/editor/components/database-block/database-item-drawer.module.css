@@ -1,0 +1,11 @@
+/* database-item-drawer.module.css */
+
+/* Show date inputs on hover of the date property row */
+.dateInputsHover {
+  display: none;
+}
+
+.dateRow:hover .dateInputsHover {
+  display: flex;
+  opacity: 1;
+}
