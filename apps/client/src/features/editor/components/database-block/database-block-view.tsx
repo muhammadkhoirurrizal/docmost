@@ -177,6 +177,14 @@ export default function DatabaseBlockView(props: NodeViewProps) {
         opened={!!selectedItem}
         onClose={() => setSelectedItem(null)}
         onUpdate={updateItem}
+        onAddProperty={(type) => {
+          const newProp: DatabaseProperty = {
+            id: `prop-${Date.now()}`,
+            name: `New ${type}`,
+            type: type as any,
+          };
+          props.updateAttributes({ properties: [...properties, newProp] });
+        }}
         parentEditor={props.editor}
       />
     </NodeViewWrapper>

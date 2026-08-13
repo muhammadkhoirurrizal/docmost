@@ -1,12 +1,15 @@
 import { DatabaseItem, DatabaseProperty } from "@docmost/editor-ext";
-import { Drawer, Text, Group, ActionIcon, Tooltip, Loader } from "@mantine/core";
+import { Drawer, Text, Group, ActionIcon, Tooltip, Loader, Menu, UnstyledButton, Avatar } from "@mantine/core";
 import {
   IconX, IconShare, IconStar, IconDots, IconCalendar, IconUser,
   IconCircleDot, IconPlus, IconMaximize, IconFileText, IconTextSize,
-  IconChevronsRight, IconClock
+  IconChevronsRight, IconClock, IconLink
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
-import { useEffect, useRef } from "react";
+import relativeTime from "dayjs/plugin/relativeTime";
+import { useEffect, useRef, useState } from "react";
+
+dayjs.extend(relativeTime);
 import { EditorContent, useEditor } from "@tiptap/react";
 import { mainExtensions } from "@/features/editor/extensions/extensions";
 import { EditorBubbleMenu } from "@/features/editor/components/bubble-menu/bubble-menu";
@@ -19,15 +22,17 @@ interface DatabaseItemDrawerProps {
   opened: boolean;
   onClose: () => void;
   onUpdate: (item: DatabaseItem) => void;
+  onAddProperty?: (type: string) => void;
   parentEditor?: any;
 }
 
 export default function DatabaseItemDrawer({
-  item, properties, opened, onClose, onUpdate, parentEditor
+  item, properties, opened, onClose, onUpdate, onAddProperty, parentEditor
 }: DatabaseItemDrawerProps) {
 
   const itemRef = useRef<DatabaseItem | null>(null);
   itemRef.current = item;
+  const [commentText, setCommentText] = useState("");
 
   const bodyEditor = useEditor({
     extensions: mainExtensions,
@@ -60,6 +65,16 @@ export default function DatabaseItemDrawer({
   }, [item?.id, item?.content]);
 
   if (!item) return null;
+
+  const comments: any[] = item.properties._comments || [];
+
+  const handleAddComment = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && commentText.trim() !== "") {
+      const newComment = { id: Date.now().toString(), text: commentText, date: dayjs().toISOString() };
+      onUpdate({ ...item, properties: { ...item.properties, _comments: [...comments, newComment] } });
+      setCommentText("");
+    }
+  };
 
   const updateProperty = (propId: string, value: any) => {
     onUpdate({ ...item, properties: { ...item.properties, [propId]: value } });
@@ -95,20 +110,72 @@ export default function DatabaseItemDrawer({
   const renderStatusProp = (prop: DatabaseProperty) => {
     const value = item.properties[prop.id];
     const active = prop.options?.find(o => o.id === value);
+    
+    const todoOptions = prop.options?.filter(o => o.label.toLowerCase().includes('not started') || o.label.toLowerCase().includes('to-do')) || [];
+    const inProgressOptions = prop.options?.filter(o => o.label.toLowerCase().includes('progress')) || [];
+    const doneOptions = prop.options?.filter(o => o.label.toLowerCase().includes('done') || o.label.toLowerCase().includes('complete')) || [];
+    
+    const hasGroups = todoOptions.length > 0 || inProgressOptions.length > 0 || doneOptions.length > 0;
+
     return (
-      <select value={value || ""} onChange={e => updateProperty(prop.id, e.target.value)}
-        style={{
-          border: "none", borderRadius: 4, padding: "3px 8px", fontSize: 13, fontWeight: 500,
-          cursor: "pointer", outline: "none", fontFamily: "inherit",
-          background: active ? `var(--mantine-color-${active.color}-light)` : "var(--mantine-color-dark-6)",
-          color: active ? `var(--mantine-color-${active.color}-filled)` : "var(--mantine-color-dimmed)",
-          height: 24, display: "flex", alignItems: "center"
-        }}>
-        <option value="" style={{ background: "var(--mantine-color-dark-6)", color: "var(--mantine-color-text)" }}>Empty</option>
-        {prop.options?.map(opt => (
-          <option key={opt.id} value={opt.id} style={{ background: "var(--mantine-color-dark-6)", color: "var(--mantine-color-text)" }}>{opt.label}</option>
-        ))}
-      </select>
+      <Menu withinPortal position="bottom-start" width={220}>
+        <Menu.Target>
+          <UnstyledButton style={{
+            display: "flex", alignItems: "center", gap: 6,
+            borderRadius: 14, padding: "2px 8px 2px 6px", fontSize: 13, fontWeight: 500,
+            background: active ? `var(--mantine-color-${active.color}-filled)` : "var(--mantine-color-dark-5)",
+            color: active ? "white" : "var(--mantine-color-dimmed)",
+            height: 24, opacity: active ? 0.85 : 1
+          }}>
+            <div style={{ width: 8, height: 8, borderRadius: "50%", background: active ? "white" : "var(--mantine-color-dimmed)", opacity: 0.8 }} />
+            {active ? active.label : "Empty"}
+          </UnstyledButton>
+        </Menu.Target>
+        <Menu.Dropdown>
+          {hasGroups ? (
+            <>
+              {todoOptions.length > 0 && <Menu.Label>To-do</Menu.Label>}
+              {todoOptions.map(opt => (
+                <Menu.Item key={opt.id} onClick={() => updateProperty(prop.id, opt.id)}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: `var(--mantine-color-${opt.color}-filled)` }} />
+                    <span style={{ fontSize: 13 }}>{opt.label}</span>
+                  </div>
+                </Menu.Item>
+              ))}
+              
+              {inProgressOptions.length > 0 && <Menu.Label>In progress</Menu.Label>}
+              {inProgressOptions.map(opt => (
+                <Menu.Item key={opt.id} onClick={() => updateProperty(prop.id, opt.id)}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: `var(--mantine-color-${opt.color}-filled)` }} />
+                    <span style={{ fontSize: 13 }}>{opt.label}</span>
+                  </div>
+                </Menu.Item>
+              ))}
+
+              {doneOptions.length > 0 && <Menu.Label>Complete</Menu.Label>}
+              {doneOptions.map(opt => (
+                <Menu.Item key={opt.id} onClick={() => updateProperty(prop.id, opt.id)}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: `var(--mantine-color-${opt.color}-filled)` }} />
+                    <span style={{ fontSize: 13 }}>{opt.label}</span>
+                  </div>
+                </Menu.Item>
+              ))}
+            </>
+          ) : (
+            prop.options?.map(opt => (
+              <Menu.Item key={opt.id} onClick={() => updateProperty(prop.id, opt.id)}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: `var(--mantine-color-${opt.color}-filled)` }} />
+                  <span style={{ fontSize: 13 }}>{opt.label}</span>
+                </div>
+              </Menu.Item>
+            ))
+          )}
+        </Menu.Dropdown>
+      </Menu>
     );
   };
 
@@ -119,7 +186,38 @@ export default function DatabaseItemDrawer({
       case "status":
       case "select": return renderStatusProp(prop);
       case "user":
-        return <span style={{ fontSize: 13, color: "var(--mantine-color-dimmed)" }}>Empty</span>;
+        return (
+          <Menu withinPortal position="bottom-start" width={220}>
+            <Menu.Target>
+              <UnstyledButton style={{
+                display: "flex", alignItems: "center", gap: 6,
+                borderRadius: 4, padding: "2px 6px", fontSize: 13,
+                color: value ? "var(--mantine-color-text)" : "var(--mantine-color-dimmed)",
+                background: "transparent",
+              }}>
+                {value ? (
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, background: "var(--mantine-color-dark-6)", padding: "2px 6px", borderRadius: 4 }}>
+                    <Avatar size={16} radius="xl" color="blue" /> {value}
+                  </div>
+                ) : "Empty"}
+              </UnstyledButton>
+            </Menu.Target>
+            <Menu.Dropdown>
+              <div style={{ padding: "4px 8px", fontSize: 12, color: "var(--mantine-color-dimmed)" }}>Search person or group...</div>
+              <Menu.Divider />
+              {/* Dummy data for functionality demonstration */}
+              <Menu.Item onClick={() => updateProperty(prop.id, "Jane Doe")}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}><Avatar size={20} radius="xl" color="blue" /> Jane Doe</div>
+              </Menu.Item>
+              <Menu.Item onClick={() => updateProperty(prop.id, "John Smith")}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}><Avatar size={20} radius="xl" color="green" /> John Smith</div>
+              </Menu.Item>
+              <Menu.Item onClick={() => updateProperty(prop.id, "Alice Cooper")}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}><Avatar size={20} radius="xl" color="red" /> Alice Cooper</div>
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
+        );
       case "text":
       default:
         return (
@@ -144,7 +242,7 @@ export default function DatabaseItemDrawer({
       opened={opened}
       onClose={onClose}
       position="right"
-      size={720} // Slightly wider to feel like a full page side-peek
+      size={720}
       padding={0}
       withCloseButton={false}
       overlayProps={{ opacity: 0.25 }}
@@ -181,7 +279,7 @@ export default function DatabaseItemDrawer({
       </div>
 
       {/* ══ SCROLLABLE BODY ══ */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "20px 72px 80px" }}>
+      <div style={{ flex: 1, overflowY: "auto", padding: "20px 48px 80px" }}>
 
         {/* Title */}
         <input
@@ -209,16 +307,63 @@ export default function DatabaseItemDrawer({
           ))}
         </div>
 
-        {/* Add property button */}
-        <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 0", cursor: "pointer", color: "var(--mantine-color-dimmed)", fontSize: 13, opacity: 0.8 }} className="hover-text-solid">
-          <IconPlus size={14} /> Add a property
+        {/* Add property Menu */}
+        <Menu withinPortal position="bottom-start" width={220}>
+          <Menu.Target>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 0", cursor: "pointer", color: "var(--mantine-color-dimmed)", fontSize: 13, opacity: 0.8 }} className="hover-text-solid">
+              <IconPlus size={14} /> Add a property
+            </div>
+          </Menu.Target>
+          <Menu.Dropdown>
+            <Menu.Label>Type</Menu.Label>
+            <Menu.Item leftSection={<IconTextSize size={14} />} onClick={() => onAddProperty?.("text")}>Text</Menu.Item>
+            <Menu.Item leftSection={<IconCalendar size={14} />} onClick={() => onAddProperty?.("date")}>Date</Menu.Item>
+            <Menu.Item leftSection={<IconCircleDot size={14} />} onClick={() => onAddProperty?.("status")}>Status</Menu.Item>
+            <Menu.Item leftSection={<IconUser size={14} />} onClick={() => onAddProperty?.("user")}>Person</Menu.Item>
+            <Menu.Item leftSection={<IconLink size={14} />} onClick={() => onAddProperty?.("text")}>Connection</Menu.Item>
+          </Menu.Dropdown>
+        </Menu>
+
+        <div style={{ height: 1, background: "var(--mantine-color-default-border)", margin: "24px 0 16px" }} />
+
+        {/* ══ COMMENTS SECTION ══ */}
+        <div style={{ marginBottom: 24 }}>
+          <Text size="sm" c="dimmed" mb="md" fw={500}>Comments</Text>
+          
+          {comments.map((c: any) => (
+            <Group key={c.id} gap="sm" align="flex-start" wrap="nowrap" style={{ marginBottom: 16 }}>
+              <Avatar size={30} radius="xl" color="blue">Me</Avatar>
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
+                  <Text size="sm" fw={600}>Me</Text>
+                  <Text size="xs" c="dimmed">{(dayjs(c.date) as any).fromNow()}</Text>
+                </div>
+                <Text size="sm">{c.text}</Text>
+              </div>
+            </Group>
+          ))}
+
+          <Group gap="sm" align="center" wrap="nowrap">
+            <Avatar size={30} radius="xl" color="blue">Me</Avatar>
+            <input 
+              type="text" 
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+              onKeyDown={handleAddComment}
+              placeholder="Add a comment... (Press Enter)" 
+              style={{
+                flex: 1, background: "transparent", border: "1px solid var(--mantine-color-default-border)",
+                borderRadius: 24, padding: "6px 16px", fontSize: 13, color: "var(--mantine-color-text)",
+                outline: "none"
+              }}
+            />
+          </Group>
         </div>
 
-        {/* Divider */}
-        <div style={{ height: 1, background: "var(--mantine-color-default-border)", margin: "24px 0 32px" }} />
+        <div style={{ height: 1, background: "var(--mantine-color-default-border)", margin: "0 0 24px" }} />
 
         {/* Tiptap Page Canvas */}
-        <div style={{ minHeight: 400, cursor: "text" }} onClick={() => bodyEditor?.commands.focus()}>
+        <div style={{ minHeight: 400, cursor: "text", paddingLeft: 0 }} onClick={() => bodyEditor?.commands.focus()}>
           {!bodyEditor ? (
             <div style={{ display: "flex", justifyContent: "center", padding: 24 }}><Loader size="sm" /></div>
           ) : (
