@@ -29,3 +29,4 @@ export * from "./lib/kanban-board/kanban-board";
 export * from "./lib/twine-editor";
 export * from "./lib/date";
 export * from "./lib/smart-guide";
+export * from "./lib/database-block/database-block";

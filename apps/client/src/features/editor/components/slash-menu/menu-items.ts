@@ -341,6 +341,17 @@ const CommandGroups: SlashMenuGroupedItemsType = {
           .run(),
     },
     {
+      title: "Timeline / Database",
+      description: "Insert a Notion-like database with timeline.",
+      searchTerms: ["timeline", "gantt", "database", "notion", "table"],
+      icon: IconTableOptions,
+      command: ({ editor, range }: CommandProps) =>
+        (editor.chain().focus() as any)
+          .deleteRange(range)
+          .insertDatabaseBlock()
+          .run(),
+    },
+    {
       title: "Side Paragraphs (2)",
       description: "Place two blocks side by side.",
       searchTerms: ["side paragraphs", "columns", "layout", "two columns", "side by side", "split"],
