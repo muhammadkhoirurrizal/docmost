@@ -1,19 +1,19 @@
 import { Table, UnstyledButton } from "@mantine/core";
-import { DatabaseItem, DatabaseProperty } from "@docmost/editor-ext";
+import { DatabaseRow, DatabasePropertySchema } from "@docmost/editor-ext";
 import { useTranslation } from "react-i18next";
 import dayjs from "dayjs";
 
 interface TableViewProps {
-  items: DatabaseItem[];
-  properties: DatabaseProperty[];
-  onUpdateItem: (item: DatabaseItem) => void;
+  items: DatabaseRow[];
+  properties: DatabasePropertySchema[];
+  onUpdateItem: (item: DatabaseRow) => void;
   onOpenItem: (itemId: string) => void;
 }
 
 export default function TableView({ items, properties, onUpdateItem, onOpenItem }: TableViewProps) {
   const { t } = useTranslation();
 
-  const renderCell = (item: DatabaseItem, prop: DatabaseProperty) => {
+  const renderCell = (item: DatabaseRow, prop: DatabasePropertySchema) => {
     const value = item.properties[prop.id];
 
     if (prop.id === "title") {

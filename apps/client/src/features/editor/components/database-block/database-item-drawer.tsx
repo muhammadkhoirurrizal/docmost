@@ -1,4 +1,4 @@
-import { DatabaseItem, DatabaseProperty } from "@docmost/editor-ext";
+import { DatabaseRow, DatabasePropertySchema } from "@docmost/editor-ext";
 import { Drawer, Text, Group, ActionIcon, Tooltip, Loader, Menu, UnstyledButton, Avatar } from "@mantine/core";
 import {
   IconX, IconShare, IconStar, IconDots, IconCalendar, IconUser,
@@ -21,23 +21,23 @@ import { useSpaceQuery } from "@/features/space/queries/space-query";
 import { useSearchSuggestionsQuery } from "@/features/search/queries/search-query";
 import { CustomAvatar } from "@/components/ui/custom-avatar";
 
-interface DatabaseItemDrawerProps {
-  item: DatabaseItem | null;
-  properties: DatabaseProperty[];
+interface DatabaseRowDrawerProps {
+  item: DatabaseRow | null;
+  properties: DatabasePropertySchema[];
   opened: boolean;
   onClose: () => void;
-  onUpdate: (item: DatabaseItem) => void;
+  onUpdate: (item: DatabaseRow) => void;
   onAddProperty?: (type: string) => void;
-  onUpdatePropertySchema?: (propId: string, updatedProp: DatabaseProperty) => void;
+  onUpdatePropertySchema?: (propId: string, updatedProp: DatabasePropertySchema) => void;
   onDeletePropertySchema?: (propId: string) => void;
   parentEditor?: any;
 }
 
-export default function DatabaseItemDrawer({
+export default function DatabaseRowDrawer({
   item, properties, opened, onClose, onUpdate, onAddProperty, onUpdatePropertySchema, onDeletePropertySchema, parentEditor
-}: DatabaseItemDrawerProps) {
+}: DatabaseRowDrawerProps) {
 
-  const itemRef = useRef<DatabaseItem | null>(null);
+  const itemRef = useRef<DatabaseRow | null>(null);
   itemRef.current = item;
   const [commentText, setCommentText] = useState("");
 
@@ -126,7 +126,7 @@ export default function DatabaseItemDrawer({
     );
   };
 
-  const renderStatusProp = (prop: DatabaseProperty) => {
+  const renderStatusProp = (prop: DatabasePropertySchema) => {
     const value = item.properties[prop.id];
     const active = prop.options?.find(o => o.id === value);
     
@@ -198,7 +198,7 @@ export default function DatabaseItemDrawer({
     );
   };
 
-  const renderPropValue = (prop: DatabaseProperty) => {
+  const renderPropValue = (prop: DatabasePropertySchema) => {
     const value = item.properties[prop.id];
     switch (prop.type) {
       case "date": return renderDateProp(prop.id);

@@ -1,4 +1,4 @@
-import { DatabaseItem, DatabaseProperty } from "@docmost/editor-ext";
+import { DatabaseRow, DatabasePropertySchema } from "@docmost/editor-ext";
 import { UnstyledButton, ActionIcon, Tooltip, Menu, Select } from "@mantine/core";
 import dayjs from "dayjs";
 import { useRef, useEffect, useState, useMemo, useCallback } from "react";
@@ -10,9 +10,9 @@ import {
 import { TimeScale, generateTimelineColumns, getScaleWidth, getJumpDistance } from "./timeline-scale-utils";
 
 interface TimelineCanvasProps {
-  items: DatabaseItem[];
-  properties: DatabaseProperty[];
-  onUpdateItem: (item: DatabaseItem) => void;
+  items: DatabaseRow[];
+  properties: DatabasePropertySchema[];
+  onUpdateItem: (item: DatabaseRow) => void;
   onOpenItem: (itemId: string) => void;
 }
 

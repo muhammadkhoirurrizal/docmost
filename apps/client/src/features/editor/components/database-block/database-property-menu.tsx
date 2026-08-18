@@ -1,29 +1,41 @@
-import { DatabaseProperty, DatabasePropertyOption, DatabasePropertyType, createDefaultProperty } from "@docmost/editor-ext";
-import { Popover, UnstyledButton, Text, TextInput, Menu, ActionIcon, Group, Divider, Badge } from "@mantine/core";
-import { IconCalendar, IconCircleDot, IconFileText, IconLink, IconTextSize, IconUser, IconEdit, IconCopy, IconTrash, IconPlus, IconEye, IconLayoutBoard } from "@tabler/icons-react";
+import { DatabasePropertySchema, DatabasePropertyOption, DatabasePropertyType, createDefaultProperty } from "@docmost/editor-ext";
+import { Popover, UnstyledButton, Text, TextInput, Menu, ActionIcon, Group, Divider, Badge, ScrollArea } from "@mantine/core";
+import { IconCalendar, IconCircleDot, IconFileText, IconLink, IconTextSize, IconUser, IconEdit, IconCopy, IconTrash, IconPlus, IconEye, IconLayoutBoard, IconHash, IconCheckbox, IconMail, IconPhone } from "@tabler/icons-react";
 import { useState, useEffect } from "react";
 
 interface DatabasePropertyMenuProps {
-  property: DatabaseProperty;
-  onUpdate: (updated: DatabaseProperty) => void;
+  property: DatabasePropertySchema;
+  onUpdate: (updated: DatabasePropertySchema) => void;
   onDelete: () => void;
   children: React.ReactNode;
 }
 
 const TYPE_ICONS: Record<string, React.ReactNode> = {
   text: <IconTextSize size={14} />,
+  number: <IconHash size={14} />,
   date: <IconCalendar size={14} />,
   status: <IconCircleDot size={14} />,
   user: <IconUser size={14} />,
   select: <IconCircleDot size={14} />,
+  multi_select: <IconLayoutBoard size={14} />,
+  checkbox: <IconCheckbox size={14} />,
+  url: <IconLink size={14} />,
+  email: <IconMail size={14} />,
+  phone: <IconPhone size={14} />,
 };
 
 const TYPE_LABELS: Record<string, string> = {
   text: "Text",
+  number: "Number",
   date: "Date",
   status: "Status",
   user: "Person",
   select: "Select",
+  multi_select: "Multi-select",
+  checkbox: "Checkbox",
+  url: "URL",
+  email: "Email",
+  phone: "Phone",
 };
 
 export default function DatabasePropertyMenu({ property, onUpdate, onDelete, children }: DatabasePropertyMenuProps) {
@@ -37,7 +49,7 @@ export default function DatabasePropertyMenu({ property, onUpdate, onDelete, chi
     setEditName(property.name);
   }, [property]);
 
-  const updateProp = (updates: Partial<DatabaseProperty>) => {
+  const updateProp = (updates: Partial<DatabasePropertySchema>) => {
     onUpdate({ ...property, ...updates });
   };
 

@@ -4,7 +4,7 @@ import {
 } from "@tiptap/core";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 
-export type DatabasePropertyType = "text" | "select" | "date" | "user" | "status";
+export type DatabasePropertyType = "text" | "number" | "select" | "multi_select" | "status" | "date" | "user" | "checkbox" | "url" | "email" | "phone";
 
 export interface DatabasePropertyOption {
   id: string;
@@ -13,25 +13,40 @@ export interface DatabasePropertyOption {
   group?: "todo" | "in_progress" | "complete";
 }
 
-export interface DatabaseProperty {
+export interface DatabasePropertySchema {
   id: string;
   name: string;
   type: DatabasePropertyType;
   options?: DatabasePropertyOption[];
 }
 
-export interface DatabaseItem {
+export interface DatabaseRow {
   id: string;
   properties: Record<string, any>;
   content?: any; // Content for the side-peek (Tiptap JSON)
 }
 
-export type DatabaseViewType = "table" | "timeline" | "calendar";
+export type DatabaseViewLayout = "table" | "kanban" | "timeline" | "calendar";
+
+export interface FilterRule {
+  propId: string;
+  op: "is" | "isNot" | "contains" | "isEmpty";
+  value: any;
+}
+
+export interface SortRule {
+  propId: string;
+  dir: "asc" | "desc";
+}
 
 export interface DatabaseView {
   id: string;
   name: string;
-  type: DatabaseViewType;
+  layout: DatabaseViewLayout;
+  visibility: string[]; // Property IDs that are visible
+  filter: FilterRule[];
+  sort: SortRule[];
+  groupBy: string | null;
 }
 
 export interface DatabaseBlockOptions {
@@ -42,13 +57,13 @@ export interface DatabaseBlockOptions {
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
     databaseBlock: {
-      insertDatabaseBlock: () => ReturnType;
+      insertDatabaseBlock: (options?: { initialLayout?: DatabaseViewLayout }) => ReturnType;
     };
   }
 }
 
-export const createDefaultProperty = (type: DatabasePropertyType, name?: string): DatabaseProperty => {
-  const base: DatabaseProperty = {
+export const createDefaultProperty = (type: DatabasePropertyType, name?: string): DatabasePropertySchema => {
+  const base: DatabasePropertySchema = {
     id: `prop-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
     name: name || `New ${type}`,
     type,
@@ -69,7 +84,7 @@ export const createDefaultProperty = (type: DatabasePropertyType, name?: string)
   return base;
 };
 
-const DEFAULT_PROPERTIES: DatabaseProperty[] = [
+const DEFAULT_PROPERTIES: DatabasePropertySchema[] = [
   { id: "title", name: "Name", type: "text" },
   { id: "status", name: "Status", type: "status", options: [
     { id: "todo", label: "Not started", color: "gray", group: "todo" },
@@ -108,15 +123,24 @@ export const DatabaseBlock = Node.create<DatabaseBlockOptions>({
         renderHTML: (attributes) => ({ "data-title": attributes.title }),
       },
       activeViewId: {
-        default: "view-timeline",
+        default: "view-table",
         parseHTML: (element) => element.getAttribute("data-active-view-id"),
         renderHTML: (attributes) => ({ "data-active-view-id": attributes.activeViewId }),
       },
+      isUninitialized: {
+        default: true,
+        parseHTML: (element) => element.getAttribute("data-uninitialized") === "true",
+        renderHTML: (attributes) => ({ "data-uninitialized": attributes.isUninitialized }),
+      },
       views: {
         default: [
-          { id: "view-timeline", name: "Timeline", type: "timeline" },
-          { id: "view-table", name: "Table", type: "table" },
-          { id: "view-calendar", name: "Calendar", type: "calendar" },
+          { 
+            id: "view-table", 
+            name: "Table View", 
+            layout: "table",
+            visibility: ["title", "status", "date", "assignee"],
+            filter: [], sort: [], groupBy: null
+          }
         ],
         parseHTML: (element) => {
           const views = element.getAttribute("data-views");
@@ -124,21 +148,25 @@ export const DatabaseBlock = Node.create<DatabaseBlockOptions>({
         },
         renderHTML: (attributes) => ({ "data-views": JSON.stringify(attributes.views) }),
       },
-      properties: {
+      // Note: We keep the attribute name "data-properties" and "data-items" in HTML 
+      // for backwards compatibility, but map them to schema/rows conceptually.
+      schema: {
         default: DEFAULT_PROPERTIES,
         parseHTML: (element) => {
-          const props = element.getAttribute("data-properties");
+          // Backward compatibility: try properties first, then schema
+          const props = element.getAttribute("data-properties") || element.getAttribute("data-schema");
           return props ? JSON.parse(props) : null;
         },
-        renderHTML: (attributes) => ({ "data-properties": JSON.stringify(attributes.properties) }),
+        renderHTML: (attributes) => ({ "data-schema": JSON.stringify(attributes.schema) }),
       },
-      items: {
+      rows: {
         default: [],
         parseHTML: (element) => {
-          const items = element.getAttribute("data-items");
+          // Backward compatibility: try items first, then rows
+          const items = element.getAttribute("data-items") || element.getAttribute("data-rows");
           return items ? JSON.parse(items) : null;
         },
-        renderHTML: (attributes) => ({ "data-items": JSON.stringify(attributes.items) }),
+        renderHTML: (attributes) => ({ "data-rows": JSON.stringify(attributes.rows) }),
       },
     };
   },
@@ -157,13 +185,23 @@ export const DatabaseBlock = Node.create<DatabaseBlockOptions>({
   addCommands() {
     return {
       insertDatabaseBlock:
-        () =>
+        (options: { initialLayout?: DatabaseViewLayout } = {}) =>
         ({ commands }) => {
+          const initialLayout = options.initialLayout || "table";
           return commands.insertContent({
             type: this.name,
             attrs: {
               id: `db-${Date.now()}`,
-              items: [],
+              isUninitialized: true,
+              activeViewId: `view-${initialLayout}`,
+              views: [{
+                id: `view-${initialLayout}`,
+                name: `${initialLayout.charAt(0).toUpperCase() + initialLayout.slice(1)} View`,
+                layout: initialLayout,
+                visibility: ["title", "status", "date", "assignee"],
+                filter: [], sort: [], groupBy: null
+              }],
+              rows: [],
             },
           });
         },
