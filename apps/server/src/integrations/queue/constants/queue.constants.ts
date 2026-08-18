@@ -6,6 +6,7 @@ export enum QueueName {
   FILE_TASK_QUEUE = '{file-task-queue}',
   SEARCH_QUEUE = '{search-queue}',
   AI_QUEUE = '{ai-queue}',
+  NOTIFICATION_QUEUE = '{notification-queue}',
 }
 
 export enum QueueJob {
@@ -58,4 +59,14 @@ export enum QueueJob {
 
   GENERATE_PAGE_EMBEDDINGS = 'generate-page-embeddings',
   DELETE_PAGE_EMBEDDINGS = 'delete-page-embeddings',
+
+  COMMENT_NOTIFICATION = 'comment-notification',
+  COMMENT_RESOLVED_NOTIFICATION = 'comment-resolved-notification',
+
+  SUGGESTION_NOTIFICATION = 'suggestion-notification',
+  SUGGESTION_RESOLVED_NOTIFICATION = 'suggestion-resolved-notification',
+
+  PAGE_MENTION_NOTIFICATION = 'page-mention-notification',
+  PAGE_PERMISSION_GRANTED = 'page-permission-granted',
+  PAGE_UPDATE_DIGEST = 'page-update-digest',
 }

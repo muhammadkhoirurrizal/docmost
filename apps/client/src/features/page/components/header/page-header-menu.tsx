@@ -1,8 +1,10 @@
 import { ActionIcon, Badge, Group, Menu, Text, Tooltip, Loader } from "@mantine/core";
+import { useEditorState } from "@tiptap/react";
 import {
   IconArchive,
   IconArrowRight,
   IconArrowsHorizontal,
+  IconBulb,
   IconDots,
   IconFileExport,
   IconFiles,
@@ -13,12 +15,16 @@ import {
   IconPrinter,
   IconTrash,
   IconWifiOff,
+  IconStar,
+  IconStarFilled,
+  IconInfoCircle,
 } from "@tabler/icons-react";
+import { WebSocketStatus } from "@hocuspocus/provider";
 import React, { useEffect, useState } from "react";
 import { exportPage } from "@/features/page/services/page-service.ts";
 import { ExportFormat } from "@/features/page/types/page.types.ts";
 import useToggleAside from "@/hooks/use-toggle-aside.tsx";
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { historyAtoms } from "@/features/page-history/atoms/history-atoms.ts";
 import {
   useDisclosure,
@@ -54,6 +60,13 @@ import MovePageModal from "@/features/page/components/move-page-modal.tsx";
 import { useTimeAgo } from "@/hooks/use-time-ago.tsx";
 import ShareModal from "@/features/share/components/share-modal.tsx";
 import { useUserRole } from "@/hooks/use-user-role";
+import {
+  useFavoriteIds,
+  useAddFavoriteMutation,
+  useRemoveFavoriteMutation,
+} from "@/features/favorite/queries/favorite-query";
+import { usePageSuggestionsQuery } from "@/features/suggestion/queries/suggestion-query";
+import { SuggestionStatus } from "@/features/suggestion/types/suggestion.types";
 
 
 interface PageHeaderMenuProps {
@@ -72,6 +85,10 @@ export default function PageHeaderMenu({ readOnly }: PageHeaderMenuProps) {
   const showSavedIndicator = lastSavedPage?.id === currentPageId;
   const savedPageTitle = showSavedIndicator ? lastSavedPage.title : "";
   const savedAt = showSavedIndicator ? lastSavedPage.savedAt : undefined;
+  const { data: suggestions } = usePageSuggestionsQuery(currentPageId);
+  const pendingCount = (suggestions ?? []).filter(
+    (s) => s.status === SuggestionStatus.PENDING,
+  ).length;
 
   useEffect(() => {
     if (!savedAt) return;
@@ -140,6 +157,34 @@ export default function PageHeaderMenu({ readOnly }: PageHeaderMenuProps) {
         </ActionIcon>
       </Tooltip>
 
+      <Tooltip label={t("Suggestions")} openDelay={250} withArrow>
+        <ActionIcon
+          variant="default"
+          style={{ border: "none", position: "relative" }}
+          onClick={() => toggleAside("suggestions")}
+        >
+          <IconBulb size={20} stroke={2} />
+          {pendingCount > 0 && (
+            <Badge
+              size="xs"
+              color="yellow"
+              variant="filled"
+              style={{
+                position: "absolute",
+                top: -4,
+                right: -4,
+                minWidth: 16,
+                height: 16,
+                padding: "0 3px",
+                pointerEvents: "none",
+              }}
+            >
+              {pendingCount}
+            </Badge>
+          )}
+        </ActionIcon>
+      </Tooltip>
+
       <Tooltip label={t("Table of contents")} openDelay={250} withArrow>
         <ActionIcon
           variant="default"
@@ -159,6 +204,7 @@ interface PageActionMenuProps {
 }
 function PageActionMenu({ readOnly }: PageActionMenuProps) {
   const { t } = useTranslation();
+  const toggleAside = useToggleAside();
   const [, setHistoryModalOpen] = useAtom(historyAtoms);
   const { spaceSlug, pageSlug } = useParams();
   const [isExportingPdf, setIsExportingPdf] = useState(false);
@@ -172,6 +218,21 @@ function PageActionMenu({ readOnly }: PageActionMenuProps) {
   const createPageMutation = useCreatePageMutation();
   const { data: childrenContent, refetch: refetchChildrenContent } =
     useGetChildrenContentQuery(page?.id);
+
+  const favoriteIds = useFavoriteIds("page", page?.spaceId);
+  const addFavoriteMutation = useAddFavoriteMutation();
+  const removeFavoriteMutation = useRemoveFavoriteMutation();
+  const isFavorited = page?.id ? favoriteIds.has(page.id) : false;
+
+  const handleToggleFavorite = () => {
+    if (!page) return;
+    const params = { type: "page" as const, pageId: page.id };
+    if (isFavorited) {
+      removeFavoriteMutation.mutate(params);
+    } else {
+      addFavoriteMutation.mutate(params);
+    }
+  };
 
   const handleArchive = async () => {
     await archivePageMutation.mutateAsync(page.id);
@@ -191,9 +252,14 @@ function PageActionMenu({ readOnly }: PageActionMenuProps) {
     movePageModalOpened,
     { open: openMovePageModal, close: closeMoveSpaceModal },
   ] = useDisclosure(false);
-  const [pageEditor] = useAtom(pageEditorAtom);
-  const pageUpdatedAt = useTimeAgo(page?.updatedAt);
+  const pageEditor = useAtomValue(pageEditorAtom);
+  const wordCount = useEditorState({
+    editor: pageEditor,
+    selector: ({ editor }) => editor?.storage?.characterCount?.words?.() ?? 0,
+  }) ?? 0;
+  const isOnline = useAtomValue(yjsConnectionStatusAtom) === WebSocketStatus.Connected;
   const userRole = useUserRole();
+  const pageUpdatedAt = useTimeAgo(page?.updatedAt);
 
   const handleCopyLink = async () => {
     const pageUrl =
@@ -311,6 +377,23 @@ function PageActionMenu({ readOnly }: PageActionMenuProps) {
             {t("Copy link")}
           </Menu.Item>
 
+          <Menu.Item
+            leftSection={
+              isFavorited ? (
+                <IconStarFilled size={16} style={{ color: "var(--mantine-color-yellow-filled)" }} />
+              ) : (
+                <IconStar size={16} />
+              )
+            }
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleToggleFavorite();
+            }}
+          >
+            {isFavorited ? t("Remove from favorites") : t("Add to favorites")}
+          </Menu.Item>
+
           {page?.hasChildren && (
             <Menu.Item
               leftSection={<IconFiles size={16} />}
@@ -338,6 +421,17 @@ function PageActionMenu({ readOnly }: PageActionMenuProps) {
                 onClick={openHistoryModal}
               >
                 {t("Page history")}
+              </Menu.Item>
+
+              <Menu.Item
+                leftSection={<IconInfoCircle size={16} />}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  toggleAside("details");
+                }}
+              >
+                {t("Page details")}
               </Menu.Item>
 
               <Menu.Divider />
@@ -411,7 +505,7 @@ function PageActionMenu({ readOnly }: PageActionMenuProps) {
                 <div style={{ width: 210 }}>
                   <Text size="xs" c="dimmed" truncate="end">
                     {t("Word count: {{wordCount}}", {
-                      wordCount: pageEditor?.storage?.characterCount?.words(),
+                      wordCount: wordCount,
                     })}
                   </Text>
 

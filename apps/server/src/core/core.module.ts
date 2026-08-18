@@ -7,6 +7,7 @@ import {
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { WorkspaceModule } from './workspace/workspace.module';
+import { SuggestionModule } from './suggestion/suggestion.module';
 import { PageModule } from './page/page.module';
 import { AttachmentModule } from './attachment/attachment.module';
 import { CommentModule } from './comment/comment.module';
@@ -16,6 +17,10 @@ import { GroupModule } from './group/group.module';
 import { CaslModule } from './casl/casl.module';
 import { DomainMiddleware } from '../common/middlewares/domain.middleware';
 import { ShareModule } from './share/share.module';
+import { NotificationModule } from './notification/notification.module';
+import { FavoriteModule } from './favorite/favorite.module';
+import { LabelModule } from './label/label.module';
+import { SessionModule } from './session/session.module';
 
 @Module({
   imports: [
@@ -24,12 +29,17 @@ import { ShareModule } from './share/share.module';
     WorkspaceModule,
     PageModule,
     AttachmentModule,
+    SuggestionModule,
     CommentModule,
     SearchModule,
     SpaceModule,
     GroupModule,
     CaslModule,
     ShareModule,
+    NotificationModule,
+    FavoriteModule,
+    LabelModule,
+    SessionModule,
   ],
 })
 export class CoreModule implements NestModule {

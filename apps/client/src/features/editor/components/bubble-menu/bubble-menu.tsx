@@ -13,6 +13,7 @@ import {
   IconStrikethrough,
   IconUnderline,
   IconMessage,
+  IconBulb,
 } from "@tabler/icons-react";
 import clsx from "clsx";
 import classes from "./bubble-menu.module.css";
@@ -24,6 +25,10 @@ import {
   draftCommentIdAtom,
   showCommentPopupAtom,
 } from "@/features/comment/atoms/comment-atom";
+import {
+  showSuggestionPopupAtom,
+  suggestionRangeAtom,
+} from "@/features/suggestion/atoms/suggestion-atom";
 import { useAtom } from "jotai";
 import { v7 as uuid7 } from "uuid";
 import { isCellSelection, isTextSelected } from "@docmost/editor-ext";
@@ -46,6 +51,8 @@ export const EditorBubbleMenu: FC<EditorBubbleMenuProps> = (props) => {
   const { t } = useTranslation();
   const [showCommentPopup, setShowCommentPopup] = useAtom(showCommentPopupAtom);
   const [, setDraftCommentId] = useAtom(draftCommentIdAtom);
+  const [, setShowSuggestionPopup] = useAtom(showSuggestionPopupAtom);
+  const [, setSuggestionRange] = useAtom(suggestionRangeAtom);
   const showCommentPopupRef = useRef(showCommentPopup);
 
   useEffect(() => {
@@ -114,6 +121,18 @@ export const EditorBubbleMenu: FC<EditorBubbleMenuProps> = (props) => {
       setShowCommentPopup(true);
     },
     icon: IconMessage,
+  };
+
+  const suggestItem: BubbleMenuItem = {
+    name: "Suggest Edit",
+    isActive: () => false,
+    command: () => {
+      const { from, to } = props.editor.state.selection;
+      const originalText = props.editor.state.doc.textBetween(from, to, " ");
+      setSuggestionRange({ active: true, from, to, originalText });
+      setShowSuggestionPopup(true);
+    },
+    icon: IconBulb,
   };
 
   const bubbleMenuProps: EditorBubbleMenuProps = {
@@ -203,6 +222,46 @@ export const EditorBubbleMenu: FC<EditorBubbleMenuProps> = (props) => {
                   </ActionIcon>
                 </Tooltip>
               ))}
+
+              <Tooltip label={t(commentItem.name)} withArrow>
+                <ActionIcon
+                  variant="default"
+                  size="lg"
+                  radius="0"
+                  aria-label={t(commentItem.name)}
+                  className={clsx({
+                    [classes.active]: commentItem.isActive(),
+                  })}
+                  style={{ border: "none" }}
+                  onClick={commentItem.command}
+                >
+                  <commentItem.icon
+                    stroke={1.5}
+                    style={{ width: rem(20), height: rem(20) }}
+                  />
+                </ActionIcon>
+              </Tooltip>
+
+              {props.canComment && (
+                <Tooltip label={t(suggestItem.name)} withArrow>
+                  <ActionIcon
+                    variant="default"
+                    size="lg"
+                    radius="0"
+                    aria-label={t(suggestItem.name)}
+                    className={clsx({
+                      [classes.active]: suggestItem.isActive(),
+                    })}
+                    style={{ border: "none" }}
+                    onClick={suggestItem.command}
+                  >
+                    <suggestItem.icon
+                      stroke={1.5}
+                      style={{ width: rem(20), height: rem(20) }}
+                    />
+                  </ActionIcon>
+                </Tooltip>
+              )}
             </ActionIcon.Group>
 
             <LinkSelector
@@ -239,6 +298,24 @@ export const EditorBubbleMenu: FC<EditorBubbleMenuProps> = (props) => {
         >
           <IconMessage size={16} stroke={2} />
         </ActionIcon>
+
+        {props.canComment && !props.editor.isEditable && (
+          <Tooltip label={t(suggestItem.name)} withArrow>
+            <ActionIcon
+              variant="default"
+              size="lg"
+              radius="0"
+              aria-label={t(suggestItem.name)}
+              className={clsx({
+                [classes.active]: suggestItem.isActive(),
+              })}
+              style={{ border: "none" }}
+              onClick={suggestItem.command}
+            >
+              <suggestItem.icon size={16} stroke={2} />
+            </ActionIcon>
+          </Tooltip>
+        )}
       </div>
     </BubbleMenu>
   );

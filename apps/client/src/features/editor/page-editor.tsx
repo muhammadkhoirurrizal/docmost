@@ -38,6 +38,9 @@ import {
   showCommentPopupAtom,
 } from "@/features/comment/atoms/comment-atom";
 import CommentDialog from "@/features/comment/components/comment-dialog";
+import SuggestionDialog from "@/features/suggestion/components/suggestion-dialog";
+import SuggestionFloatingMenu from "@/features/suggestion/components/suggestion-floating-menu";
+import { useSuggestions } from "@/features/suggestion/hooks/use-suggestions";
 import { EditorBubbleMenu } from "@/features/editor/components/bubble-menu/bubble-menu";
 import TableCellMenu from "@/features/editor/components/table/table-cell-menu.tsx";
 import TableMenu from "@/features/editor/components/table/table-menu.tsx";
@@ -374,6 +377,8 @@ export default function PageEditor({
     };
   }, [editor]);
 
+  useSuggestions(editor, pageId);
+
   useStickyHeader(editor);
 
   const editorIsEditable = useEditorState({
@@ -583,6 +588,8 @@ export default function PageEditor({
           </div>
         )}
         {showCommentPopup && <CommentDialog editor={editor} pageId={pageId} />}
+        <SuggestionDialog pageId={pageId} />
+        <SuggestionFloatingMenu editor={editor} pageId={pageId} editable={editable} />
       </div>
       <div
         onClick={() => editor?.commands.focus("end")}

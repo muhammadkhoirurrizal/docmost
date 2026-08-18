@@ -21,6 +21,8 @@ import {
 } from "@tabler/icons-react";
 import classes from "./space-sidebar.module.css";
 import React from "react";
+import { ErrorBoundary } from "react-error-boundary";
+import { FavoriteSidebarList } from "./favorite-sidebar-list";
 import { useAtom } from "jotai";
 import { treeApiAtom } from "@/features/page/tree/atoms/tree-api-atom.ts";
 import { TreeApi } from "react-arborist";
@@ -230,6 +232,8 @@ export function SpaceSidebar() {
             )}
           </div>
         </div>
+
+        <FavoriteSidebarList spaceId={space.id} spaceSlug={space.slug} />
 
         <div className={clsx(classes.section, classes.sectionPages)}>
           <Group className={classes.pagesHeader} justify="space-between">

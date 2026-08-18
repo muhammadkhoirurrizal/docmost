@@ -14,6 +14,7 @@ import { Color } from "@tiptap/extension-color";
 import GlobalDragHandle from "tiptap-extension-global-drag-handle";
 import { Youtube } from "@tiptap/extension-youtube";
 import SlashCommand from "@/features/editor/extensions/slash-command";
+import { SuggestionExtension } from "@/features/editor/extensions/suggestion";
 import { Collaboration, isChangeOrigin } from "@tiptap/extension-collaboration";
 import { CollaborationCursor } from "@tiptap/extension-collaboration-cursor";
 import { HocuspocusProvider } from "@hocuspocus/provider";
@@ -50,6 +51,7 @@ import {
   Column,
   ColumnGroup,
   DataTable,
+  DatabaseBlock,
   KanbanBoard,
   TwineEditor,
   TiptapDate,
@@ -72,6 +74,7 @@ import EmbedView from "@/features/editor/components/embed/embed-view.tsx";
 import TwineView from "@/features/editor/components/twine/twine-view.tsx";
 import SubpagesView from "@/features/editor/components/subpages/subpages-view.tsx";
 import DataTableView from "@/features/editor/components/data-table/data-table-view.tsx";
+import DatabaseBlockView from "@/features/editor/components/database-block/database-block-view.tsx";
 import KanbanBoardView from "@/features/editor/components/kanban/kanban-board-view.tsx";
 import DateView from "@/features/editor/components/date/date-view.tsx";
 import { common, createLowlight } from "lowlight";
@@ -174,6 +177,7 @@ export const baseExtensions = [
   Color,
   SlashCommand,
   EmojiCommand,
+  SuggestionExtension,
   Comment.configure({
     HTMLAttributes: {
       class: "comment-mark",
@@ -289,8 +293,12 @@ export const baseExtensions = [
 export const mainExtensions = [
   ...baseExtensions,
   DataTable.configure({
-    // @ts-ignore
+    HTMLAttributes: { class: "docmost-data-table" },
     view: DataTableView,
+  }),
+  DatabaseBlock.configure({
+    HTMLAttributes: { class: "docmost-database-block" },
+    view: DatabaseBlockView,
   }),
   KanbanBoard.configure({
     // @ts-ignore

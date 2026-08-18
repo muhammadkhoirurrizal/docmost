@@ -8,6 +8,7 @@ import { LoginDto } from '../dto/login.dto';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { TokenService } from './token.service';
 import { SignupService } from './signup.service';
+import { SessionService } from '../../session/session.service';
 import { CreateAdminUserDto } from '../dto/create-admin-user.dto';
 import { UserRepo } from '@docmost/db/repos/user/user.repo';
 import {
@@ -39,6 +40,7 @@ export class AuthService {
     private userTokenRepo: UserTokenRepo,
     private mailService: MailService,
     private domainService: DomainService,
+    private sessionService: SessionService,
     @InjectKysely() private readonly db: KyselyDB,
   ) {}
 
@@ -64,19 +66,19 @@ export class AuthService {
     user.lastLoginAt = new Date();
     await this.userRepo.updateLastLogin(user.id, workspaceId);
 
-    return this.tokenService.generateAccessToken(user);
+    return this.sessionService.createSessionAndToken(user);
   }
 
   async register(createUserDto: CreateUserDto, workspaceId: string) {
     const user = await this.signupService.signup(createUserDto, workspaceId);
-    return this.tokenService.generateAccessToken(user);
+    return this.sessionService.createSessionAndToken(user);
   }
 
   async setup(createAdminUserDto: CreateAdminUserDto) {
     const { workspace, user } =
       await this.signupService.initialSetup(createAdminUserDto);
 
-    const authToken = await this.tokenService.generateAccessToken(user);
+    const authToken = await this.sessionService.createSessionAndToken(user);
     return { workspace, authToken };
   }
 
@@ -218,7 +220,7 @@ export class AuthService {
       };
     }
 
-    const authToken = await this.tokenService.generateAccessToken(user);
+    const authToken = await this.sessionService.createSessionAndToken(user);
     return { authToken };
   }
 

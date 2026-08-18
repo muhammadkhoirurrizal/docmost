@@ -47,3 +47,5 @@ docmost.tar
 docs_common
 
 pnpm-lock.*
+
+test/

@@ -5,9 +5,10 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { WorkspaceModule } from '../workspace/workspace.module';
 import { SignupService } from './services/signup.service';
 import { TokenModule } from './token.module';
+import { SessionModule } from '../session/session.module';
 
 @Module({
-  imports: [TokenModule, WorkspaceModule],
+  imports: [TokenModule, WorkspaceModule, SessionModule],
   controllers: [AuthController],
   providers: [AuthService, SignupService, JwtStrategy],
   exports: [SignupService],

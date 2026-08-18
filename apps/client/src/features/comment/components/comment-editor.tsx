@@ -8,7 +8,11 @@ import { useFocusWithin } from "@mantine/hooks";
 import clsx from "clsx";
 import { forwardRef, useEffect, useImperativeHandle } from "react";
 import { useTranslation } from "react-i18next";
+import { ReactNodeViewRenderer } from "@tiptap/react";
 import EmojiCommand from "@/features/editor/extensions/emoji-command";
+import { Mention } from "@docmost/editor-ext";
+import mentionRenderItems from "@/features/editor/components/mention/mention-suggestion";
+import MentionView from "@/features/editor/components/mention/mention-view";
 
 interface CommentEditorProps {
   defaultContent?: any;
@@ -46,6 +50,23 @@ const CommentEditor = forwardRef(
         Underline,
         Link,
         EmojiCommand,
+        Mention.configure({
+          suggestion: {
+            allowSpaces: true,
+            items: () => {
+              return [];
+            },
+            // @ts-ignore
+            render: mentionRenderItems,
+          },
+          HTMLAttributes: {
+            class: "mention",
+          },
+        }).extend({
+          addNodeView() {
+            return ReactNodeViewRenderer(MentionView);
+          },
+        }),
       ],
       editorProps: {
         handleDOMEvents: {

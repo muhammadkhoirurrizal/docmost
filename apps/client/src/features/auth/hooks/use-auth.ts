@@ -144,8 +144,12 @@ export default function useAuth() {
   };
 
   const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (err) {
+      console.log(err);
+    }
     setCurrentUser(RESET);
-    await logout();
     window.location.replace(APP_ROUTE.AUTH.LOGIN);
   };
 

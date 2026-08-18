@@ -21,9 +21,11 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { PasswordResetDto } from './dto/password-reset.dto';
 import { VerifyUserTokenDto } from './dto/verify-user-token.dto';
-import { FastifyReply } from 'fastify';
+import { FastifyReply, FastifyRequest } from 'fastify';
 import { validateSsoEnforcement } from './auth.util';
 import { ModuleRef } from '@nestjs/core';
+import { SessionService } from '../session/session.service';
+import { Req } from '@nestjs/common';
 
 @Controller('auth')
 export class AuthController {
@@ -33,6 +35,7 @@ export class AuthController {
     private authService: AuthService,
     private environmentService: EnvironmentService,
     private moduleRef: ModuleRef,
+    private sessionService: SessionService,
   ) {}
 
   @HttpCode(HttpStatus.OK)
@@ -169,7 +172,19 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   @Post('logout')
-  async logout(@Res({ passthrough: true }) res: FastifyReply) {
+  async logout(
+    @AuthUser() user: User,
+    @Req() req: FastifyRequest,
+    @Res({ passthrough: true }) res: FastifyReply,
+  ) {
+    const sessionId = (req.raw as any).sessionId;
+    if (sessionId) {
+      await this.sessionService.revokeSession(
+        sessionId,
+        user.id,
+        user.workspaceId,
+      );
+    }
     res.clearCookie('authToken');
   }
 

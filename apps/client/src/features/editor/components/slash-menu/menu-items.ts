@@ -31,6 +31,7 @@ import {
   IconRectangle,
   IconAt,
   IconDeviceGamepad,
+  IconBrandGoogleDrive,
 } from "@tabler/icons-react";
 import { modals } from "@mantine/modals";
 import { DatePickerValue } from "../date-picker/utils";
@@ -337,6 +338,17 @@ const CommandGroups: SlashMenuGroupedItemsType = {
         (editor.chain().focus() as any)
           .deleteRange(range)
           .insertKanbanBoard()
+          .run(),
+    },
+    {
+      title: "Timeline / Database",
+      description: "Insert a Notion-like database with timeline.",
+      searchTerms: ["timeline", "gantt", "database", "notion", "table"],
+      icon: IconTableOptions,
+      command: ({ editor, range }: CommandProps) =>
+        (editor.chain().focus() as any)
+          .deleteRange(range)
+          .insertDatabaseBlock()
           .run(),
     },
     {
@@ -725,6 +737,20 @@ const CommandGroups: SlashMenuGroupedItemsType = {
           .focus()
           .deleteRange(range)
           .setEmbed({ provider: "framer" })
+          .run();
+      },
+    },
+    {
+      title: "Google Drive (Media/PDF)",
+      description: "Embed public video, image, or PDF from Drive",
+      searchTerms: ["google drive", "gdrive", "drive", "video", "pdf", "image"],
+      icon: IconBrandGoogleDrive,
+      command: ({ editor, range }: CommandProps) => {
+        editor
+          .chain()
+          .focus()
+          .deleteRange(range)
+          .setEmbed({ provider: "gdrive" })
           .run();
       },
     },

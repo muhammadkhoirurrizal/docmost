@@ -14,3 +14,16 @@
 @import "./ordered-list.css";
 @import "./highlight.css";
 @import "./columns.css";
+
+.suggestion-highlight {
+  background-color: rgba(64, 192, 87, 0.2);
+  border-bottom: 2px dashed #40c057;
+  color: inherit;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.suggestion-highlight:hover {
+  background-color: rgba(64, 192, 87, 0.35);
+}
+

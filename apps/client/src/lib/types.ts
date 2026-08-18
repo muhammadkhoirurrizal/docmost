@@ -33,6 +33,8 @@ export type IPaginationMeta = {
   page: number;
   hasNextPage: boolean;
   hasPrevPage: boolean;
+  nextCursor?: string;
+  prevCursor?: string;
 };
 export type IPagination<T> = {
   items: T[];

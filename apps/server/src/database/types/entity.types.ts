@@ -20,6 +20,12 @@ import {
   FileTasks,
   UserMfa as _UserMFA,
   ApiKeys,
+  Notifications,
+  Favorites,
+  Watchers,
+  Labels,
+  PageLabels,
+  UserSessions,
 } from './db';
 import { PageEmbeddings } from '@docmost/db/types/embeddings.types';
 
@@ -27,6 +33,26 @@ import { PageEmbeddings } from '@docmost/db/types/embeddings.types';
 export type Workspace = Selectable<Workspaces>;
 export type InsertableWorkspace = Insertable<Workspaces>;
 export type UpdatableWorkspace = Updateable<Omit<Workspaces, 'id'>>;
+
+// Notification
+export type Notification = Selectable<Notifications>;
+export type InsertableNotification = Insertable<Notifications>;
+export type UpdatableNotification = Updateable<Omit<Notifications, 'id'>>;
+
+// UserSession
+export type UserSession = Selectable<UserSessions>;
+export type InsertableUserSession = Insertable<UserSessions>;
+export type UpdatableUserSession = Updateable<Omit<UserSessions, 'id'>>;
+
+// Favorite
+export type Favorite = Selectable<Favorites>;
+export type InsertableFavorite = Insertable<Favorites>;
+export type UpdatableFavorite = Updateable<Omit<Favorites, 'id'>>;
+
+// Watcher
+export type Watcher = Selectable<Watchers>;
+export type InsertableWatcher = Insertable<Watchers>;
+export type UpdatableWatcher = Updateable<Omit<Watchers, 'id'>>;
 
 // WorkspaceInvitation
 export type WorkspaceInvitation = Selectable<WorkspaceInvitations>;
@@ -126,6 +152,16 @@ export type UpdatableUserMFA = Updateable<Omit<_UserMFA, 'id'>>;
 export type ApiKey = Selectable<ApiKeys>;
 export type InsertableApiKey = Insertable<ApiKeys>;
 export type UpdatableApiKey = Updateable<Omit<ApiKeys, 'id'>>;
+
+// Label
+export type Label = Selectable<Labels>;
+export type InsertableLabel = Insertable<Labels>;
+export type UpdatableLabel = Updateable<Omit<Labels, 'id'>>;
+
+// PageLabel
+export type PageLabel = Selectable<PageLabels>;
+export type InsertablePageLabel = Insertable<PageLabels>;
+export type UpdatablePageLabel = Updateable<Omit<PageLabels, 'id'>>;
 
 // Page Embedding
 export type PageEmbedding = Selectable<PageEmbeddings>;

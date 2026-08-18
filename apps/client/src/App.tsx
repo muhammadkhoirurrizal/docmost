@@ -39,6 +39,7 @@ import SpaceArchive from "@/pages/space/space-archive.tsx";
 import UserApiKeys from "@/ee/api-key/pages/user-api-keys";
 import WorkspaceApiKeys from "@/ee/api-key/pages/workspace-api-keys";
 import AiSettings from "@/ee/ai/pages/ai-settings.tsx";
+import LabelPage from "@/pages/label/label-page";
 
 export default function App() {
   const { t } = useTranslation();
@@ -81,6 +82,7 @@ export default function App() {
         <Route element={<Layout />}>
           <Route path={"/home"} element={<Home />} />
           <Route path={"/spaces"} element={<SpacesPage />} />
+          <Route path={"/labels/:labelName"} element={<LabelPage />} />
           <Route path={"/s/:spaceSlug"} element={<SpaceHome />} />
           <Route path={"/s/:spaceSlug/trash"} element={<SpaceTrash />} />
           <Route path={"/s/:spaceSlug/archive"} element={<SpaceArchive />} />
