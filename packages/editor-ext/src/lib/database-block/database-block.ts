@@ -4,7 +4,7 @@ import {
 } from "@tiptap/core";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 
-export type DatabasePropertyType = "text" | "number" | "select" | "multi_select" | "status" | "date" | "user" | "checkbox" | "url" | "email" | "phone";
+export type DatabasePropertyType = "text" | "number" | "select" | "multi_select" | "status" | "date" | "user" | "checkbox" | "url" | "email" | "phone" | "progress";
 
 export interface DatabasePropertyOption {
   id: string;

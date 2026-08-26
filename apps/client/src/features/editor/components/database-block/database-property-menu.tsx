@@ -1,6 +1,6 @@
 import { DatabasePropertySchema, DatabasePropertyOption, DatabasePropertyType, createDefaultProperty } from "@docmost/editor-ext";
 import { Popover, UnstyledButton, Text, TextInput, Menu, ActionIcon, Group, Divider, Badge, ScrollArea } from "@mantine/core";
-import { IconCalendar, IconCircleDot, IconFileText, IconLink, IconTextSize, IconUser, IconEdit, IconCopy, IconTrash, IconPlus, IconEye, IconLayoutBoard, IconHash, IconCheckbox, IconMail, IconPhone } from "@tabler/icons-react";
+import { IconCalendar, IconCircleDot, IconFileText, IconLink, IconTextSize, IconUser, IconEdit, IconCopy, IconTrash, IconPlus, IconEye, IconLayoutBoard, IconHash, IconCheckbox, IconMail, IconPhone, IconPercentage } from "@tabler/icons-react";
 import { useState, useEffect } from "react";
 
 interface DatabasePropertyMenuProps {
@@ -22,6 +22,7 @@ const TYPE_ICONS: Record<string, React.ReactNode> = {
   url: <IconLink size={14} />,
   email: <IconMail size={14} />,
   phone: <IconPhone size={14} />,
+  progress: <IconPercentage size={14} />,
 };
 
 const TYPE_LABELS: Record<string, string> = {
@@ -36,6 +37,7 @@ const TYPE_LABELS: Record<string, string> = {
   url: "URL",
   email: "Email",
   phone: "Phone",
+  progress: "Progress",
 };
 
 export default function DatabasePropertyMenu({ property, onUpdate, onDelete, children }: DatabasePropertyMenuProps) {
@@ -53,12 +55,11 @@ export default function DatabasePropertyMenu({ property, onUpdate, onDelete, chi
     onUpdate({ ...property, ...updates });
   };
 
-  const handleAddOption = (group: "todo" | "in_progress" | "complete" | undefined) => {
+  const handleAddOption = () => {
     const newOpt: DatabasePropertyOption = {
       id: `opt-${Date.now()}`,
       label: "New Option",
       color: "gray",
-      group
     };
     updateProp({ options: [...(property.options || []), newOpt] });
   };
@@ -83,23 +84,21 @@ export default function DatabasePropertyMenu({ property, onUpdate, onDelete, chi
   };
 
   const renderOptionsMenu = () => {
-    if (property.type !== "status" && property.type !== "select") return null;
+    if (property.type !== "status" && property.type !== "select" && property.type !== "multi_select") return null;
 
-    const todo = property.options?.filter(o => o.group === "todo") || [];
-    const prog = property.options?.filter(o => o.group === "in_progress") || [];
-    const done = property.options?.filter(o => o.group === "complete") || [];
-    const others = property.options?.filter(o => !o.group) || [];
+    const items = property.options || [];
 
-    const renderGroup = (label: string, items: DatabasePropertyOption[], groupVal?: "todo" | "in_progress" | "complete") => (
-      <div style={{ marginBottom: 12 }}>
-        <Group justify="space-between" mb={4}>
-          <Text size="xs" fw={600} c="dimmed">{label}</Text>
-          <ActionIcon size="xs" variant="subtle" onClick={() => handleAddOption(groupVal)}><IconPlus size={14} /></ActionIcon>
+    return (
+      <div style={{ padding: "12px 12px" }}>
+        <Group justify="space-between" mb={8}>
+          <Text size="xs" fw={600} c="dimmed">Options</Text>
+          <ActionIcon size="xs" variant="subtle" onClick={handleAddOption}><IconPlus size={14} /></ActionIcon>
         </Group>
+        
         {items.map(opt => (
-          <Group key={opt.id} justify="space-between" wrap="nowrap" style={{ padding: "4px 8px", borderRadius: 4 }} className="hover-bg-gray">
+          <Group key={opt.id} justify="space-between" wrap="nowrap" style={{ padding: "4px 8px", borderRadius: 4, marginBottom: 4 }} className="hover-bg-gray">
             <Group gap={6} style={{ flex: 1 }}>
-              <div style={{ width: 8, height: 8, borderRadius: "50%", background: `var(--mantine-color-${opt.color}-filled)` }} />
+              <div style={{ width: 10, height: 10, borderRadius: "50%", background: `var(--mantine-color-${opt.color}-filled)` }} />
               <input 
                 value={opt.label}
                 onChange={e => handleUpdateOption(opt.id, { label: e.target.value })}
@@ -109,20 +108,6 @@ export default function DatabasePropertyMenu({ property, onUpdate, onDelete, chi
             <ActionIcon size="xs" variant="subtle" color="red" onClick={() => handleDeleteOption(opt.id)}><IconTrash size={12} /></ActionIcon>
           </Group>
         ))}
-      </div>
-    );
-
-    return (
-      <div style={{ padding: "12px 12px" }}>
-        {property.type === "status" ? (
-          <>
-            {renderGroup("To-do", todo, "todo")}
-            {renderGroup("In progress", prog, "in_progress")}
-            {renderGroup("Complete", done, "complete")}
-          </>
-        ) : (
-          renderGroup("Options", others, undefined)
-        )}
       </div>
     );
   };
@@ -191,10 +176,20 @@ export default function DatabasePropertyMenu({ property, onUpdate, onDelete, chi
                   </UnstyledButton>
                 </Menu.Target>
                 <Menu.Dropdown>
-                  <Menu.Item leftSection={<IconTextSize size={14} />} onClick={() => handleChangeType("text")}>Text</Menu.Item>
-                  <Menu.Item leftSection={<IconCalendar size={14} />} onClick={() => handleChangeType("date")}>Date</Menu.Item>
-                  <Menu.Item leftSection={<IconCircleDot size={14} />} onClick={() => handleChangeType("status")}>Status</Menu.Item>
-                  <Menu.Item leftSection={<IconUser size={14} />} onClick={() => handleChangeType("user")}>Person</Menu.Item>
+                  <ScrollArea.Autosize mah={200}>
+                    <Menu.Item leftSection={<IconTextSize size={14} />} onClick={() => handleChangeType("text")}>Text</Menu.Item>
+                    <Menu.Item leftSection={<IconHash size={14} />} onClick={() => handleChangeType("number")}>Number</Menu.Item>
+                    <Menu.Item leftSection={<IconCalendar size={14} />} onClick={() => handleChangeType("date")}>Date</Menu.Item>
+                    <Menu.Item leftSection={<IconCircleDot size={14} />} onClick={() => handleChangeType("status")}>Status</Menu.Item>
+                    <Menu.Item leftSection={<IconCircleDot size={14} />} onClick={() => handleChangeType("select")}>Select</Menu.Item>
+                    <Menu.Item leftSection={<IconLayoutBoard size={14} />} onClick={() => handleChangeType("multi_select")}>Multi-select</Menu.Item>
+                    <Menu.Item leftSection={<IconCheckbox size={14} />} onClick={() => handleChangeType("checkbox")}>Checkbox</Menu.Item>
+                    <Menu.Item leftSection={<IconPercentage size={14} />} onClick={() => handleChangeType("progress")}>Progress</Menu.Item>
+                    <Menu.Item leftSection={<IconUser size={14} />} onClick={() => handleChangeType("user")}>Person</Menu.Item>
+                    <Menu.Item leftSection={<IconLink size={14} />} onClick={() => handleChangeType("url")}>URL</Menu.Item>
+                    <Menu.Item leftSection={<IconMail size={14} />} onClick={() => handleChangeType("email")}>Email</Menu.Item>
+                    <Menu.Item leftSection={<IconPhone size={14} />} onClick={() => handleChangeType("phone")}>Phone</Menu.Item>
+                  </ScrollArea.Autosize>
                 </Menu.Dropdown>
               </Menu>
             </div>

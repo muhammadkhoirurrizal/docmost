@@ -200,6 +200,10 @@ export default function DatabaseBlockView(props: NodeViewProps) {
               onUpdateItem={updateItem}
               onOpenItem={openItem}
               onAddRow={addItem}
+              onAddProperty={(type) => {
+                const newProp = createDefaultProperty(type as DatabasePropertyType);
+                props.updateAttributes({ schema: [...properties, newProp] });
+              }}
             />
           )}
           {activeView.layout === "kanban" && (

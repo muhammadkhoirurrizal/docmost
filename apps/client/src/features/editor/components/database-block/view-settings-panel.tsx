@@ -1,5 +1,5 @@
-import { Popover, UnstyledButton, Text, Group, Stack, Switch, Divider, TextInput } from "@mantine/core";
-import { IconFilter, IconArrowsSort, IconDots, IconTrash, IconTable, IconColumns, IconCalendar, IconTimeline, IconEye } from "@tabler/icons-react";
+import { Popover, UnstyledButton, Text, Group, Stack, Switch, Divider, TextInput, ActionIcon } from "@mantine/core";
+import { IconFilter, IconArrowsSort, IconDots, IconTrash, IconTable, IconColumns, IconCalendar, IconTimeline, IconEye, IconX, IconChevronRight, IconChevronLeft, IconPlus } from "@tabler/icons-react";
 import { DatabaseView, DatabasePropertySchema, DatabaseViewLayout } from "@docmost/editor-ext";
 import { useState, useEffect } from "react";
 
@@ -10,17 +10,30 @@ interface ViewSettingsPanelProps {
   onDeleteView?: () => void;
 }
 
+type SettingsPage = "main" | "properties" | "filter" | "sort";
+
 export default function ViewSettingsPanel({ view, schema, onUpdateView, onDeleteView }: ViewSettingsPanelProps) {
+  const [viewName, setViewName] = useState(view.name || "");
+  const [settingsOpened, setSettingsOpened] = useState(false);
+  const [activePage, setActivePage] = useState<SettingsPage>("main");
+  
+  useEffect(() => { setViewName(view.name || ""); }, [view.name]);
+  
+  // Reset page to main when popover is closed
+  useEffect(() => {
+    if (!settingsOpened) {
+      setTimeout(() => setActivePage("main"), 200); // Wait for transition
+    }
+  }, [settingsOpened]);
+
   const hasFilters = view.filter && view.filter.length > 0;
   const hasSorts = view.sort && view.sort.length > 0;
-
-  // Local state for name input to prevent jittering on every keystroke
-  const [viewName, setViewName] = useState(view.name || "");
-  useEffect(() => { setViewName(view.name || ""); }, [view.name]);
 
   const hiddenPropIds: string[] = (view.visibility && view.visibility.length > 0)
     ? schema.filter(p => !view.visibility.includes(p.id)).map(p => p.id)
     : [];
+    
+  const visiblePropsCount = schema.length - hiddenPropIds.length;
 
   const togglePropVisibility = (propId: string) => {
     const currentVisible: string[] = view.visibility && view.visibility.length > 0
@@ -46,189 +59,237 @@ export default function ViewSettingsPanel({ view, schema, onUpdateView, onDelete
     { layout: "timeline", label: "Timeline", icon: <IconTimeline size={20} /> },
   ];
 
+  // Helper for menu item
+  const MenuItem = ({ icon, label, subtext, onClick, color }: { icon: JSX.Element, label: string, subtext?: string, onClick: () => void, color?: string }) => (
+    <UnstyledButton
+      onClick={onClick}
+      style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: "6px 8px", borderRadius: 6,
+        color: color || "var(--mantine-color-text)",
+        transition: "background 0.1s",
+      }}
+      onMouseEnter={e => e.currentTarget.style.background = color ? `var(--mantine-color-${color}-light)` : "var(--mantine-color-default-hover)"}
+      onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+    >
+      <Group gap="sm" wrap="nowrap">
+        <div style={{ color: color ? `var(--mantine-color-${color}-filled)` : "var(--mantine-color-dimmed)", display: "flex" }}>
+          {icon}
+        </div>
+        <Text size="sm" fw={500}>{label}</Text>
+      </Group>
+      {subtext !== undefined ? (
+        <Group gap={4} wrap="nowrap">
+          <Text size="xs" c="dimmed">{subtext}</Text>
+          <IconChevronRight size={14} color="var(--mantine-color-dimmed)" />
+        </Group>
+      ) : null}
+    </UnstyledButton>
+  );
+
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
-
-      {/* Filter Button */}
-      <Popover width={280} position="bottom-end" withArrow shadow="md">
-        <Popover.Target>
-          <UnstyledButton style={{
-            display: "flex", alignItems: "center", gap: 4, padding: "4px 8px",
-            borderRadius: 4, fontSize: 13,
-            color: hasFilters ? "var(--mantine-color-blue-filled)" : "var(--mantine-color-dimmed)",
-            background: hasFilters ? "var(--mantine-color-blue-light)" : "transparent",
-          }}>
-            <IconFilter size={13} />
-            {hasFilters ? `Filtered (${view.filter!.length})` : "Filter"}
-          </UnstyledButton>
-        </Popover.Target>
-        <Popover.Dropdown>
-          <Stack gap="xs">
-            <Text size="xs" fw={600} c="dimmed">FILTER</Text>
-            {(!view.filter || view.filter.length === 0)
-              ? <Text size="xs" c="dimmed">No filters applied to this view.</Text>
-              : <Text size="xs" c="dimmed">{view.filter.length} active filter(s)</Text>
-            }
-            <Divider />
-            <Text size="xs" c="dimmed">Full filter UI coming soon.</Text>
-          </Stack>
-        </Popover.Dropdown>
-      </Popover>
-
-      {/* Sort Button */}
-      <Popover width={280} position="bottom-end" withArrow shadow="md">
-        <Popover.Target>
-          <UnstyledButton style={{
-            display: "flex", alignItems: "center", gap: 4, padding: "4px 8px",
-            borderRadius: 4, fontSize: 13,
-            color: hasSorts ? "var(--mantine-color-blue-filled)" : "var(--mantine-color-dimmed)",
-            background: hasSorts ? "var(--mantine-color-blue-light)" : "transparent",
-          }}>
-            <IconArrowsSort size={13} />
-            {hasSorts ? `Sorted (${view.sort!.length})` : "Sort"}
-          </UnstyledButton>
-        </Popover.Target>
-        <Popover.Dropdown>
-          <Stack gap="xs">
-            <Text size="xs" fw={600} c="dimmed">SORT</Text>
-            {(!view.sort || view.sort.length === 0)
-              ? <Text size="xs" c="dimmed">No sorts applied to this view.</Text>
-              : <Text size="xs" c="dimmed">{view.sort.length} active sort(s)</Text>
-            }
-            <Divider />
-            <Text size="xs" c="dimmed">Full sort UI coming soon.</Text>
-          </Stack>
-        </Popover.Dropdown>
-      </Popover>
-
-      {/* Properties visibility */}
-      <Popover width={240} position="bottom-end" withArrow shadow="md">
-        <Popover.Target>
-          <UnstyledButton style={{
-            display: "flex", alignItems: "center", gap: 4, padding: "4px 8px",
-            borderRadius: 4, fontSize: 13, color: "var(--mantine-color-dimmed)",
-          }}>
-            <IconEye size={13} />
-            {hiddenPropIds.length > 0 ? `Properties (${hiddenPropIds.length} hidden)` : "Properties"}
-          </UnstyledButton>
-        </Popover.Target>
-        <Popover.Dropdown>
-          <Stack gap="xs">
-            <Text size="xs" fw={600} c="dimmed">PROPERTIES</Text>
-            {schema.filter(p => p.id !== "title").map(prop => {
-              const isVisible = !hiddenPropIds.includes(prop.id);
-              return (
-                <Group key={prop.id} justify="space-between" wrap="nowrap">
-                  <Text size="sm">{prop.name}</Text>
-                  <Switch
-                    size="xs"
-                    checked={isVisible}
-                    onChange={() => togglePropVisibility(prop.id)}
-                  />
-                </Group>
-              );
-            })}
-          </Stack>
-        </Popover.Dropdown>
-      </Popover>
+      {/* 
+        Note: The external Filter, Sort, Properties buttons are removed 
+        as they are now integrated into the View Settings popover.
+      */}
 
       {/* View Settings (3-dots) */}
-      <Popover shadow="md" width={260} position="bottom-end" withArrow>
+      <Popover shadow="md" width={320} position="bottom-end" withArrow opened={settingsOpened} onChange={setSettingsOpened}>
         <Popover.Target>
-          <UnstyledButton style={{
-            display: "flex", alignItems: "center", justifyContent: "center",
-            padding: "4px", borderRadius: 4, color: "var(--mantine-color-dimmed)",
-          }}>
+          <UnstyledButton
+            onClick={() => setSettingsOpened((o) => !o)}
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "center",
+              padding: "4px", borderRadius: 4, color: "var(--mantine-color-dimmed)",
+              background: settingsOpened ? "var(--mantine-color-default-hover)" : "transparent",
+            }}>
             <IconDots size={16} />
           </UnstyledButton>
         </Popover.Target>
-        <Popover.Dropdown p="xs">
-          <Stack gap="xs">
-            {/* Rename View */}
-            <TextInput
-              value={viewName}
-              onChange={(e) => setViewName(e.currentTarget.value)}
-              onBlur={() => onUpdateView({ name: viewName })}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.currentTarget.blur();
-                }
-              }}
-              placeholder="View name"
-              size="xs"
-              variant="filled"
-              styles={{
-                input: { fontWeight: 500 }
-              }}
-            />
-
-            <Divider my="xs" />
-
-            {/* Layout Section */}
-            <div>
-              <Group gap="xs" mb="xs" align="center">
-                <IconTable size={14} color="var(--mantine-color-dimmed)" />
-                <Text size="xs" fw={500} c="dimmed">Layout</Text>
+        <Popover.Dropdown p="md">
+          {activePage === "main" && (
+            <Stack gap="sm">
+              {/* Header */}
+              <Group justify="space-between" align="center" mb={2}>
+                <Text size="sm" fw={600} c="dimmed">View settings</Text>
+                <ActionIcon size="sm" variant="subtle" color="gray" onClick={() => setSettingsOpened(false)}>
+                  <IconX size={16} />
+                </ActionIcon>
               </Group>
-              <Group gap={6} wrap="nowrap">
-                {LAYOUT_OPTIONS.map(opt => {
-                  const isSelected = view.layout === opt.layout;
+
+              {/* Rename View */}
+              <TextInput
+                value={viewName}
+                onChange={(e) => setViewName(e.currentTarget.value)}
+                onBlur={() => onUpdateView({ name: viewName })}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.currentTarget.blur();
+                  }
+                }}
+                placeholder="View name"
+                size="xs"
+                variant="filled"
+                styles={{
+                  input: { fontWeight: 500 }
+                }}
+              />
+
+              <Divider my="xs" />
+
+              {/* Layout Section */}
+              <div>
+                <Group gap="xs" mb="xs" align="center">
+                  <IconTable size={14} color="var(--mantine-color-dimmed)" />
+                  <Text size="xs" fw={500} c="dimmed">Layout</Text>
+                </Group>
+                <Group gap={6} wrap="nowrap">
+                  {LAYOUT_OPTIONS.map(opt => {
+                    const isSelected = view.layout === opt.layout;
+                    return (
+                      <UnstyledButton
+                        key={opt.layout}
+                        onClick={() => handleLayoutChange(opt.layout)}
+                        style={{
+                          flex: 1,
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          padding: "6px 4px",
+                          borderRadius: 6,
+                          background: isSelected ? "var(--mantine-color-blue-light)" : "transparent",
+                          color: isSelected ? "var(--mantine-color-blue-filled)" : "var(--mantine-color-dimmed)",
+                          transition: "background 0.15s",
+                        }}
+                        onMouseEnter={e => {
+                          if (!isSelected) e.currentTarget.style.background = "var(--mantine-color-default-hover)";
+                        }}
+                        onMouseLeave={e => {
+                          if (!isSelected) e.currentTarget.style.background = "transparent";
+                        }}
+                      >
+                        <div style={{ marginBottom: 4 }}>
+                          {opt.icon}
+                        </div>
+                        <Text size="xs" fw={isSelected ? 600 : 400} style={{ fontSize: 11 }}>
+                          {opt.label}
+                        </Text>
+                      </UnstyledButton>
+                    );
+                  })}
+                </Group>
+              </div>
+
+              <Divider my="xs" />
+
+              {/* Settings Menu */}
+              <Stack gap={2}>
+                <MenuItem 
+                  icon={<IconEye size={16} />} 
+                  label="Properties" 
+                  subtext={`${visiblePropsCount} shown`}
+                  onClick={() => setActivePage("properties")} 
+                />
+                <MenuItem 
+                  icon={<IconFilter size={16} />} 
+                  label="Filter" 
+                  subtext={hasFilters ? `${view.filter!.length} active` : ""}
+                  onClick={() => setActivePage("filter")} 
+                />
+                <MenuItem 
+                  icon={<IconArrowsSort size={16} />} 
+                  label="Sort" 
+                  subtext={hasSorts ? `${view.sort!.length} active` : ""}
+                  onClick={() => setActivePage("sort")} 
+                />
+              </Stack>
+
+              {/* Delete View */}
+              {onDeleteView && (
+                <>
+                  <Divider my="xs" />
+                  <MenuItem 
+                    icon={<IconTrash size={16} />} 
+                    label="Delete view" 
+                    color="red"
+                    onClick={onDeleteView} 
+                  />
+                </>
+              )}
+            </Stack>
+          )}
+
+          {activePage === "properties" && (
+            <Stack gap="sm">
+              <Group gap="xs" align="center" mb={2}>
+                <ActionIcon size="sm" variant="subtle" color="gray" onClick={() => setActivePage("main")}>
+                  <IconChevronLeft size={16} />
+                </ActionIcon>
+                <Text size="sm" fw={600} c="dimmed">Properties</Text>
+              </Group>
+              <Divider mb="xs" />
+              <Stack gap="xs">
+                {schema.filter(p => p.id !== "title").map(prop => {
+                  const isVisible = !hiddenPropIds.includes(prop.id);
                   return (
-                    <UnstyledButton
-                      key={opt.layout}
-                      onClick={() => handleLayoutChange(opt.layout)}
-                      style={{
-                        flex: 1,
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        padding: "6px 4px",
-                        borderRadius: 6,
-                        background: isSelected ? "var(--mantine-color-blue-light)" : "transparent",
-                        color: isSelected ? "var(--mantine-color-blue-filled)" : "var(--mantine-color-dimmed)",
-                        transition: "background 0.15s",
-                      }}
-                      onMouseEnter={e => {
-                        if (!isSelected) e.currentTarget.style.background = "var(--mantine-color-default-hover)";
-                      }}
-                      onMouseLeave={e => {
-                        if (!isSelected) e.currentTarget.style.background = "transparent";
-                      }}
-                    >
-                      <div style={{ marginBottom: 4 }}>
-                        {opt.icon}
-                      </div>
-                      <Text size="xs" fw={isSelected ? 600 : 400} style={{ fontSize: 11 }}>
-                        {opt.label}
-                      </Text>
-                    </UnstyledButton>
+                    <Group key={prop.id} justify="space-between" wrap="nowrap">
+                      <Text size="sm">{prop.name}</Text>
+                      <Switch
+                        size="xs"
+                        checked={isVisible}
+                        onChange={() => togglePropVisibility(prop.id)}
+                      />
+                    </Group>
                   );
                 })}
-              </Group>
-            </div>
+              </Stack>
+            </Stack>
+          )}
 
-            {/* Delete View */}
-            {onDeleteView && (
-              <>
-                <Divider my="xs" />
-                <UnstyledButton
-                  onClick={onDeleteView}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 8,
-                    padding: "6px 8px", borderRadius: 4,
-                    color: "var(--mantine-color-red-filled)",
-                    fontSize: 13, fontWeight: 500,
-                  }}
-                  onMouseEnter={e => e.currentTarget.style.background = "var(--mantine-color-red-light)"}
-                  onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                >
-                  <IconTrash size={14} />
-                  Delete view
+          {activePage === "filter" && (
+            <Stack gap="sm">
+              <Group gap="xs" align="center" mb={2}>
+                <ActionIcon size="sm" variant="subtle" color="gray" onClick={() => setActivePage("main")}>
+                  <IconChevronLeft size={16} />
+                </ActionIcon>
+                <Text size="sm" fw={600} c="dimmed">Filter</Text>
+              </Group>
+              <Divider mb="xs" />
+              {(!view.filter || view.filter.length === 0)
+                ? <Text size="xs" c="dimmed">No filters applied to this view.</Text>
+                : <Text size="xs" c="dimmed">{view.filter.length} active filter(s)</Text>
+              }
+              <Group justify="center" mt="sm">
+                <UnstyledButton style={{ display: "flex", alignItems: "center", gap: 4, color: "var(--mantine-color-blue-filled)", fontSize: 13, fontWeight: 500 }}>
+                  <IconPlus size={14} /> Add filter
                 </UnstyledButton>
-              </>
-            )}
-          </Stack>
+              </Group>
+            </Stack>
+          )}
+
+          {activePage === "sort" && (
+            <Stack gap="sm">
+              <Group gap="xs" align="center" mb={2}>
+                <ActionIcon size="sm" variant="subtle" color="gray" onClick={() => setActivePage("main")}>
+                  <IconChevronLeft size={16} />
+                </ActionIcon>
+                <Text size="sm" fw={600} c="dimmed">Sort</Text>
+              </Group>
+              <Divider mb="xs" />
+              {(!view.sort || view.sort.length === 0)
+                ? <Text size="xs" c="dimmed">No sorts applied to this view.</Text>
+                : <Text size="xs" c="dimmed">{view.sort.length} active sort(s)</Text>
+              }
+              <Group justify="center" mt="sm">
+                <UnstyledButton style={{ display: "flex", alignItems: "center", gap: 4, color: "var(--mantine-color-blue-filled)", fontSize: 13, fontWeight: 500 }}>
+                  <IconPlus size={14} /> Add sort
+                </UnstyledButton>
+              </Group>
+            </Stack>
+          )}
+
         </Popover.Dropdown>
       </Popover>
 

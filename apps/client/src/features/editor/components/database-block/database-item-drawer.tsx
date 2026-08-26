@@ -1,9 +1,10 @@
 import { DatabaseRow, DatabasePropertySchema } from "@docmost/editor-ext";
-import { Drawer, Text, Group, ActionIcon, Tooltip, Loader, Menu, UnstyledButton, Avatar } from "@mantine/core";
-import {
+import { Drawer, ActionIcon, Menu, UnstyledButton, Text, Group, Divider, Tooltip, Progress, Slider, Popover, Loader, Avatar } from "@mantine/core";
+import { 
   IconX, IconShare, IconStar, IconDots, IconCalendar, IconUser,
   IconCircleDot, IconPlus, IconMaximize, IconFileText, IconTextSize,
-  IconChevronsRight, IconClock, IconLink
+  IconChevronsRight, IconClock, IconLink, IconPercentage,
+  IconHash, IconLayoutBoard, IconCheckbox, IconMail, IconPhone
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -130,12 +131,6 @@ export default function DatabaseRowDrawer({
     const value = item.properties[prop.id];
     const active = prop.options?.find(o => o.id === value);
     
-    const todoOptions = prop.options?.filter(o => o.label.toLowerCase().includes('not started') || o.label.toLowerCase().includes('to-do')) || [];
-    const inProgressOptions = prop.options?.filter(o => o.label.toLowerCase().includes('progress')) || [];
-    const doneOptions = prop.options?.filter(o => o.label.toLowerCase().includes('done') || o.label.toLowerCase().includes('complete')) || [];
-    
-    const hasGroups = todoOptions.length > 0 || inProgressOptions.length > 0 || doneOptions.length > 0;
-
     return (
       <Menu withinPortal position="bottom-start" width={220}>
         <Menu.Target>
@@ -151,48 +146,14 @@ export default function DatabaseRowDrawer({
           </UnstyledButton>
         </Menu.Target>
         <Menu.Dropdown>
-          {hasGroups ? (
-            <>
-              {todoOptions.length > 0 && <Menu.Label>To-do</Menu.Label>}
-              {todoOptions.map(opt => (
-                <Menu.Item key={opt.id} onClick={() => updateProperty(prop.id, opt.id)}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: `var(--mantine-color-${opt.color}-filled)` }} />
-                    <span style={{ fontSize: 13 }}>{opt.label}</span>
-                  </div>
-                </Menu.Item>
-              ))}
-              
-              {inProgressOptions.length > 0 && <Menu.Label>In progress</Menu.Label>}
-              {inProgressOptions.map(opt => (
-                <Menu.Item key={opt.id} onClick={() => updateProperty(prop.id, opt.id)}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: `var(--mantine-color-${opt.color}-filled)` }} />
-                    <span style={{ fontSize: 13 }}>{opt.label}</span>
-                  </div>
-                </Menu.Item>
-              ))}
-
-              {doneOptions.length > 0 && <Menu.Label>Complete</Menu.Label>}
-              {doneOptions.map(opt => (
-                <Menu.Item key={opt.id} onClick={() => updateProperty(prop.id, opt.id)}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: `var(--mantine-color-${opt.color}-filled)` }} />
-                    <span style={{ fontSize: 13 }}>{opt.label}</span>
-                  </div>
-                </Menu.Item>
-              ))}
-            </>
-          ) : (
-            prop.options?.map(opt => (
-              <Menu.Item key={opt.id} onClick={() => updateProperty(prop.id, opt.id)}>
-                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: `var(--mantine-color-${opt.color}-filled)` }} />
-                  <span style={{ fontSize: 13 }}>{opt.label}</span>
-                </div>
-              </Menu.Item>
-            ))
-          )}
+          {prop.options?.map(opt => (
+            <Menu.Item key={opt.id} onClick={() => updateProperty(prop.id, opt.id)}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <div style={{ width: 8, height: 8, borderRadius: "50%", background: `var(--mantine-color-${opt.color}-filled)` }} />
+                <span style={{ fontSize: 13 }}>{opt.label}</span>
+              </div>
+            </Menu.Item>
+          ))}
         </Menu.Dropdown>
       </Menu>
     );
@@ -204,6 +165,74 @@ export default function DatabaseRowDrawer({
       case "date": return renderDateProp(prop.id);
       case "status":
       case "select": return renderStatusProp(prop);
+      case "multi_select": {
+        const selectedIds = Array.isArray(value) ? value : [];
+        return (
+          <Menu withinPortal position="bottom-start" width={220} closeOnItemClick={false}>
+            <Menu.Target>
+              <UnstyledButton style={{ display: "flex", flexWrap: "wrap", gap: 4, padding: "4px 0", minHeight: 24, width: "100%" }}>
+                {selectedIds.length > 0 ? (
+                  selectedIds.map((id: string) => {
+                    const option = prop.options?.find(o => o.id === id);
+                    if (!option) return null;
+                    return (
+                      <div key={id} style={{ display: "flex", alignItems: "center", gap: 6, borderRadius: 14, padding: "2px 8px 2px 6px", fontSize: 13, background: `var(--mantine-color-${option.color}-filled)`, color: "white", opacity: 0.85 }}>
+                        <div style={{ width: 8, height: 8, borderRadius: "50%", background: "white", opacity: 0.8 }} />
+                        {option.label}
+                      </div>
+                    );
+                  })
+                ) : (
+                  <span style={{ fontSize: 13, color: "var(--mantine-color-dimmed)" }}>Empty</span>
+                )}
+              </UnstyledButton>
+            </Menu.Target>
+            <Menu.Dropdown>
+              {prop.options?.map(opt => {
+                const isSelected = selectedIds.includes(opt.id);
+                return (
+                  <Menu.Item
+                    key={opt.id}
+                    onClick={() => {
+                      if (isSelected) updateProperty(prop.id, selectedIds.filter((id: string) => id !== opt.id));
+                      else updateProperty(prop.id, [...selectedIds, opt.id]);
+                    }}
+                    leftSection={<input type="checkbox" checked={isSelected} readOnly style={{ pointerEvents: "none" }} />}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: `var(--mantine-color-${opt.color}-filled)` }} />
+                      <span style={{ fontSize: 13 }}>{opt.label}</span>
+                    </div>
+                  </Menu.Item>
+                );
+              })}
+            </Menu.Dropdown>
+          </Menu>
+        );
+      }
+      case "checkbox":
+        return (
+          <input
+            type="checkbox"
+            checked={!!value}
+            onChange={e => updateProperty(prop.id, e.target.checked)}
+            style={{ cursor: "pointer", width: 16, height: 16 }}
+          />
+        );
+      case "number":
+        return (
+          <input type="number" value={value ?? ""} onChange={e => updateProperty(prop.id, e.target.value === "" ? null : Number(e.target.value))}
+            placeholder="0"
+            style={{ border: "none", background: "transparent", color: "inherit", outline: "none", fontFamily: "inherit", fontSize: 13, width: "100%", height: "100%" }} />
+        );
+      case "url":
+      case "email":
+      case "phone":
+        return (
+          <input type={prop.type === "url" ? "url" : prop.type === "email" ? "email" : "tel"} value={value || ""} onChange={e => updateProperty(prop.id, e.target.value)}
+            placeholder="Empty"
+            style={{ border: "none", background: "transparent", color: "inherit", outline: "none", fontFamily: "inherit", fontSize: 13, width: "100%", height: "100%" }} />
+        );
       case "user":
         return (
           <Menu withinPortal position="bottom-start" width={220} onClose={() => setUserSearchQuery("")}>
@@ -248,6 +277,31 @@ export default function DatabaseRowDrawer({
             </Menu.Dropdown>
           </Menu>
         );
+      case "progress":
+        const val = typeof value === "number" ? value : 0;
+        return (
+          <Popover width={240} position="bottom-start" withArrow shadow="md">
+            <Popover.Target>
+              <UnstyledButton style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, height: "100%" }}>
+                <Progress value={val} size="md" style={{ flex: 1 }} color={val === 100 ? "green" : "blue"} />
+                <span style={{ fontSize: 13, color: "var(--mantine-color-dimmed)", width: 36, textAlign: "right" }}>{val}%</span>
+              </UnstyledButton>
+            </Popover.Target>
+            <Popover.Dropdown>
+              <Text size="xs" fw={500} mb="sm" c="dimmed">Set Progress</Text>
+              <Slider
+                value={val}
+                onChange={(v) => updateProperty(prop.id, v)}
+                marks={[
+                  { value: 0, label: "0%" },
+                  { value: 50, label: "50%" },
+                  { value: 100, label: "100%" }
+                ]}
+                mb="xl"
+              />
+            </Popover.Dropdown>
+          </Popover>
+        );
       case "text":
       default:
         return (
@@ -262,7 +316,7 @@ export default function DatabaseRowDrawer({
     const icons: Record<string, JSX.Element> = {
       date: <IconCalendar size={14} />, user: <IconUser size={14} />,
       status: <IconCircleDot size={14} />, select: <IconCircleDot size={14} />,
-      text: <IconTextSize size={14} />,
+      text: <IconTextSize size={14} />, progress: <IconPercentage size={14} />
     };
     return icons[type] ?? <IconFileText size={14} />;
   };
@@ -287,24 +341,21 @@ export default function DatabaseRowDrawer({
     >
       {/* ══ TOP BAR ══ */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 16px", flexShrink: 0, position: "sticky", top: 0, background: "var(--mantine-color-body)", zIndex: 10 }}>
-        {/* Left: Open as Page */}
+        {/* Left: Close & Open as Page */}
         <Group gap={4}>
+          <ActionIcon variant="subtle" size="sm" c="dimmed" onClick={onClose} title="Close side peek" style={{ marginRight: 4 }}>
+            <IconChevronsRight size={16} />
+          </ActionIcon>
           <Tooltip label="Open as page" position="bottom" withArrow>
             <ActionIcon variant="subtle" size="sm" c="dimmed"><IconMaximize size={15} /></ActionIcon>
           </Tooltip>
         </Group>
 
-        {/* Right: Actions & Close */}
+        {/* Right: Actions */}
         <Group gap={6}>
-          <Text size="xs" c="dimmed" style={{ marginRight: 8, display: "flex", alignItems: "center", gap: 4 }}>
+          <Text size="xs" c="dimmed" style={{ display: "flex", alignItems: "center", gap: 4 }}>
             <IconClock size={12} /> Edited just now
           </Text>
-          <ActionIcon variant="subtle" size="sm" c="dimmed" title="Share"><IconShare size={15} /></ActionIcon>
-          <ActionIcon variant="subtle" size="sm" c="dimmed" title="Favorite"><IconStar size={15} /></ActionIcon>
-          <ActionIcon variant="subtle" size="sm" c="dimmed" title="More"><IconDots size={15} /></ActionIcon>
-          <ActionIcon variant="subtle" size="sm" c="dimmed" onClick={onClose} title="Close side peek" style={{ marginLeft: 4 }}>
-            <IconChevronsRight size={16} />
-          </ActionIcon>
         </Group>
       </div>
 
@@ -353,10 +404,17 @@ export default function DatabaseRowDrawer({
           <Menu.Dropdown>
             <Menu.Label>Type</Menu.Label>
             <Menu.Item leftSection={<IconTextSize size={14} />} onClick={() => onAddProperty?.("text")}>Text</Menu.Item>
+            <Menu.Item leftSection={<IconHash size={14} />} onClick={() => onAddProperty?.("number")}>Number</Menu.Item>
             <Menu.Item leftSection={<IconCalendar size={14} />} onClick={() => onAddProperty?.("date")}>Date</Menu.Item>
             <Menu.Item leftSection={<IconCircleDot size={14} />} onClick={() => onAddProperty?.("status")}>Status</Menu.Item>
+            <Menu.Item leftSection={<IconCircleDot size={14} />} onClick={() => onAddProperty?.("select")}>Select</Menu.Item>
+            <Menu.Item leftSection={<IconLayoutBoard size={14} />} onClick={() => onAddProperty?.("multi_select")}>Multi-select</Menu.Item>
+            <Menu.Item leftSection={<IconCheckbox size={14} />} onClick={() => onAddProperty?.("checkbox")}>Checkbox</Menu.Item>
+            <Menu.Item leftSection={<IconPercentage size={14} />} onClick={() => onAddProperty?.("progress")}>Progress</Menu.Item>
             <Menu.Item leftSection={<IconUser size={14} />} onClick={() => onAddProperty?.("user")}>Person</Menu.Item>
-            <Menu.Item leftSection={<IconLink size={14} />} onClick={() => onAddProperty?.("text")}>Connection</Menu.Item>
+            <Menu.Item leftSection={<IconLink size={14} />} onClick={() => onAddProperty?.("url")}>URL</Menu.Item>
+            <Menu.Item leftSection={<IconMail size={14} />} onClick={() => onAddProperty?.("email")}>Email</Menu.Item>
+            <Menu.Item leftSection={<IconPhone size={14} />} onClick={() => onAddProperty?.("phone")}>Phone</Menu.Item>
           </Menu.Dropdown>
         </Menu>
 

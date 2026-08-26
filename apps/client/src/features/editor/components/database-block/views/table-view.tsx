@@ -1,6 +1,6 @@
-import { Table, UnstyledButton, Menu, Badge } from "@mantine/core";
+import { Table, UnstyledButton, Menu, Badge, Popover, Progress, Slider, Text } from "@mantine/core";
 import { DatabaseRow, DatabasePropertySchema } from "@docmost/editor-ext";
-import { IconPlus } from "@tabler/icons-react";
+import { IconPlus, IconTextSize, IconCalendar, IconCircleDot, IconUser, IconLink, IconHash, IconLayoutBoard, IconCheckbox, IconPercentage, IconMail, IconPhone } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 import { useRef, useState } from "react";
 import dayjs from "dayjs";
@@ -12,9 +12,10 @@ interface TableViewProps {
   onUpdateItem: (item: DatabaseRow) => void;
   onOpenItem: (itemId: string) => void;
   onAddRow?: () => void;
+  onAddProperty?: (type: string) => void;
 }
 
-export default function TableView({ items, properties, visiblePropIds, onUpdateItem, onOpenItem, onAddRow }: TableViewProps) {
+export default function TableView({ items, properties, visiblePropIds, onUpdateItem, onOpenItem, onAddRow, onAddProperty }: TableViewProps) {
   const { t } = useTranslation();
 
   // Filter visible columns. If no visibility list, show all.
@@ -108,6 +109,58 @@ export default function TableView({ items, properties, visiblePropIds, onUpdateI
       );
     }
 
+    // Multi-Select
+    if (prop.type === "multi_select") {
+      const selectedIds = Array.isArray(value) ? value : [];
+      return (
+        <Menu withinPortal position="bottom-start" width={200} closeOnItemClick={false}>
+          <Menu.Target>
+            <UnstyledButton style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+              {selectedIds.length > 0 ? (
+                selectedIds.map((id: string) => {
+                  const option = prop.options?.find(o => o.id === id);
+                  if (!option) return null;
+                  return (
+                    <Badge
+                      key={id}
+                      size="sm"
+                      variant="light"
+                      color={option.color}
+                      style={{ cursor: "pointer" }}
+                    >
+                      {option.label}
+                    </Badge>
+                  );
+                })
+              ) : (
+                <span style={{ fontSize: 12, color: "var(--mantine-color-dimmed)" }}>Empty</span>
+              )}
+            </UnstyledButton>
+          </Menu.Target>
+          <Menu.Dropdown>
+            {prop.options?.map(opt => {
+              const isSelected = selectedIds.includes(opt.id);
+              return (
+                <Menu.Item
+                  key={opt.id}
+                  onClick={() => {
+                    if (isSelected) {
+                      updateProp(item, prop.id, selectedIds.filter((id: string) => id !== opt.id));
+                    } else {
+                      updateProp(item, prop.id, [...selectedIds, opt.id]);
+                    }
+                  }}
+                  leftSection={<input type="checkbox" checked={isSelected} readOnly style={{ pointerEvents: "none" }} />}
+                >
+                  <Badge size="sm" variant="light" color={opt.color}>{opt.label}</Badge>
+                </Menu.Item>
+              );
+            })}
+          </Menu.Dropdown>
+        </Menu>
+      );
+    }
+
     // User — show name
     if (prop.type === "user") {
       const userName = typeof value === "object" && value !== null ? value.name : value;
@@ -123,6 +176,34 @@ export default function TableView({ items, properties, visiblePropIds, onUpdateI
           onChange={e => updateProp(item, prop.id, e.target.checked)}
           style={{ cursor: "pointer", width: 16, height: 16 }}
         />
+      );
+    }
+
+    // Progress
+    if (prop.type === "progress") {
+      const val = typeof value === "number" ? value : 0;
+      return (
+        <Popover width={200} position="bottom" withArrow shadow="md">
+          <Popover.Target>
+            <UnstyledButton style={{ width: "100%", display: "flex", alignItems: "center", gap: 8 }}>
+              <Progress value={val} size="sm" style={{ flex: 1 }} color={val === 100 ? "green" : "blue"} />
+              <span style={{ fontSize: 12, color: "var(--mantine-color-dimmed)", width: 28, textAlign: "right" }}>{val}%</span>
+            </UnstyledButton>
+          </Popover.Target>
+          <Popover.Dropdown>
+            <Text size="xs" fw={500} mb="xs" c="dimmed">Set Progress</Text>
+            <Slider
+              value={val}
+              onChange={(v) => updateProp(item, prop.id, v)}
+              marks={[
+                { value: 0, label: "0%" },
+                { value: 50, label: "50%" },
+                { value: 100, label: "100%" }
+              ]}
+              mb="xl"
+            />
+          </Popover.Dropdown>
+        </Popover>
       );
     }
 
@@ -180,6 +261,30 @@ export default function TableView({ items, properties, visiblePropIds, onUpdateI
                 {prop.name}
               </Table.Th>
             ))}
+            <Table.Th style={{ width: 40, padding: 0 }}>
+              <Menu withinPortal position="bottom-start" width={220}>
+                <Menu.Target>
+                  <UnstyledButton style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "100%", height: 32, color: "var(--mantine-color-dimmed)" }}>
+                    <IconPlus size={16} />
+                  </UnstyledButton>
+                </Menu.Target>
+                <Menu.Dropdown>
+                  <Menu.Label>Type</Menu.Label>
+                  <Menu.Item leftSection={<IconTextSize size={14} />} onClick={() => onAddProperty?.("text")}>Text</Menu.Item>
+                  <Menu.Item leftSection={<IconHash size={14} />} onClick={() => onAddProperty?.("number")}>Number</Menu.Item>
+                  <Menu.Item leftSection={<IconCalendar size={14} />} onClick={() => onAddProperty?.("date")}>Date</Menu.Item>
+                  <Menu.Item leftSection={<IconCircleDot size={14} />} onClick={() => onAddProperty?.("status")}>Status</Menu.Item>
+                  <Menu.Item leftSection={<IconCircleDot size={14} />} onClick={() => onAddProperty?.("select")}>Select</Menu.Item>
+                  <Menu.Item leftSection={<IconLayoutBoard size={14} />} onClick={() => onAddProperty?.("multi_select")}>Multi-select</Menu.Item>
+                  <Menu.Item leftSection={<IconCheckbox size={14} />} onClick={() => onAddProperty?.("checkbox")}>Checkbox</Menu.Item>
+                  <Menu.Item leftSection={<IconPercentage size={14} />} onClick={() => onAddProperty?.("progress")}>Progress</Menu.Item>
+                  <Menu.Item leftSection={<IconUser size={14} />} onClick={() => onAddProperty?.("user")}>Person</Menu.Item>
+                  <Menu.Item leftSection={<IconLink size={14} />} onClick={() => onAddProperty?.("url")}>URL</Menu.Item>
+                  <Menu.Item leftSection={<IconMail size={14} />} onClick={() => onAddProperty?.("email")}>Email</Menu.Item>
+                  <Menu.Item leftSection={<IconPhone size={14} />} onClick={() => onAddProperty?.("phone")}>Phone</Menu.Item>
+                </Menu.Dropdown>
+              </Menu>
+            </Table.Th>
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
@@ -193,11 +298,12 @@ export default function TableView({ items, properties, visiblePropIds, onUpdateI
                   {renderCell(item, prop)}
                 </Table.Td>
               ))}
+              <Table.Td style={{ width: 40 }} />
             </Table.Tr>
           ))}
           {/* Add row */}
           <Table.Tr>
-            <Table.Td colSpan={visibleProps.length}>
+            <Table.Td colSpan={visibleProps.length + 1}>
               <UnstyledButton
                 onClick={onAddRow}
                 style={{
@@ -214,7 +320,7 @@ export default function TableView({ items, properties, visiblePropIds, onUpdateI
           {items.length === 0 && (
             <Table.Tr>
               <Table.Td
-                colSpan={visibleProps.length}
+                colSpan={visibleProps.length + 1}
                 style={{ textAlign: "center", color: "var(--mantine-color-dimmed)", padding: "32px 0", fontSize: 13 }}
               >
                 {t("No items yet. Click \"New\" to add one.")}
