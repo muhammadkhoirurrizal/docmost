@@ -1,9 +1,8 @@
 import { NodeViewWrapper, NodeViewProps } from "@tiptap/react";
 import { useTranslation } from "react-i18next";
-import { ActionIcon, Menu, UnstyledButton, Button } from "@mantine/core";
+import { ActionIcon, UnstyledButton, Button } from "@mantine/core";
 import {
-  IconDots, IconTable, IconCalendar, IconTimeline, IconPlus,
-  IconSearch, IconFilter, IconArrowsSort, IconChevronDown
+  IconTable, IconCalendar, IconTimeline, IconColumns, IconPlus, IconChevronDown
 } from "@tabler/icons-react";
 import { useState } from "react";
 import TableView from "./views/table-view";
@@ -19,6 +18,7 @@ import dayjs from "dayjs";
 
 const VIEW_ICONS: Record<string, JSX.Element> = {
   table: <IconTable size={14} />,
+  kanban: <IconColumns size={14} />,
   timeline: <IconTimeline size={14} />,
   calendar: <IconCalendar size={14} />,
 };
@@ -39,6 +39,12 @@ export default function DatabaseBlockView(props: NodeViewProps) {
   const filteredItems = applyFilters(items, activeView.filter || [], properties);
   const processedItems = applySorts(filteredItems, activeView.sort || [], properties);
 
+  // Compute which property IDs are visible in this view
+  // visibility = [] means all visible; otherwise it's an explicit allow-list
+  const visiblePropIds: string[] | undefined = (activeView.visibility && activeView.visibility.length > 0)
+    ? activeView.visibility
+    : undefined;
+
   const updateItem = (updatedItem: DatabaseRow) => {
     const newItems = items.map(i => i.id === updatedItem.id ? updatedItem : i);
     props.updateAttributes({ rows: newItems });
@@ -47,14 +53,21 @@ export default function DatabaseBlockView(props: NodeViewProps) {
   };
 
   const addItem = () => {
+    // Generate initial properties dynamically from schema
+    const initProps: Record<string, any> = {};
+    properties.forEach(prop => {
+      if (prop.type === "date") {
+        initProps[prop.id] = { start: dayjs().toISOString(), end: dayjs().add(1, "day").toISOString() };
+      } else if (prop.type === "status" || prop.type === "select") {
+        // Default to first option if available
+        initProps[prop.id] = prop.options?.[0]?.id ?? null;
+      } else {
+        initProps[prop.id] = prop.id === "title" ? "" : null;
+      }
+    });
     const newItem: DatabaseRow = {
       id: `item-${Date.now()}`,
-      properties: {
-        title: "",
-        status: "todo",
-        date: { start: dayjs().toISOString(), end: dayjs().add(1, "day").toISOString() },
-        assignee: null,
-      },
+      properties: initProps,
       content: null,
     };
     props.updateAttributes({ rows: [...items, newItem] });
@@ -149,6 +162,10 @@ export default function DatabaseBlockView(props: NodeViewProps) {
                 const newViews = views.map(v => v.id === activeView.id ? { ...v, ...updates } : v);
                 props.updateAttributes({ views: newViews });
               }}
+              onDeleteView={views.length > 1 ? () => {
+                const newViews = views.filter(v => v.id !== activeView.id);
+                props.updateAttributes({ views: newViews, activeViewId: newViews[0].id });
+              } : undefined}
             />
             <div style={{ display: "flex", borderRadius: 6, overflow: "hidden", marginLeft: 4 }}>
               <Button
@@ -176,16 +193,40 @@ export default function DatabaseBlockView(props: NodeViewProps) {
           overflow: "hidden",
         }}>
           {activeView.layout === "table" && (
-            <TableView items={processedItems} properties={properties} onUpdateItem={updateItem} onOpenItem={openItem} />
+            <TableView
+              items={processedItems}
+              properties={properties}
+              visiblePropIds={visiblePropIds}
+              onUpdateItem={updateItem}
+              onOpenItem={openItem}
+              onAddRow={addItem}
+            />
           )}
           {activeView.layout === "kanban" && (
-            <KanbanBoard items={processedItems} properties={properties} onUpdateItem={updateItem} onOpenItem={openItem} />
+            <KanbanBoard
+              items={processedItems}
+              properties={properties}
+              visiblePropIds={visiblePropIds}
+              onUpdateItem={updateItem}
+              onOpenItem={openItem}
+              onAddRow={addItem}
+            />
           )}
           {activeView.layout === "calendar" && (
-            <CalendarView items={processedItems} properties={properties} onUpdateItem={updateItem} onOpenItem={openItem} />
+            <CalendarView
+              items={processedItems}
+              properties={properties}
+              onUpdateItem={updateItem}
+              onOpenItem={openItem}
+            />
           )}
           {activeView.layout === "timeline" && (
-            <TimelineCanvas items={processedItems} properties={properties} onUpdateItem={updateItem} onOpenItem={openItem} />
+            <TimelineCanvas
+              items={processedItems}
+              properties={properties}
+              onUpdateItem={updateItem}
+              onOpenItem={openItem}
+            />
           )}
         </div>
 

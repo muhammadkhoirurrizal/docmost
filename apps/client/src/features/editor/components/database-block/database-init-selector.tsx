@@ -8,9 +8,15 @@ interface DatabaseInitSelectorProps {
   layoutName: string;
 }
 
+const cardBase: React.CSSProperties = {
+  width: 200,
+  cursor: "pointer",
+  transition: "box-shadow 0.2s, background 0.2s",
+  borderRadius: 8,
+};
+
 export default function DatabaseInitSelector({
   onNewDatabase,
-  onSelectDataSource,
   layoutName
 }: DatabaseInitSelectorProps) {
   const { t } = useTranslation();
@@ -18,43 +24,49 @@ export default function DatabaseInitSelector({
   return (
     <div style={{
       border: "1px solid var(--mantine-color-default-border)",
-      borderRadius: "var(--mantine-radius-md)",
+      borderRadius: 8,
       padding: "24px",
       margin: "2rem 0",
       background: "var(--mantine-color-body)",
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'
     }}>
       <Text size="sm" fw={600} c="dimmed" mb="lg">
-        {t("Database")} &middot; {layoutName}
+        {t("Database")} · {layoutName}
       </Text>
       
       <Group align="flex-start" gap="md">
-        <Card 
-          withBorder 
-          padding="lg" 
-          radius="md" 
-          style={{ width: 200, cursor: "pointer", transition: "all 0.2s" }}
+        {/* New Database */}
+        <div
+          style={{
+            ...cardBase,
+            border: "1px solid var(--mantine-color-default-border)",
+            padding: 20,
+          }}
+          onMouseEnter={e => (e.currentTarget.style.background = "var(--mantine-color-default-hover)")}
+          onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
           onClick={onNewDatabase}
         >
           <Stack align="center" gap="sm">
             <IconTablePlus size={32} color="var(--mantine-color-blue-filled)" />
             <Text size="sm" fw={500}>{t("New database")}</Text>
           </Stack>
-        </Card>
+        </div>
 
-        <Card 
-          withBorder 
-          padding="lg" 
-          radius="md" 
-          style={{ width: 200, cursor: "not-allowed", opacity: 0.6 }}
-          onClick={() => {}}
+        {/* Select data source (coming soon) */}
+        <div
+          style={{
+            ...cardBase,
+            border: "1px solid var(--mantine-color-default-border)",
+            padding: 20,
+            cursor: "not-allowed",
+            opacity: 0.5,
+          }}
         >
           <Stack align="center" gap="sm">
             <IconLink size={32} color="var(--mantine-color-dimmed)" />
             <Text size="sm" fw={500} c="dimmed">{t("Select data source")}</Text>
             <Text size="xs" c="dimmed">{t("Coming soon")}</Text>
           </Stack>
-        </Card>
+        </div>
       </Group>
     </div>
   );
