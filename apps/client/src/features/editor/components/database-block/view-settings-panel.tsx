@@ -1,13 +1,13 @@
-import { Popover, UnstyledButton, Text, Group, Stack, Switch, Divider, TextInput, ActionIcon, Select } from "@mantine/core";
-import { IconFilter, IconArrowsSort, IconDots, IconTrash, IconTable, IconColumns, IconCalendar, IconTimeline, IconEye, IconEyeOff, IconX, IconChevronRight, IconChevronLeft, IconPlus } from "@tabler/icons-react";
+import { Popover, UnstyledButton, Text, Group, Stack, Switch, Divider, ActionIcon, TextInput } from "@mantine/core";
+import { IconFilter, IconArrowsSort, IconDots, IconTrash, IconTable, IconColumns, IconCalendar, IconTimeline, IconEye, IconEyeOff, IconChevronRight, IconChevronLeft, IconPlus, IconX } from "@tabler/icons-react";
+import FilterPanel from "./filter-panel";
+import SortPanel from "./sort-panel";
 import { DatabaseView, DatabasePropertySchema, DatabaseViewLayout } from "@docmost/editor-ext";
 import { useState, useEffect } from "react";
 
 interface ViewSettingsPanelProps {
   view: DatabaseView;
   schema: DatabasePropertySchema[];
-  searchQuery?: string;
-  onSearchChange?: (q: string) => void;
   onUpdateView: (updates: Partial<DatabaseView>) => void;
   onDuplicateView?: () => void;
   onDeleteView?: () => void;
@@ -16,11 +16,10 @@ interface ViewSettingsPanelProps {
 
 type SettingsPage = "main" | "properties" | "filter" | "sort" | "group" | "group-select" | "calendarBy" | "calendarEnd";
 
-export default function ViewSettingsPanel({ view, schema, searchQuery, onSearchChange, onUpdateView, onDuplicateView, onDeleteView, onCreateDateProperty }: ViewSettingsPanelProps) {
+export default function ViewSettingsPanel({ view, schema, onUpdateView, onDuplicateView, onDeleteView, onCreateDateProperty }: ViewSettingsPanelProps) {
   const [viewName, setViewName] = useState(view.name || "");
   const [settingsOpened, setSettingsOpened] = useState(false);
   const [activePage, setActivePage] = useState<SettingsPage>("main");
-  const [searchActive, setSearchActive] = useState(false);
   
   useEffect(() => { setViewName(view.name || ""); }, [view.name]);
   
@@ -114,65 +113,6 @@ export default function ViewSettingsPanel({ view, schema, searchQuery, onSearchC
 
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
-      {/* Search Input / Button */}
-      {searchActive ? (
-        <TextInput
-          size="xs"
-          placeholder="Search..."
-          value={searchQuery || ""}
-          onChange={(e) => onSearchChange?.(e.currentTarget.value)}
-          rightSection={
-            <ActionIcon size="xs" variant="transparent" c="dimmed" onClick={() => {
-              setSearchActive(false);
-              onSearchChange?.("");
-            }}>
-              <IconX size={12} />
-            </ActionIcon>
-          }
-          styles={{ input: { width: 140, transition: "width 0.2s ease" } }}
-        />
-      ) : (
-        <UnstyledButton
-          onClick={() => setSearchActive(true)}
-          style={{
-            display: "flex", alignItems: "center", justifyContent: "center",
-            padding: "4px", borderRadius: 4, color: "var(--mantine-color-dimmed)",
-          }}
-          onMouseEnter={e => e.currentTarget.style.background = "var(--mantine-color-default-hover)"}
-          onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-        >
-          <IconFilter style={{ transform: 'rotate(90deg)' }} size={16} /> {/* Using IconFilter rotated or any search icon */}
-        </UnstyledButton>
-      )}
-
-      {/* Filter Button */}
-      <UnstyledButton
-        onClick={() => { setActivePage("filter"); setSettingsOpened(true); }}
-        style={{
-          display: "flex", alignItems: "center", justifyContent: "center",
-          padding: "4px", borderRadius: 4, 
-          color: hasFilters ? "var(--mantine-color-blue-filled)" : "var(--mantine-color-dimmed)",
-        }}
-        onMouseEnter={e => e.currentTarget.style.background = "var(--mantine-color-default-hover)"}
-        onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-      >
-        <IconFilter size={16} />
-      </UnstyledButton>
-
-      {/* Sort Button */}
-      <UnstyledButton
-        onClick={() => { setActivePage("sort"); setSettingsOpened(true); }}
-        style={{
-          display: "flex", alignItems: "center", justifyContent: "center",
-          padding: "4px", borderRadius: 4, 
-          color: hasSorts ? "var(--mantine-color-blue-filled)" : "var(--mantine-color-dimmed)",
-        }}
-        onMouseEnter={e => e.currentTarget.style.background = "var(--mantine-color-default-hover)"}
-        onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-      >
-        <IconArrowsSort size={16} />
-      </UnstyledButton>
-
       {/* View Settings (3-dots) */}
       <Popover shadow="md" width={320} position="bottom-end" withArrow opened={settingsOpened} onChange={setSettingsOpened}>
         <Popover.Target>
@@ -368,82 +308,7 @@ export default function ViewSettingsPanel({ view, schema, searchQuery, onSearchC
                 <Text size="sm" fw={600} c="dimmed">Filter</Text>
               </Group>
               <Divider mb="xs" />
-              {(!view.filter || view.filter.length === 0)
-                ? <Text size="xs" c="dimmed">No filters applied to this view.</Text>
-                : <Stack gap={8}>
-                    {view.filter.map((rule, idx) => (
-                      <Group key={idx} gap={4} wrap="nowrap" align="flex-start">
-                        <Select 
-                          size="xs" 
-                          data={schema.map(p => ({ value: p.id, label: p.name }))}
-                          value={rule.propId}
-                          onChange={(v) => {
-                            if (!v) return;
-                            const newFilter = [...view.filter!];
-                            newFilter[idx] = { ...newFilter[idx], propId: v };
-                            onUpdateView({ filter: newFilter });
-                          }}
-                          styles={{ input: { width: 100 } }}
-                        />
-                        <Select 
-                          size="xs" 
-                          data={[
-                            { value: "is", label: "is" },
-                            { value: "isNot", label: "is not" },
-                            { value: "contains", label: "contains" },
-                            { value: "isEmpty", label: "is empty" },
-                            { value: "isNotEmpty", label: "is not empty" },
-                          ]}
-                          value={rule.op}
-                          onChange={(v) => {
-                            if (!v) return;
-                            const newFilter = [...view.filter!];
-                            newFilter[idx] = { ...newFilter[idx], op: v as any };
-                            onUpdateView({ filter: newFilter });
-                          }}
-                          styles={{ input: { width: 100 } }}
-                        />
-                        {!["isEmpty", "isNotEmpty"].includes(rule.op) && (
-                          <TextInput 
-                            size="xs" 
-                            placeholder="Value"
-                            value={rule.value || ""}
-                            onChange={(e) => {
-                              const newFilter = [...view.filter!];
-                              newFilter[idx] = { ...newFilter[idx], value: e.currentTarget.value };
-                              onUpdateView({ filter: newFilter });
-                            }}
-                            styles={{ input: { width: 90 } }}
-                          />
-                        )}
-                        <ActionIcon 
-                          size="xs" 
-                          color="red" 
-                          variant="subtle" 
-                          style={{ marginTop: 2 }}
-                          onClick={() => {
-                            const newFilter = [...view.filter!];
-                            newFilter.splice(idx, 1);
-                            onUpdateView({ filter: newFilter });
-                          }}
-                        >
-                          <IconTrash size={14} />
-                        </ActionIcon>
-                      </Group>
-                    ))}
-                  </Stack>
-              }
-              <Group justify="center" mt="sm">
-                <UnstyledButton 
-                  onClick={() => {
-                    const newRule = { propId: schema[0]?.id || "", op: "is" as any, value: "" };
-                    onUpdateView({ filter: [...(view.filter || []), newRule] });
-                  }}
-                  style={{ display: "flex", alignItems: "center", gap: 4, color: "var(--mantine-color-blue-filled)", fontSize: 13, fontWeight: 500 }}
-                >
-                  <IconPlus size={14} /> Add filter
-                </UnstyledButton>
-              </Group>
+              <FilterPanel view={view} schema={schema} onUpdateView={onUpdateView} />
             </Stack>
           )}
 
@@ -456,65 +321,7 @@ export default function ViewSettingsPanel({ view, schema, searchQuery, onSearchC
                 <Text size="sm" fw={600} c="dimmed">Sort</Text>
               </Group>
               <Divider mb="xs" />
-              {(!view.sort || view.sort.length === 0)
-                ? <Text size="xs" c="dimmed">No sorts applied to this view.</Text>
-                : <Stack gap={8}>
-                    {view.sort.map((rule, idx) => (
-                      <Group key={idx} gap={4} wrap="nowrap" align="center">
-                        <Select 
-                          size="xs" 
-                          data={schema.map(p => ({ value: p.id, label: p.name }))}
-                          value={rule.propId}
-                          onChange={(v) => {
-                            if (!v) return;
-                            const newSort = [...view.sort!];
-                            newSort[idx] = { ...newSort[idx], propId: v };
-                            onUpdateView({ sort: newSort });
-                          }}
-                          styles={{ input: { width: 140 } }}
-                        />
-                        <Select 
-                          size="xs" 
-                          data={[
-                            { value: "asc", label: "Ascending" },
-                            { value: "desc", label: "Descending" },
-                          ]}
-                          value={rule.dir}
-                          onChange={(v) => {
-                            if (!v) return;
-                            const newSort = [...view.sort!];
-                            newSort[idx] = { ...newSort[idx], dir: v as any };
-                            onUpdateView({ sort: newSort });
-                          }}
-                          styles={{ input: { width: 110 } }}
-                        />
-                        <ActionIcon 
-                          size="xs" 
-                          color="red" 
-                          variant="subtle" 
-                          onClick={() => {
-                            const newSort = [...view.sort!];
-                            newSort.splice(idx, 1);
-                            onUpdateView({ sort: newSort });
-                          }}
-                        >
-                          <IconTrash size={14} />
-                        </ActionIcon>
-                      </Group>
-                    ))}
-                  </Stack>
-              }
-              <Group justify="center" mt="sm">
-                <UnstyledButton 
-                  onClick={() => {
-                    const newRule = { propId: schema[0]?.id || "", dir: "asc" as any };
-                    onUpdateView({ sort: [...(view.sort || []), newRule] });
-                  }}
-                  style={{ display: "flex", alignItems: "center", gap: 4, color: "var(--mantine-color-blue-filled)", fontSize: 13, fontWeight: 500 }}
-                >
-                  <IconPlus size={14} /> Add sort
-                </UnstyledButton>
-              </Group>
+              <SortPanel view={view} schema={schema} onUpdateView={onUpdateView} />
             </Stack>
           )}
 

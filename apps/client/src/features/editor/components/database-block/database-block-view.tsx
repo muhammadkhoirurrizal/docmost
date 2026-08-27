@@ -12,6 +12,7 @@ import KanbanBoard from "./views/kanban-board";
 import DatabaseRowDrawer from "./database-item-drawer";
 import DatabaseInitSelector from "./database-init-selector";
 import ViewSettingsPanel from "./view-settings-panel";
+import DatabaseToolbar from "./database-toolbar";
 import { applyFilters, applySorts } from "./data-engine";
 import { DatabaseRow, DatabasePropertySchema, DatabaseView, createDefaultProperty, DatabasePropertyType, DatabaseViewLayout } from "@docmost/editor-ext";
 import dayjs from "dayjs";
@@ -239,11 +240,19 @@ export default function DatabaseBlockView(props: NodeViewProps) {
 
           {/* Right: Actions */}
           <div style={{ display: "flex", alignItems: "center", gap: 2, paddingRight: 8 }}>
-            <ViewSettingsPanel 
+            <DatabaseToolbar 
               view={activeView}
               schema={properties}
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
+              onUpdateView={(updates) => {
+                const newViews = views.map(v => v.id === activeView.id ? { ...v, ...updates } : v);
+                props.updateAttributes({ views: newViews });
+              }}
+            />
+            <ViewSettingsPanel 
+              view={activeView}
+              schema={properties}
               onUpdateView={(updates) => {
                 const newViews = views.map(v => v.id === activeView.id ? { ...v, ...updates } : v);
                 props.updateAttributes({ views: newViews });
