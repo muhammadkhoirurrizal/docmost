@@ -73,10 +73,11 @@ interface DatabaseRowDrawerProps {
   onUpdatePropertySchema?: (propId: string, updatedProp: DatabasePropertySchema) => void;
   onDeletePropertySchema?: (propId: string) => void;
   parentEditor?: any;
+  isTemplate?: boolean;
 }
 
 export default function DatabaseRowDrawer({
-  item, properties, opened, onClose, onUpdate, onAddProperty, onUpdatePropertySchema, onDeletePropertySchema, parentEditor
+  item, properties, opened, onClose, onUpdate, onAddProperty, onUpdatePropertySchema, onDeletePropertySchema, parentEditor, isTemplate
 }: DatabaseRowDrawerProps) {
 
   const itemRef = useRef<DatabaseRow | null>(null);

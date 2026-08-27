@@ -173,6 +173,14 @@ export const DatabaseBlock = Node.create<DatabaseBlockOptions>({
         },
         renderHTML: (attributes) => ({ "data-rows": JSON.stringify(attributes.rows) }),
       },
+      templates: {
+        default: [],
+        parseHTML: (element) => {
+          const tpls = element.getAttribute("data-templates");
+          return tpls ? JSON.parse(tpls) : null;
+        },
+        renderHTML: (attributes) => ({ "data-templates": JSON.stringify(attributes.templates) }),
+      },
     };
   },
 
