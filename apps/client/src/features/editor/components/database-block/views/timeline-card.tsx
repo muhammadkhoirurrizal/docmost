@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { DatabaseItem } from "@docmost/editor-ext";
+import { DatabaseRow } from "@docmost/editor-ext";
 import dayjs from "dayjs";
 
 export const ROW_HEIGHT = 44;
@@ -7,7 +7,7 @@ export const ROW_GAP = 8;
 export const TOP_PAD = 10;
 
 interface TimelineCardProps {
-  item: DatabaseItem;
+  item: DatabaseRow;
   startDate: dayjs.Dayjs;
   rowIndex: number;
   statusColor: string;

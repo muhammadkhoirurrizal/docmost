@@ -1,54 +1,76 @@
 import { NodeViewWrapper, NodeViewProps } from "@tiptap/react";
 import { useTranslation } from "react-i18next";
-import { ActionIcon, Menu, UnstyledButton, Button } from "@mantine/core";
+import { ActionIcon, UnstyledButton, Button } from "@mantine/core";
 import {
-  IconDots, IconTable, IconCalendar, IconTimeline, IconPlus,
-  IconSearch, IconFilter, IconArrowsSort, IconChevronDown
+  IconTable, IconCalendar, IconTimeline, IconColumns, IconPlus, IconChevronDown
 } from "@tabler/icons-react";
 import { useState } from "react";
 import TableView from "./views/table-view";
 import CalendarView from "./views/calendar-view";
 import TimelineCanvas from "./views/timeline-canvas";
-import DatabaseItemDrawer from "./database-item-drawer";
-import { DatabaseItem, DatabaseProperty, DatabaseView, createDefaultProperty, DatabasePropertyType } from "@docmost/editor-ext";
+import KanbanBoard from "./views/kanban-board";
+import DatabaseRowDrawer from "./database-item-drawer";
+import DatabaseInitSelector from "./database-init-selector";
+import ViewSettingsPanel from "./view-settings-panel";
+import { applyFilters, applySorts } from "./data-engine";
+import { DatabaseRow, DatabasePropertySchema, DatabaseView, createDefaultProperty, DatabasePropertyType } from "@docmost/editor-ext";
 import dayjs from "dayjs";
 
 const VIEW_ICONS: Record<string, JSX.Element> = {
   table: <IconTable size={14} />,
+  kanban: <IconColumns size={14} />,
   timeline: <IconTimeline size={14} />,
   calendar: <IconCalendar size={14} />,
 };
 
 export default function DatabaseBlockView(props: NodeViewProps) {
   const { t } = useTranslation();
-  const [selectedItem, setSelectedItem] = useState<DatabaseItem | null>(null);
+  const [selectedItem, setSelectedItem] = useState<DatabaseRow | null>(null);
 
   const attrs = props.node.attrs;
-  const properties = attrs.properties as DatabaseProperty[];
-  const items = attrs.items as DatabaseItem[];
+  const properties = attrs.schema as DatabasePropertySchema[];
+  const items = attrs.rows as DatabaseRow[];
   const views = attrs.views as DatabaseView[];
   const activeViewId = attrs.activeViewId as string;
+  const isUninitialized = attrs.isUninitialized as boolean;
   const activeView = views.find(v => v.id === activeViewId) || views[0];
 
-  const updateItem = (updatedItem: DatabaseItem) => {
+  // Process data with engine
+  const filteredItems = applyFilters(items, activeView.filter || [], properties);
+  const processedItems = applySorts(filteredItems, activeView.sort || [], properties);
+
+  // Compute which property IDs are visible in this view
+  // visibility = [] means all visible; otherwise it's an explicit allow-list
+  const visiblePropIds: string[] | undefined = (activeView.visibility && activeView.visibility.length > 0)
+    ? activeView.visibility
+    : undefined;
+
+  const updateItem = (updatedItem: DatabaseRow) => {
     const newItems = items.map(i => i.id === updatedItem.id ? updatedItem : i);
-    props.updateAttributes({ items: newItems });
+    props.updateAttributes({ rows: newItems });
     // keep selectedItem in sync if it's the one being updated
     if (selectedItem?.id === updatedItem.id) setSelectedItem(updatedItem);
   };
 
   const addItem = () => {
-    const newItem: DatabaseItem = {
+    // Generate initial properties dynamically from schema
+    const initProps: Record<string, any> = {};
+    properties.forEach(prop => {
+      if (prop.type === "date") {
+        initProps[prop.id] = { start: dayjs().toISOString(), end: dayjs().add(1, "day").toISOString() };
+      } else if (prop.type === "status" || prop.type === "select") {
+        // Default to first option if available
+        initProps[prop.id] = prop.options?.[0]?.id ?? null;
+      } else {
+        initProps[prop.id] = prop.id === "title" ? "" : null;
+      }
+    });
+    const newItem: DatabaseRow = {
       id: `item-${Date.now()}`,
-      properties: {
-        title: "",
-        status: "todo",
-        date: { start: dayjs().toISOString(), end: dayjs().add(1, "day").toISOString() },
-        assignee: null,
-      },
+      properties: initProps,
       content: null,
     };
-    props.updateAttributes({ items: [...items, newItem] });
+    props.updateAttributes({ rows: [...items, newItem] });
     setSelectedItem(newItem);
   };
 
@@ -56,6 +78,24 @@ export default function DatabaseBlockView(props: NodeViewProps) {
     const found = items.find(i => i.id === id) || null;
     setSelectedItem(found);
   };
+
+  if (isUninitialized) {
+    return (
+      <NodeViewWrapper
+        className="database-block"
+        data-drag-handle="true"
+        style={{ width: "100%", margin: "2rem 0" }}
+      >
+        <DatabaseInitSelector 
+          layoutName={activeView.name}
+          onNewDatabase={() => {
+            props.updateAttributes({ isUninitialized: false });
+          }}
+          onSelectDataSource={() => {}}
+        />
+      </NodeViewWrapper>
+    );
+  }
 
   return (
     <NodeViewWrapper
@@ -102,7 +142,7 @@ export default function DatabaseBlockView(props: NodeViewProps) {
                     transition: "color .1s ease",
                   }}
                 >
-                  {VIEW_ICONS[view.type]}
+                  {VIEW_ICONS[view.layout]}
                   {view.name}
                   {isActive && <IconChevronDown size={12} style={{ opacity: 0.5 }} />}
                 </UnstyledButton>
@@ -115,24 +155,18 @@ export default function DatabaseBlockView(props: NodeViewProps) {
 
           {/* Right: Actions */}
           <div style={{ display: "flex", alignItems: "center", gap: 2, paddingRight: 8 }}>
-            <UnstyledButton style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 8px", borderRadius: 4, fontSize: 13, color: "var(--mantine-color-dimmed)" }}>
-              <IconFilter size={13} /> Filter
-            </UnstyledButton>
-            <UnstyledButton style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 8px", borderRadius: 4, fontSize: 13, color: "var(--mantine-color-dimmed)" }}>
-              <IconArrowsSort size={13} /> Sort
-            </UnstyledButton>
-            <ActionIcon variant="subtle" size="sm" c="dimmed">
-              <IconSearch size={14} />
-            </ActionIcon>
-            <Menu withinPortal position="bottom-end" shadow="sm">
-              <Menu.Target>
-                <ActionIcon variant="subtle" size="sm" c="dimmed"><IconDots size={14} /></ActionIcon>
-              </Menu.Target>
-              <Menu.Dropdown>
-                <Menu.Item color="red" onClick={() => (props as any).deleteNode()}>Delete Database</Menu.Item>
-              </Menu.Dropdown>
-            </Menu>
-            {/* Blue "New" button with dropdown */}
+            <ViewSettingsPanel 
+              view={activeView}
+              schema={properties}
+              onUpdateView={(updates) => {
+                const newViews = views.map(v => v.id === activeView.id ? { ...v, ...updates } : v);
+                props.updateAttributes({ views: newViews });
+              }}
+              onDeleteView={views.length > 1 ? () => {
+                const newViews = views.filter(v => v.id !== activeView.id);
+                props.updateAttributes({ views: newViews, activeViewId: newViews[0].id });
+              } : undefined}
+            />
             <div style={{ display: "flex", borderRadius: 6, overflow: "hidden", marginLeft: 4 }}>
               <Button
                 size="xs"
@@ -158,20 +192,51 @@ export default function DatabaseBlockView(props: NodeViewProps) {
           borderRadius: "0 0 var(--mantine-radius-md) var(--mantine-radius-md)",
           overflow: "hidden",
         }}>
-          {activeView.type === "table" && (
-            <TableView items={items} properties={properties} onUpdateItem={updateItem} onOpenItem={openItem} />
+          {activeView.layout === "table" && (
+            <TableView
+              items={processedItems}
+              properties={properties}
+              visiblePropIds={visiblePropIds}
+              onUpdateItem={updateItem}
+              onOpenItem={openItem}
+              onAddRow={addItem}
+              onAddProperty={(type) => {
+                const newProp = createDefaultProperty(type as DatabasePropertyType);
+                props.updateAttributes({ schema: [...properties, newProp] });
+              }}
+            />
           )}
-          {activeView.type === "calendar" && (
-            <CalendarView items={items} properties={properties} onUpdateItem={updateItem} onOpenItem={openItem} />
+          {activeView.layout === "kanban" && (
+            <KanbanBoard
+              items={processedItems}
+              properties={properties}
+              visiblePropIds={visiblePropIds}
+              onUpdateItem={updateItem}
+              onOpenItem={openItem}
+              onAddRow={addItem}
+            />
           )}
-          {activeView.type === "timeline" && (
-            <TimelineCanvas items={items} properties={properties} onUpdateItem={updateItem} onOpenItem={openItem} />
+          {activeView.layout === "calendar" && (
+            <CalendarView
+              items={processedItems}
+              properties={properties}
+              onUpdateItem={updateItem}
+              onOpenItem={openItem}
+            />
+          )}
+          {activeView.layout === "timeline" && (
+            <TimelineCanvas
+              items={processedItems}
+              properties={properties}
+              onUpdateItem={updateItem}
+              onOpenItem={openItem}
+            />
           )}
         </div>
 
       </div>
 
-      <DatabaseItemDrawer
+      <DatabaseRowDrawer
         item={selectedItem}
         properties={properties}
         opened={!!selectedItem}
@@ -179,15 +244,15 @@ export default function DatabaseBlockView(props: NodeViewProps) {
         onUpdate={updateItem}
         onAddProperty={(type) => {
           const newProp = createDefaultProperty(type as DatabasePropertyType);
-          props.updateAttributes({ properties: [...properties, newProp] });
+          props.updateAttributes({ schema: [...properties, newProp] });
         }}
         onUpdatePropertySchema={(propId, updatedProp) => {
           const newProps = properties.map(p => p.id === propId ? updatedProp : p);
-          props.updateAttributes({ properties: newProps });
+          props.updateAttributes({ schema: newProps });
         }}
         onDeletePropertySchema={(propId) => {
           const newProps = properties.filter(p => p.id !== propId);
-          props.updateAttributes({ properties: newProps });
+          props.updateAttributes({ schema: newProps });
         }}
         parentEditor={props.editor}
       />

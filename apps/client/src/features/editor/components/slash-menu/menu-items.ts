@@ -22,6 +22,7 @@ import {
   IconTypography,
   IconMenu4,
   IconCalendar,
+  IconTimeline,
   IconAppWindow,
   IconFileText,
   IconSitemap,
@@ -319,36 +320,58 @@ const CommandGroups: SlashMenuGroupedItemsType = {
           .run(),
     },
     {
-      title: "Table View",
+      title: "Table view",
       description: "Insert a Notion-like data table.",
       searchTerms: ["table view", "database", "data table", "notion"],
       icon: IconTableOptions,
       command: ({ editor, range }: CommandProps) =>
         (editor.chain().focus() as any)
           .deleteRange(range)
-          .insertDataTable()
+          .insertDatabaseBlock({ initialLayout: "table" })
           .run(),
     },
     {
-      title: "Kanban Board",
+      title: "Kanban view",
       description: "Insert a Jira-style kanban board.",
       searchTerms: ["kanban", "board", "tasks", "jira", "notion"],
       icon: IconColumns,
       command: ({ editor, range }: CommandProps) =>
         (editor.chain().focus() as any)
           .deleteRange(range)
-          .insertKanbanBoard()
+          .insertDatabaseBlock({ initialLayout: "kanban" })
           .run(),
     },
     {
-      title: "Timeline / Database",
+      title: "Calendar view",
+      description: "Insert a Calendar database.",
+      searchTerms: ["calendar", "database", "notion"],
+      icon: IconCalendar,
+      command: ({ editor, range }: CommandProps) =>
+        (editor.chain().focus() as any)
+          .deleteRange(range)
+          .insertDatabaseBlock({ initialLayout: "calendar" })
+          .run(),
+    },
+    {
+      title: "Timeline view",
       description: "Insert a Notion-like database with timeline.",
       searchTerms: ["timeline", "gantt", "database", "notion", "table"],
+      icon: IconTimeline,
+      command: ({ editor, range }: CommandProps) =>
+        (editor.chain().focus() as any)
+          .deleteRange(range)
+          .insertDatabaseBlock({ initialLayout: "timeline" })
+          .run(),
+    },
+    {
+      title: "Database - Inline",
+      description: "Insert an inline database.",
+      searchTerms: ["database", "inline", "notion", "table"],
       icon: IconTableOptions,
       command: ({ editor, range }: CommandProps) =>
         (editor.chain().focus() as any)
           .deleteRange(range)
-          .insertDatabaseBlock()
+          .insertDatabaseBlock({ initialLayout: "table" })
           .run(),
     },
     {
