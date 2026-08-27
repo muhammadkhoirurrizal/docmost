@@ -1,7 +1,7 @@
 import { DatabaseRow, DatabasePropertySchema } from "@docmost/editor-ext";
 import { applyGrouping } from "../data-engine";
-import { Text, Group, UnstyledButton, ActionIcon, Avatar, Checkbox } from "@mantine/core";
-import { IconPlus, IconMaximize, IconCalendar, IconUser, IconCheckbox, IconHash, IconAlignLeft, IconDots, IconList } from "@tabler/icons-react";
+import { Text, Group, UnstyledButton, ActionIcon, Avatar, Checkbox, Progress } from "@mantine/core";
+import { IconPlus, IconMaximize, IconCalendar, IconUser, IconCheckbox, IconHash, IconAlignLeft, IconDots, IconList, IconLink, IconMail, IconPhone, IconPercentage } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import dayjs from "dayjs";
@@ -97,17 +97,27 @@ const KanbanCard = ({
                   })}
                 </div>
               );
+            } else if (prop.type === "progress") {
+              const numVal = parseFloat(String(val));
+              if (!isNaN(numVal)) {
+                renderedVal = (
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", height: 20 }}>
+                    <Progress value={numVal} size="sm" style={{ flex: 1 }} color={numVal === 100 ? "teal" : "blue"} />
+                    <Text size="xs" c="dimmed" style={{ width: 32, textAlign: "right" }}>{numVal}%</Text>
+                  </div>
+                );
+              }
             } else if (typeof val === "string" || typeof val === "number") {
-              renderedVal = <Text size="xs" truncate="end" c="dimmed">{val}</Text>;
+              renderedVal = <Text size="xs" truncate="end" c="dimmed" style={{ flex: 1 }}>{val}</Text>;
             }
 
             if (!renderedVal) return null;
 
             // Icon for property
-            const PropIcon = prop.type === "date" ? IconCalendar : prop.type === "user" ? IconUser : prop.type === "checkbox" ? null : prop.type === "number" ? IconHash : prop.type === "text" ? IconAlignLeft : prop.type === "multi_select" ? IconList : null;
+            const PropIcon = prop.type === "date" ? IconCalendar : prop.type === "user" ? IconUser : prop.type === "checkbox" ? null : prop.type === "number" ? IconHash : prop.type === "text" ? IconAlignLeft : prop.type === "multi_select" ? IconList : prop.type === "url" ? IconLink : prop.type === "email" ? IconMail : prop.type === "phone" ? IconPhone : prop.type === "progress" ? IconPercentage : null;
 
             return (
-              <div key={prop.id} style={{ display: "flex", alignItems: "center", gap: 6, minHeight: 20 }}>
+              <div key={prop.id} style={{ display: "flex", alignItems: "center", gap: 6, minHeight: 20, width: "100%" }}>
                 {PropIcon && <PropIcon size={14} style={{ color: "var(--mantine-color-dimmed)", flexShrink: 0 }} />}
                 {renderedVal}
               </div>
