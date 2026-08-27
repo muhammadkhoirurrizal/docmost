@@ -1,6 +1,6 @@
 import { NodeViewWrapper, NodeViewProps } from "@tiptap/react";
 import { useTranslation } from "react-i18next";
-import { ActionIcon, UnstyledButton, Button } from "@mantine/core";
+import { ActionIcon, UnstyledButton, Button, Menu } from "@mantine/core";
 import {
   IconTable, IconCalendar, IconTimeline, IconColumns, IconPlus, IconChevronDown
 } from "@tabler/icons-react";
@@ -13,7 +13,7 @@ import DatabaseRowDrawer from "./database-item-drawer";
 import DatabaseInitSelector from "./database-init-selector";
 import ViewSettingsPanel from "./view-settings-panel";
 import { applyFilters, applySorts } from "./data-engine";
-import { DatabaseRow, DatabasePropertySchema, DatabaseView, createDefaultProperty, DatabasePropertyType } from "@docmost/editor-ext";
+import { DatabaseRow, DatabasePropertySchema, DatabaseView, createDefaultProperty, DatabasePropertyType, DatabaseViewLayout } from "@docmost/editor-ext";
 import dayjs from "dayjs";
 
 const VIEW_ICONS: Record<string, JSX.Element> = {
@@ -77,6 +77,23 @@ export default function DatabaseBlockView(props: NodeViewProps) {
   const openItem = (id: string) => {
     const found = items.find(i => i.id === id) || null;
     setSelectedItem(found);
+  };
+
+  const handleAddView = (layout: DatabaseViewLayout) => {
+    const newViewId = `view-${Date.now()}`;
+    const newView: DatabaseView = {
+      id: newViewId,
+      name: layout.charAt(0).toUpperCase() + layout.slice(1),
+      layout,
+      visibility: properties.map(p => p.id),
+      filter: [],
+      sort: [],
+      groupBy: null,
+    };
+    props.updateAttributes({ 
+      views: [...views, newView],
+      activeViewId: newViewId
+    });
   };
 
   if (isUninitialized) {
@@ -148,9 +165,19 @@ export default function DatabaseBlockView(props: NodeViewProps) {
                 </UnstyledButton>
               );
             })}
-            <ActionIcon variant="subtle" size="sm" c="dimmed" style={{ marginLeft: 4 }}>
-              <IconPlus size={14} />
-            </ActionIcon>
+            <Menu withinPortal position="bottom-start" width={160}>
+              <Menu.Target>
+                <ActionIcon variant="subtle" size="sm" c="dimmed" style={{ marginLeft: 4 }}>
+                  <IconPlus size={14} />
+                </ActionIcon>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Item leftSection={<IconTable size={14} />} onClick={() => handleAddView("table")}>Table</Menu.Item>
+                <Menu.Item leftSection={<IconColumns size={14} />} onClick={() => handleAddView("kanban")}>Board</Menu.Item>
+                <Menu.Item leftSection={<IconCalendar size={14} />} onClick={() => handleAddView("calendar")}>Calendar</Menu.Item>
+                <Menu.Item leftSection={<IconTimeline size={14} />} onClick={() => handleAddView("timeline")}>Timeline</Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
           </div>
 
           {/* Right: Actions */}
