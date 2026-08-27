@@ -45,6 +45,7 @@ export default function FilterPanel({ view, schema, onUpdateView }: FilterPanelP
                 onUpdateView({ filter: newFilter });
               }}
               styles={{ input: { width: 100 } }}
+              comboboxProps={{ withinPortal: false }}
             />
             <Select 
               size="xs" 
@@ -63,6 +64,7 @@ export default function FilterPanel({ view, schema, onUpdateView }: FilterPanelP
                 onUpdateView({ filter: newFilter });
               }}
               styles={{ input: { width: 100 } }}
+              comboboxProps={{ withinPortal: false }}
             />
             {!["isEmpty", "isNotEmpty"].includes(rule.op) && (
               <TextInput 

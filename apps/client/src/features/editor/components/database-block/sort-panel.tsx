@@ -45,6 +45,7 @@ export default function SortPanel({ view, schema, onUpdateView }: SortPanelProps
                 onUpdateView({ sort: newSort });
               }}
               styles={{ input: { width: 140 } }}
+              comboboxProps={{ withinPortal: false }}
             />
             <Select 
               size="xs" 
@@ -60,6 +61,7 @@ export default function SortPanel({ view, schema, onUpdateView }: SortPanelProps
                 onUpdateView({ sort: newSort });
               }}
               styles={{ input: { width: 110 } }}
+              comboboxProps={{ withinPortal: false }}
             />
             <ActionIcon 
               size="xs" 

@@ -24,16 +24,19 @@ export function applyFilters(rows: DatabaseRow[], rules: FilterRule[], schema: D
 
       switch (rule.op) {
         case "is":
+          if (rule.value === "" || rule.value === null) return true;
           if (propMeta.type === "date" && typeof propValue === "object") {
             return propValue?.start === rule.value;
           }
           return propValue === rule.value;
         case "isNot":
+          if (rule.value === "" || rule.value === null) return true;
           if (propMeta.type === "date" && typeof propValue === "object") {
             return propValue?.start !== rule.value;
           }
           return propValue !== rule.value;
         case "contains":
+          if (rule.value === "" || rule.value === null) return true;
           return typeof propValue === "string" && typeof rule.value === "string"
             ? propValue.toLowerCase().includes(rule.value.toLowerCase())
             : false;
