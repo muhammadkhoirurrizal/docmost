@@ -37,9 +37,19 @@ export default function DatabaseBlockView(props: NodeViewProps) {
   const activeView = views.find(v => v.id === activeViewId) || views[0];
 
   const [isEditingTemplate, setIsEditingTemplate] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Process data with engine
-  const filteredItems = applyFilters(items, activeView.filter || [], properties);
+  const searchedItems = items.filter(item => {
+    if (!searchQuery) return true;
+    const titleVal = item.properties["title"];
+    if (typeof titleVal === "string") {
+      return titleVal.toLowerCase().includes(searchQuery.toLowerCase());
+    }
+    return false;
+  });
+
+  const filteredItems = applyFilters(searchedItems, activeView.filter || [], properties);
   const processedItems = applySorts(filteredItems, activeView.sort || [], properties);
 
   // Compute which property IDs are visible in this view
@@ -232,9 +242,16 @@ export default function DatabaseBlockView(props: NodeViewProps) {
             <ViewSettingsPanel 
               view={activeView}
               schema={properties}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
               onUpdateView={(updates) => {
                 const newViews = views.map(v => v.id === activeView.id ? { ...v, ...updates } : v);
                 props.updateAttributes({ views: newViews });
+              }}
+              onDuplicateView={() => {
+                const newViewId = `view-${Date.now()}`;
+                const newView = { ...activeView, id: newViewId, name: `${activeView.name} (Copy)` };
+                props.updateAttributes({ views: [...views, newView], activeViewId: newViewId });
               }}
               onDeleteView={views.length > 1 ? () => {
                 const newViews = views.filter(v => v.id !== activeView.id);
