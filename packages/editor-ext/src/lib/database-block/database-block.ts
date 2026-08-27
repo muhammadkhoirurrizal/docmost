@@ -47,6 +47,8 @@ export interface DatabaseView {
   filter: FilterRule[];
   sort: SortRule[];
   groupBy: string | null;
+  groupVisibility?: Record<string, boolean>;
+  groupOrder?: string[];
   calendarBy?: string | null;
   calendarEnd?: string | null;
 }

@@ -96,6 +96,19 @@ export default function DatabaseBlockView(props: NodeViewProps) {
     });
   };
 
+  const handleCreateDateProperty = (target: "calendarBy" | "calendarEnd") => {
+    const newProp = createDefaultProperty("date");
+    newProp.name = "Date";
+    const newProperties = [...properties, newProp];
+    const newViews = views.map(v => {
+      if (v.id === activeView.id) {
+        return { ...v, [target]: newProp.id };
+      }
+      return v;
+    });
+    props.updateAttributes({ schema: newProperties, views: newViews });
+  };
+
   if (isUninitialized) {
     return (
       <NodeViewWrapper
@@ -193,6 +206,7 @@ export default function DatabaseBlockView(props: NodeViewProps) {
                 const newViews = views.filter(v => v.id !== activeView.id);
                 props.updateAttributes({ views: newViews, activeViewId: newViews[0].id });
               } : undefined}
+              onCreateDateProperty={(target) => handleCreateDateProperty(target as "calendarBy" | "calendarEnd")}
             />
             <div style={{ display: "flex", borderRadius: 6, overflow: "hidden", marginLeft: 4 }}>
               <Button

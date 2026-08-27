@@ -1,5 +1,5 @@
 import { Popover, UnstyledButton, Text, Group, Stack, Switch, Divider, TextInput, ActionIcon } from "@mantine/core";
-import { IconFilter, IconArrowsSort, IconDots, IconTrash, IconTable, IconColumns, IconCalendar, IconTimeline, IconEye, IconX, IconChevronRight, IconChevronLeft, IconPlus } from "@tabler/icons-react";
+import { IconFilter, IconArrowsSort, IconDots, IconTrash, IconTable, IconColumns, IconCalendar, IconTimeline, IconEye, IconEyeOff, IconX, IconChevronRight, IconChevronLeft, IconPlus } from "@tabler/icons-react";
 import { DatabaseView, DatabasePropertySchema, DatabaseViewLayout } from "@docmost/editor-ext";
 import { useState, useEffect } from "react";
 
@@ -8,11 +8,12 @@ interface ViewSettingsPanelProps {
   schema: DatabasePropertySchema[];
   onUpdateView: (updates: Partial<DatabaseView>) => void;
   onDeleteView?: () => void;
+  onCreateDateProperty?: (target: "calendarBy" | "calendarEnd") => void;
 }
 
-type SettingsPage = "main" | "properties" | "filter" | "sort" | "group" | "calendarBy" | "calendarEnd";
+type SettingsPage = "main" | "properties" | "filter" | "sort" | "group" | "group-select" | "calendarBy" | "calendarEnd";
 
-export default function ViewSettingsPanel({ view, schema, onUpdateView, onDeleteView }: ViewSettingsPanelProps) {
+export default function ViewSettingsPanel({ view, schema, onUpdateView, onDeleteView, onCreateDateProperty }: ViewSettingsPanelProps) {
   const [viewName, setViewName] = useState(view.name || "");
   const [settingsOpened, setSettingsOpened] = useState(false);
   const [activePage, setActivePage] = useState<SettingsPage>("main");
@@ -230,7 +231,7 @@ export default function ViewSettingsPanel({ view, schema, onUpdateView, onDelete
                     icon={<IconColumns size={16} />} 
                     label="Group by" 
                     subtext={getPropName(view.groupBy)}
-                    onClick={() => setActivePage("group")} 
+                    onClick={() => setActivePage(view.groupBy ? "group" : "group-select")} 
                   />
                 )}
               </Stack>
@@ -319,7 +320,7 @@ export default function ViewSettingsPanel({ view, schema, onUpdateView, onDelete
             </Stack>
           )}
 
-          {activePage === "group" && (
+          {activePage === "group-select" && (
             <Stack gap="sm">
               <Group gap="xs" align="center" mb={2}>
                 <ActionIcon size="sm" variant="subtle" color="gray" onClick={() => setActivePage("main")}>
@@ -348,6 +349,70 @@ export default function ViewSettingsPanel({ view, schema, onUpdateView, onDelete
             </Stack>
           )}
 
+          {activePage === "group" && (() => {
+            const groupProp = schema.find(p => p.id === view.groupBy);
+            if (!groupProp) return null;
+            const isAllShowed = groupProp.options ? groupProp.options.every(o => !(view.groupVisibility?.[o.id])) : true;
+            return (
+              <Stack gap="sm">
+                <Group gap="xs" align="center" mb={2} justify="space-between">
+                  <Group gap="xs">
+                    <ActionIcon size="sm" variant="subtle" color="gray" onClick={() => setActivePage("main")}>
+                      <IconChevronLeft size={16} />
+                    </ActionIcon>
+                    <Text size="sm" fw={600} c="dimmed">Groups</Text>
+                  </Group>
+                  <UnstyledButton
+                    onClick={() => {
+                      if (!groupProp.options) return;
+                      const newVis = { ...(view.groupVisibility || {}) };
+                      groupProp.options.forEach(o => {
+                        if (isAllShowed) newVis[o.id] = true;
+                        else delete newVis[o.id];
+                      });
+                      onUpdateView({ groupVisibility: newVis });
+                    }}
+                    style={{ fontSize: 12, color: "var(--mantine-color-blue-filled)", fontWeight: 500 }}
+                  >
+                    {isAllShowed ? "Hide All" : "Show All"}
+                  </UnstyledButton>
+                </Group>
+                <Divider mb="xs" />
+                <Stack gap={2}>
+                  {groupProp.options?.map(opt => {
+                    const isHidden = !!view.groupVisibility?.[opt.id];
+                    return (
+                      <Group key={opt.id} justify="space-between" wrap="nowrap" style={{ padding: "4px 8px" }}>
+                        <Group gap={8}>
+                           <div style={{ width: 12, height: 12, borderRadius: 6, background: `var(--mantine-color-${opt.color}-filled, ${opt.color})` }} />
+                           <Text size="sm" c={isHidden ? "dimmed" : undefined}>{opt.label}</Text>
+                        </Group>
+                        <ActionIcon size="xs" variant="subtle" color="gray" onClick={() => {
+                          const newVis = { ...(view.groupVisibility || {}) };
+                          if (isHidden) delete newVis[opt.id];
+                          else newVis[opt.id] = true;
+                          onUpdateView({ groupVisibility: newVis });
+                        }}>
+                          {isHidden ? <IconEyeOff size={14} /> : <IconEye size={14} />}
+                        </ActionIcon>
+                      </Group>
+                    );
+                  })}
+                  {(!groupProp.options || groupProp.options.length === 0) && (
+                     <Text size="xs" c="dimmed" style={{ padding: "4px 8px" }}>No options available.</Text>
+                  )}
+                </Stack>
+                <Divider my="xs" />
+                <MenuItem
+                  icon={<IconColumns size={16} />}
+                  label="Group by"
+                  subtext={groupProp.name}
+                  onClick={() => setActivePage("group-select")}
+                />
+              </Stack>
+            );
+          })()}
+
           {activePage === "calendarBy" && (
             <Stack gap="sm">
               <Group gap="xs" align="center" mb={2}>
@@ -373,6 +438,13 @@ export default function ViewSettingsPanel({ view, schema, onUpdateView, onDelete
                     onClick={() => onUpdateView({ calendarBy: prop.id })}
                   />
                 ))}
+                {onCreateDateProperty && (
+                  <MenuItem
+                    icon={<IconPlus size={16} />}
+                    label="Create date property"
+                    onClick={() => onCreateDateProperty("calendarBy")}
+                  />
+                )}
               </Stack>
             </Stack>
           )}
@@ -402,6 +474,13 @@ export default function ViewSettingsPanel({ view, schema, onUpdateView, onDelete
                     onClick={() => onUpdateView({ calendarEnd: prop.id })}
                   />
                 ))}
+                {onCreateDateProperty && (
+                  <MenuItem
+                    icon={<IconPlus size={16} />}
+                    label="Create end date property"
+                    onClick={() => onCreateDateProperty("calendarEnd")}
+                  />
+                )}
               </Stack>
             </Stack>
           )}
