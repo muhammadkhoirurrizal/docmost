@@ -262,7 +262,7 @@ export default function DatabaseBlockView(props: NodeViewProps) {
               onOpenItem={openItem}
               groupByPropId={activeView.groupBy || undefined}
               dateGroupMode={activeView.dateGroupMode}
-              onAddRow={addItem}
+              onAddRow={(propId, val) => addItemWithProps({ [propId]: val })}
             />
           )}
           {activeView.layout === "calendar" && (
