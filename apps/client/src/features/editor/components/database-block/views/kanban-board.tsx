@@ -12,11 +12,12 @@ interface KanbanBoardProps {
   visiblePropIds?: string[];
   onUpdateItem: (item: DatabaseRow) => void;
   onOpenItem: (itemId: string) => void;
-  groupByPropId?: string;
+  groupByPropId?: string | null;
+  dateGroupMode?: string;
   onAddRow?: () => void;
 }
 
-export default function KanbanBoard({ items, properties, visiblePropIds, onUpdateItem, onOpenItem, groupByPropId, onAddRow }: KanbanBoardProps) {
+export default function KanbanBoard({ items, properties, visiblePropIds, onUpdateItem, onOpenItem, groupByPropId, dateGroupMode, onAddRow }: KanbanBoardProps) {
   const { t } = useTranslation();
   const [dragItemId, setDragItemId] = useState<string | null>(null);
   const [dragOverCol, setDragOverCol] = useState<string | null>(null);
@@ -27,10 +28,13 @@ export default function KanbanBoard({ items, properties, visiblePropIds, onUpdat
     : properties.find(p => p.type === "status" || p.type === "select");
 
   const groups = groupProp
-    ? applyGrouping(items, groupProp.id, properties)
+    ? applyGrouping(items, groupProp.id, properties, dateGroupMode)
     : { "ungrouped": items };
 
-  const columns = groupProp?.options ? [...groupProp.options] : [];
+  const isDynamicGroups = groupProp?.type === "date";
+  const columns = isDynamicGroups 
+    ? Object.keys(groups).filter(k => k !== "__unassigned__").map(k => ({ id: k, label: k, color: "gray" })) 
+    : (groupProp?.options ? [...groupProp.options] : []);
   const unassignedItems = groups["__unassigned__"] || [];
 
   // Visible extra properties (exclude title and group prop)

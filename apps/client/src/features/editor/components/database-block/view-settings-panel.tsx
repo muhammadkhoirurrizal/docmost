@@ -66,22 +66,23 @@ export default function ViewSettingsPanel({ view, schema, onUpdateView, onDelete
   ];
 
   // Helper for menu item
-  const MenuItem = ({ icon, label, subtext, onClick, color }: { icon: JSX.Element, label: string, subtext?: string, onClick: () => void, color?: string }) => (
+  const MenuItem = ({ icon, label, subtext, onClick, color }: { icon?: JSX.Element, label: string, subtext?: string, onClick: () => void, color?: string }) => (
     <UnstyledButton
       onClick={onClick}
       style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "6px 8px", borderRadius: 6,
-        color: color || "var(--mantine-color-text)",
-        transition: "background 0.1s",
+        width: "100%", padding: "6px 8px", borderRadius: 4,
+        background: color ? `var(--mantine-color-${color}-light)` : "transparent",
+        color: color ? `var(--mantine-color-${color}-filled)` : "var(--mantine-color-text)",
+        transition: "background 0.1s"
       }}
-      onMouseEnter={e => e.currentTarget.style.background = color ? `var(--mantine-color-${color}-light)` : "var(--mantine-color-default-hover)"}
-      onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+      onMouseEnter={e => { if (!color) e.currentTarget.style.background = "var(--mantine-color-default-hover)"; }}
+      onMouseLeave={e => { if (!color) e.currentTarget.style.background = "transparent"; }}
     >
-      <Group gap="sm" wrap="nowrap">
-        <div style={{ color: color ? `var(--mantine-color-${color}-filled)` : "var(--mantine-color-dimmed)", display: "flex" }}>
+      <Group gap="xs">
+        {icon && <div style={{ display: "flex", color: color ? `var(--mantine-color-${color}-filled)` : "var(--mantine-color-dimmed)" }}>
           {icon}
-        </div>
+        </div>}
         <Text size="sm" fw={500}>{label}</Text>
       </Group>
       {subtext !== undefined ? (
@@ -336,7 +337,7 @@ export default function ViewSettingsPanel({ view, schema, onUpdateView, onDelete
                   color={view.groupBy === null ? "blue" : undefined}
                   onClick={() => onUpdateView({ groupBy: null })}
                 />
-                {schema.filter(p => ["select", "multi_select", "status", "user"].includes(p.type)).map(prop => (
+                {schema.filter(p => ["select", "multi_select", "status", "user", "date"].includes(p.type)).map(prop => (
                   <MenuItem
                     key={prop.id}
                     icon={<IconColumns size={16} />}
@@ -352,6 +353,46 @@ export default function ViewSettingsPanel({ view, schema, onUpdateView, onDelete
           {activePage === "group" && (() => {
             const groupProp = schema.find(p => p.id === view.groupBy);
             if (!groupProp) return null;
+
+            if (groupProp.type === "date") {
+              return (
+                <Stack gap="sm">
+                  <Group gap="xs" align="center" mb={2} justify="space-between">
+                    <Group gap="xs">
+                      <ActionIcon size="sm" variant="subtle" color="gray" onClick={() => setActivePage("main")}>
+                        <IconChevronLeft size={16} />
+                      </ActionIcon>
+                      <Text size="sm" fw={600} c="dimmed">Date by</Text>
+                    </Group>
+                  </Group>
+                  <Divider mb="xs" />
+                  <Stack gap={2}>
+                    {[
+                      { value: "relative", label: "Relative" },
+                      { value: "day", label: "Day" },
+                      { value: "week", label: "Week" },
+                      { value: "month", label: "Month" },
+                      { value: "year", label: "Year" }
+                    ].map(mode => (
+                      <MenuItem
+                        key={mode.value}
+                        label={mode.label}
+                        color={(view.dateGroupMode || "month") === mode.value ? "blue" : undefined}
+                        onClick={() => onUpdateView({ dateGroupMode: mode.value as any })}
+                      />
+                    ))}
+                  </Stack>
+                  <Divider my="xs" />
+                  <MenuItem
+                    icon={<IconColumns size={16} />}
+                    label="Group by"
+                    subtext={groupProp.name}
+                    onClick={() => setActivePage("group-select")}
+                  />
+                </Stack>
+              );
+            }
+
             const isAllShowed = groupProp.options ? groupProp.options.every(o => !(view.groupVisibility?.[o.id])) : true;
             return (
               <Stack gap="sm">

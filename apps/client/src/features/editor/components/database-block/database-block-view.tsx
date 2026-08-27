@@ -53,10 +53,16 @@ export default function DatabaseBlockView(props: NodeViewProps) {
   };
 
   const addItem = () => {
+    addItemWithProps({});
+  };
+
+  const addItemWithProps = (overrideProps: Record<string, any>) => {
     // Generate initial properties dynamically from schema
     const initProps: Record<string, any> = {};
     properties.forEach(prop => {
-      if (prop.type === "date") {
+      if (overrideProps[prop.id] !== undefined) {
+        initProps[prop.id] = overrideProps[prop.id];
+      } else if (prop.type === "date") {
         initProps[prop.id] = { start: dayjs().toISOString(), end: dayjs().add(1, "day").toISOString() };
       } else if (prop.type === "status" || prop.type === "select") {
         // Default to first option if available
@@ -254,6 +260,8 @@ export default function DatabaseBlockView(props: NodeViewProps) {
               visiblePropIds={visiblePropIds}
               onUpdateItem={updateItem}
               onOpenItem={openItem}
+              groupByPropId={activeView.groupBy || undefined}
+              dateGroupMode={activeView.dateGroupMode}
               onAddRow={addItem}
             />
           )}
@@ -264,6 +272,7 @@ export default function DatabaseBlockView(props: NodeViewProps) {
               properties={properties}
               onUpdateItem={updateItem}
               onOpenItem={openItem}
+              onAddItem={addItemWithProps}
             />
           )}
           {activeView.layout === "timeline" && (

@@ -1,7 +1,7 @@
 import { DatabaseRow, DatabasePropertySchema, DatabaseView } from "@docmost/editor-ext";
 import { useTranslation } from "react-i18next";
 import { Text, UnstyledButton, Group, ActionIcon } from "@mantine/core";
-import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
+import { IconChevronLeft, IconChevronRight, IconPlus } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useState } from "react";
 
@@ -11,6 +11,7 @@ interface CalendarViewProps {
   properties: DatabasePropertySchema[];
   onUpdateItem: (item: DatabaseRow) => void;
   onOpenItem: (itemId: string) => void;
+  onAddItem: (initialProps: Record<string, any>) => void;
 }
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -30,11 +31,12 @@ const getDatePropId = (view: DatabaseView, schema: DatabasePropertySchema[]): st
   return schema.find(p => p.type === "date")?.id ?? null;
 };
 
-export default function CalendarView({ view, items, properties, onUpdateItem, onOpenItem }: CalendarViewProps) {
+export default function CalendarView({ view, items, properties, onUpdateItem, onOpenItem, onAddItem }: CalendarViewProps) {
   const { t } = useTranslation();
   const [currentMonth, setCurrentMonth] = useState(dayjs().startOf("month"));
   const [dragItemId, setDragItemId] = useState<string | null>(null);
   const [dragOverDate, setDragOverDate] = useState<string | null>(null);
+  const [hoveredDate, setHoveredDate] = useState<string | null>(null);
 
   const datePropId = getDatePropId(view, properties);
 
@@ -155,22 +157,44 @@ export default function CalendarView({ view, items, properties, onUpdateItem, on
               onDragOver={e => { e.preventDefault(); setDragOverDate(dateStr); }}
               onDragLeave={() => setDragOverDate(null)}
               onDrop={e => handleDrop(e, dayObj.date)}
+              onMouseEnter={() => setHoveredDate(dateStr)}
+              onMouseLeave={() => setHoveredDate(null)}
+              onClick={(e) => {
+                // If they clicked the cell background, not an item
+                if (e.target === e.currentTarget && datePropId) {
+                  onAddItem({ [datePropId]: { start: dayObj.date.startOf("day").toISOString(), end: dayObj.date.startOf("day").toISOString() } });
+                }
+              }}
             >
-              {/* Day number */}
-              <div style={{
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: 24, height: 24,
-                borderRadius: "50%",
-                marginBottom: 4,
-                background: isToday ? "var(--mantine-color-red-filled)" : "transparent",
-                color: isToday ? "#fff" : dayObj.isCurrentMonth ? "var(--mantine-color-text)" : "var(--mantine-color-dimmed)",
-                fontSize: 12,
-                fontWeight: isToday ? 700 : 400,
-              }}>
-                {dayObj.date.date()}
-              </div>
+              {/* Day header (Number + Add button) */}
+              <Group justify="space-between" align="center" mb={4}>
+                <div style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: 24, height: 24,
+                  borderRadius: "50%",
+                  background: isToday ? "var(--mantine-color-red-filled)" : "transparent",
+                  color: isToday ? "#fff" : dayObj.isCurrentMonth ? "var(--mantine-color-text)" : "var(--mantine-color-dimmed)",
+                  fontSize: 12,
+                  fontWeight: isToday ? 700 : 400,
+                }}>
+                  {dayObj.date.date()}
+                </div>
+                {(hoveredDate === dateStr || isDragOver) && datePropId && (
+                  <ActionIcon 
+                    size="xs" 
+                    variant="subtle" 
+                    color="gray"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onAddItem({ [datePropId]: { start: dayObj.date.startOf("day").toISOString(), end: dayObj.date.startOf("day").toISOString() } });
+                    }}
+                  >
+                    <IconPlus size={14} />
+                  </ActionIcon>
+                )}
+              </Group>
 
               {/* Items */}
               <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>

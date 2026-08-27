@@ -82,17 +82,63 @@ export function applySorts(rows: DatabaseRow[], rules: SortRule[], schema: Datab
   });
 }
 
-export function applyGrouping(rows: DatabaseRow[], groupBy: string | null, schema: DatabasePropertySchema[]): Record<string, DatabaseRow[]> {
+export function applyGrouping(rows: DatabaseRow[], groupBy: string | null, schema: DatabasePropertySchema[], dateGroupMode?: string): Record<string, DatabaseRow[]> {
   if (!groupBy) return { "ungrouped": rows };
 
   const propMeta = schema.find(p => p.id === groupBy);
-  if (!propMeta || (propMeta.type !== "select" && propMeta.type !== "status" && propMeta.type !== "multi_select")) {
+  if (!propMeta || !["select", "status", "multi_select", "date"].includes(propMeta.type)) {
     return { "ungrouped": rows };
   }
 
   const groups: Record<string, DatabaseRow[]> = {};
 
-  // Initialize columns in option order
+  if (propMeta.type === "date") {
+    // Dynamic grouping
+    groups["__unassigned__"] = [];
+    rows.forEach(row => {
+      let val = row.properties[groupBy];
+      val = typeof val === "object" ? val?.start : val;
+      if (!val) {
+        groups["__unassigned__"].push(row);
+        return;
+      }
+
+      const d = dayjs(val);
+      let groupKey = "";
+
+      switch (dateGroupMode) {
+        case "day":
+          groupKey = d.format("YYYY-MM-DD");
+          break;
+        case "week":
+          groupKey = d.startOf("week").format("YYYY-MM-DD") + " (Week)";
+          break;
+        case "year":
+          groupKey = d.format("YYYY");
+          break;
+        case "relative":
+          const now = dayjs().startOf("day");
+          const diff = d.startOf("day").diff(now, "day");
+          if (diff === 0) groupKey = "Today";
+          else if (diff === 1) groupKey = "Tomorrow";
+          else if (diff === -1) groupKey = "Yesterday";
+          else if (diff > 1 && diff <= 7) groupKey = "Next 7 Days";
+          else if (diff < -1 && diff >= -7) groupKey = "Last 7 Days";
+          else groupKey = d.format("MMM YYYY");
+          break;
+        case "month":
+        default:
+          groupKey = d.format("MMM YYYY");
+          break;
+      }
+
+      if (!groups[groupKey]) groups[groupKey] = [];
+      groups[groupKey].push(row);
+    });
+    return groups;
+  }
+
+  // Initialize columns in option order for select/status
   if (propMeta.options) {
     propMeta.options.forEach(opt => { groups[opt.id] = []; });
   }

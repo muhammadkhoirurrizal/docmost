@@ -49,6 +49,7 @@ export interface DatabaseView {
   groupBy: string | null;
   groupVisibility?: Record<string, boolean>;
   groupOrder?: string[];
+  dateGroupMode?: "relative" | "day" | "week" | "month" | "year";
   calendarBy?: string | null;
   calendarEnd?: string | null;
 }
