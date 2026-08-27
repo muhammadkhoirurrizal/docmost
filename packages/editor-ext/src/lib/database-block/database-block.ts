@@ -47,6 +47,8 @@ export interface DatabaseView {
   filter: FilterRule[];
   sort: SortRule[];
   groupBy: string | null;
+  calendarBy?: string | null;
+  calendarEnd?: string | null;
 }
 
 export interface DatabaseBlockOptions {

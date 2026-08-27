@@ -10,7 +10,7 @@ interface ViewSettingsPanelProps {
   onDeleteView?: () => void;
 }
 
-type SettingsPage = "main" | "properties" | "filter" | "sort";
+type SettingsPage = "main" | "properties" | "filter" | "sort" | "group" | "calendarBy" | "calendarEnd";
 
 export default function ViewSettingsPanel({ view, schema, onUpdateView, onDeleteView }: ViewSettingsPanelProps) {
   const [viewName, setViewName] = useState(view.name || "");
@@ -50,6 +50,11 @@ export default function ViewSettingsPanel({ view, schema, onUpdateView, onDelete
 
   const handleLayoutChange = (layout: DatabaseViewLayout) => {
     onUpdateView({ layout });
+  };
+
+  const getPropName = (id: string | null | undefined) => {
+    if (!id) return "None";
+    return schema.find(p => p.id === id)?.name || "None";
   };
 
   const LAYOUT_OPTIONS: { layout: DatabaseViewLayout; label: string; icon: JSX.Element }[] = [
@@ -204,6 +209,30 @@ export default function ViewSettingsPanel({ view, schema, onUpdateView, onDelete
                   subtext={hasSorts ? `${view.sort!.length} active` : ""}
                   onClick={() => setActivePage("sort")} 
                 />
+                
+                {view.layout === "calendar" ? (
+                  <>
+                    <MenuItem 
+                      icon={<IconCalendar size={16} />} 
+                      label="Calendar by" 
+                      subtext={getPropName(view.calendarBy)}
+                      onClick={() => setActivePage("calendarBy")} 
+                    />
+                    <MenuItem 
+                      icon={<IconTimeline size={16} />} 
+                      label="End date" 
+                      subtext={getPropName(view.calendarEnd)}
+                      onClick={() => setActivePage("calendarEnd")} 
+                    />
+                  </>
+                ) : (
+                  <MenuItem 
+                    icon={<IconColumns size={16} />} 
+                    label="Group by" 
+                    subtext={getPropName(view.groupBy)}
+                    onClick={() => setActivePage("group")} 
+                  />
+                )}
               </Stack>
 
               {/* Delete View */}
@@ -287,6 +316,93 @@ export default function ViewSettingsPanel({ view, schema, onUpdateView, onDelete
                   <IconPlus size={14} /> Add sort
                 </UnstyledButton>
               </Group>
+            </Stack>
+          )}
+
+          {activePage === "group" && (
+            <Stack gap="sm">
+              <Group gap="xs" align="center" mb={2}>
+                <ActionIcon size="sm" variant="subtle" color="gray" onClick={() => setActivePage("main")}>
+                  <IconChevronLeft size={16} />
+                </ActionIcon>
+                <Text size="sm" fw={600} c="dimmed">Group by</Text>
+              </Group>
+              <Divider mb="xs" />
+              <Stack gap={2}>
+                <MenuItem
+                  icon={<IconX size={16} />}
+                  label="None"
+                  color={view.groupBy === null ? "blue" : undefined}
+                  onClick={() => onUpdateView({ groupBy: null })}
+                />
+                {schema.filter(p => ["select", "multi_select", "status", "user"].includes(p.type)).map(prop => (
+                  <MenuItem
+                    key={prop.id}
+                    icon={<IconColumns size={16} />}
+                    label={prop.name}
+                    color={view.groupBy === prop.id ? "blue" : undefined}
+                    onClick={() => onUpdateView({ groupBy: prop.id })}
+                  />
+                ))}
+              </Stack>
+            </Stack>
+          )}
+
+          {activePage === "calendarBy" && (
+            <Stack gap="sm">
+              <Group gap="xs" align="center" mb={2}>
+                <ActionIcon size="sm" variant="subtle" color="gray" onClick={() => setActivePage("main")}>
+                  <IconChevronLeft size={16} />
+                </ActionIcon>
+                <Text size="sm" fw={600} c="dimmed">Calendar by</Text>
+              </Group>
+              <Divider mb="xs" />
+              <Stack gap={2}>
+                <MenuItem
+                  icon={<IconX size={16} />}
+                  label="None"
+                  color={!view.calendarBy ? "blue" : undefined}
+                  onClick={() => onUpdateView({ calendarBy: null })}
+                />
+                {schema.filter(p => p.type === "date").map(prop => (
+                  <MenuItem
+                    key={prop.id}
+                    icon={<IconCalendar size={16} />}
+                    label={prop.name}
+                    color={view.calendarBy === prop.id ? "blue" : undefined}
+                    onClick={() => onUpdateView({ calendarBy: prop.id })}
+                  />
+                ))}
+              </Stack>
+            </Stack>
+          )}
+
+          {activePage === "calendarEnd" && (
+            <Stack gap="sm">
+              <Group gap="xs" align="center" mb={2}>
+                <ActionIcon size="sm" variant="subtle" color="gray" onClick={() => setActivePage("main")}>
+                  <IconChevronLeft size={16} />
+                </ActionIcon>
+                <Text size="sm" fw={600} c="dimmed">End date</Text>
+              </Group>
+              <Divider mb="xs" />
+              <Stack gap={2}>
+                <MenuItem
+                  icon={<IconX size={16} />}
+                  label="None"
+                  color={!view.calendarEnd ? "blue" : undefined}
+                  onClick={() => onUpdateView({ calendarEnd: null })}
+                />
+                {schema.filter(p => p.type === "date").map(prop => (
+                  <MenuItem
+                    key={prop.id}
+                    icon={<IconTimeline size={16} />}
+                    label={prop.name}
+                    color={view.calendarEnd === prop.id ? "blue" : undefined}
+                    onClick={() => onUpdateView({ calendarEnd: prop.id })}
+                  />
+                ))}
+              </Stack>
             </Stack>
           )}
 

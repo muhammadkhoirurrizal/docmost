@@ -1,4 +1,4 @@
-import { DatabaseRow, DatabasePropertySchema } from "@docmost/editor-ext";
+import { DatabaseRow, DatabasePropertySchema, DatabaseView } from "@docmost/editor-ext";
 import { useTranslation } from "react-i18next";
 import { Text, UnstyledButton, Group, ActionIcon } from "@mantine/core";
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
@@ -6,6 +6,7 @@ import dayjs from "dayjs";
 import { useState } from "react";
 
 interface CalendarViewProps {
+  view: DatabaseView;
   items: DatabaseRow[];
   properties: DatabasePropertySchema[];
   onUpdateItem: (item: DatabaseRow) => void;
@@ -15,25 +16,27 @@ interface CalendarViewProps {
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 // Find which property holds the date for a row
-const getDateStart = (item: DatabaseRow, schema: DatabasePropertySchema[]): string | null => {
-  const dateProp = schema.find(p => p.type === "date");
-  if (!dateProp) return null;
-  const val = item.properties[dateProp.id];
+const getDateStart = (item: DatabaseRow, datePropId: string | null): string | null => {
+  if (!datePropId) return null;
+  const val = item.properties[datePropId];
   if (!val) return null;
   return typeof val === "object" ? val.start ?? null : val;
 };
 
-const getDatePropId = (schema: DatabasePropertySchema[]): string | null => {
+const getDatePropId = (view: DatabaseView, schema: DatabasePropertySchema[]): string | null => {
+  if (view.calendarBy && schema.some(p => p.id === view.calendarBy)) {
+    return view.calendarBy;
+  }
   return schema.find(p => p.type === "date")?.id ?? null;
 };
 
-export default function CalendarView({ items, properties, onUpdateItem, onOpenItem }: CalendarViewProps) {
+export default function CalendarView({ view, items, properties, onUpdateItem, onOpenItem }: CalendarViewProps) {
   const { t } = useTranslation();
   const [currentMonth, setCurrentMonth] = useState(dayjs().startOf("month"));
   const [dragItemId, setDragItemId] = useState<string | null>(null);
   const [dragOverDate, setDragOverDate] = useState<string | null>(null);
 
-  const datePropId = getDatePropId(properties);
+  const datePropId = getDatePropId(view, properties);
 
   const prevMonth = () => setCurrentMonth(m => m.subtract(1, "month"));
   const nextMonth = () => setCurrentMonth(m => m.add(1, "month"));
@@ -55,7 +58,7 @@ export default function CalendarView({ items, properties, onUpdateItem, onOpenIt
 
   const getItemsForDate = (date: dayjs.Dayjs) => {
     return items.filter(item => {
-      const start = getDateStart(item, properties);
+      const start = getDateStart(item, datePropId);
       if (!start) return false;
       return dayjs(start).isSame(date, "day");
     });

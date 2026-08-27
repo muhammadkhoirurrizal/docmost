@@ -245,6 +245,7 @@ export default function DatabaseBlockView(props: NodeViewProps) {
           )}
           {activeView.layout === "calendar" && (
             <CalendarView
+              view={activeView}
               items={processedItems}
               properties={properties}
               onUpdateItem={updateItem}
