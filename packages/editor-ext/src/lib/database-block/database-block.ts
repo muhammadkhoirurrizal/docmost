@@ -47,6 +47,11 @@ export interface DatabaseView {
   filter: FilterRule[];
   sort: SortRule[];
   groupBy: string | null;
+  groupVisibility?: Record<string, boolean>;
+  groupOrder?: string[];
+  dateGroupMode?: "relative" | "day" | "week" | "month" | "year";
+  calendarBy?: string | null;
+  calendarEnd?: string | null;
 }
 
 export interface DatabaseBlockOptions {
@@ -167,6 +172,14 @@ export const DatabaseBlock = Node.create<DatabaseBlockOptions>({
           return items ? JSON.parse(items) : null;
         },
         renderHTML: (attributes) => ({ "data-rows": JSON.stringify(attributes.rows) }),
+      },
+      templates: {
+        default: [],
+        parseHTML: (element) => {
+          const tpls = element.getAttribute("data-templates");
+          return tpls ? JSON.parse(tpls) : null;
+        },
+        renderHTML: (attributes) => ({ "data-templates": JSON.stringify(attributes.templates) }),
       },
     };
   },

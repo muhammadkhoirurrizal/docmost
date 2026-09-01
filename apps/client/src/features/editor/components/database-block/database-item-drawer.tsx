@@ -8,6 +8,7 @@ import {
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import { DatePicker } from "@mantine/dates";
 import { useEffect, useRef, useState } from "react";
 
 dayjs.extend(relativeTime);
@@ -22,6 +23,46 @@ import { useSpaceQuery } from "@/features/space/queries/space-query";
 import { useSearchSuggestionsQuery } from "@/features/search/queries/search-query";
 import { CustomAvatar } from "@/components/ui/custom-avatar";
 
+const DatePropertyEditor = ({ value, onChange }: { value: any, onChange: (val: any) => void }) => {
+  const { start, end } = parseDateProp(value);
+  const fmtStart = start ? dayjs(start).format("MMM D, YYYY") : null;
+  const fmtEnd = end && end !== start ? dayjs(end).format("MMM D, YYYY") : null;
+  const displayLabel = !fmtStart ? "Empty" : (!fmtEnd ? fmtStart : `${fmtStart} → ${fmtEnd}`);
+
+  return (
+    <Popover position="bottom-start" withArrow shadow="md">
+      <Popover.Target>
+        <UnstyledButton style={{
+          display: "flex", alignItems: "center", gap: 6,
+          borderRadius: 4, padding: "2px 6px", fontSize: 13,
+          color: fmtStart ? "var(--mantine-color-text)" : "var(--mantine-color-dimmed)",
+          background: "transparent", width: "100%", height: "100%", minHeight: 24
+        }}>
+          {displayLabel}
+        </UnstyledButton>
+      </Popover.Target>
+      <Popover.Dropdown p="xs">
+        <DatePicker 
+          type="range"
+          allowSingleDateInRange
+          value={[start ? new Date(start) : null, end ? new Date(end) : null]}
+          onChange={(val) => {
+            if (!val) {
+              onChange(null);
+            } else {
+              const [s, e] = val;
+              onChange({ 
+                start: s ? dayjs(s).startOf("day").toISOString() : null, 
+                end: e ? dayjs(e).startOf("day").toISOString() : (s ? dayjs(s).startOf("day").toISOString() : null)
+              });
+            }
+          }}
+        />
+      </Popover.Dropdown>
+    </Popover>
+  );
+};
+
 interface DatabaseRowDrawerProps {
   item: DatabaseRow | null;
   properties: DatabasePropertySchema[];
@@ -32,10 +73,11 @@ interface DatabaseRowDrawerProps {
   onUpdatePropertySchema?: (propId: string, updatedProp: DatabasePropertySchema) => void;
   onDeletePropertySchema?: (propId: string) => void;
   parentEditor?: any;
+  isTemplate?: boolean;
 }
 
 export default function DatabaseRowDrawer({
-  item, properties, opened, onClose, onUpdate, onAddProperty, onUpdatePropertySchema, onDeletePropertySchema, parentEditor
+  item, properties, opened, onClose, onUpdate, onAddProperty, onUpdatePropertySchema, onDeletePropertySchema, parentEditor, isTemplate
 }: DatabaseRowDrawerProps) {
 
   const itemRef = useRef<DatabaseRow | null>(null);
@@ -101,30 +143,7 @@ export default function DatabaseRowDrawer({
   };
 
   const renderDateProp = (propId: string) => {
-    const { start, end } = parseDateProp(item.properties[propId]);
-    const fmtStart = start ? dayjs(start).format("MMM D, YYYY") : null;
-    const fmtEnd = end ? dayjs(end).format("MMM D, YYYY") : null;
-
-    const displayLabel = !fmtStart
-      ? <span style={{ color: "var(--mantine-color-dimmed)", fontSize: 13 }}>Empty</span>
-      : fmtStart === fmtEnd
-        ? <span style={{ fontSize: 13 }}>{fmtStart}</span>
-        : <span style={{ fontSize: 13 }}>{fmtStart} → {fmtEnd}</span>;
-
-    return (
-      <Group gap={4} align="center" wrap="nowrap" style={{ height: "100%", width: "100%" }}>
-        {displayLabel}
-        <Group gap={4} wrap="nowrap" style={{ opacity: 0, transition: "opacity .15s" }} className={classes.dateInputsHover}>
-          <input type="date" value={start ? dayjs(start).format("YYYY-MM-DD") : ""}
-            onChange={e => updateProperty(propId, { start: e.target.value ? new Date(e.target.value).toISOString() : null, end })}
-            style={{ border: "none", background: "transparent", color: "inherit", outline: "none", fontSize: 12, colorScheme: "dark" }} />
-          <Text size="xs" c="dimmed">→</Text>
-          <input type="date" value={end ? dayjs(end).format("YYYY-MM-DD") : ""}
-            onChange={e => updateProperty(propId, { start, end: e.target.value ? new Date(e.target.value).toISOString() : null })}
-            style={{ border: "none", background: "transparent", color: "inherit", outline: "none", fontSize: 12, colorScheme: "dark" }} />
-        </Group>
-      </Group>
-    );
+    return <DatePropertyEditor value={item.properties[propId]} onChange={(val) => updateProperty(propId, val)} />;
   };
 
   const renderStatusProp = (prop: DatabasePropertySchema) => {

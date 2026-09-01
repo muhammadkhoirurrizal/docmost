@@ -1,8 +1,8 @@
 import { NodeViewWrapper, NodeViewProps } from "@tiptap/react";
 import { useTranslation } from "react-i18next";
-import { ActionIcon, UnstyledButton, Button } from "@mantine/core";
+import { ActionIcon, UnstyledButton, Button, Menu } from "@mantine/core";
 import {
-  IconTable, IconCalendar, IconTimeline, IconColumns, IconPlus, IconChevronDown
+  IconTable, IconCalendar, IconTimeline, IconColumns, IconPlus, IconChevronDown, IconFile, IconFileText
 } from "@tabler/icons-react";
 import { useState } from "react";
 import TableView from "./views/table-view";
@@ -12,8 +12,9 @@ import KanbanBoard from "./views/kanban-board";
 import DatabaseRowDrawer from "./database-item-drawer";
 import DatabaseInitSelector from "./database-init-selector";
 import ViewSettingsPanel from "./view-settings-panel";
+import DatabaseToolbar from "./database-toolbar";
 import { applyFilters, applySorts } from "./data-engine";
-import { DatabaseRow, DatabasePropertySchema, DatabaseView, createDefaultProperty, DatabasePropertyType } from "@docmost/editor-ext";
+import { DatabaseRow, DatabasePropertySchema, DatabaseView, createDefaultProperty, DatabasePropertyType, DatabaseViewLayout } from "@docmost/editor-ext";
 import dayjs from "dayjs";
 
 const VIEW_ICONS: Record<string, JSX.Element> = {
@@ -30,13 +31,26 @@ export default function DatabaseBlockView(props: NodeViewProps) {
   const attrs = props.node.attrs;
   const properties = attrs.schema as DatabasePropertySchema[];
   const items = attrs.rows as DatabaseRow[];
+  const templates = attrs.templates as DatabaseRow[] || [];
   const views = attrs.views as DatabaseView[];
   const activeViewId = attrs.activeViewId as string;
   const isUninitialized = attrs.isUninitialized as boolean;
   const activeView = views.find(v => v.id === activeViewId) || views[0];
 
+  const [isEditingTemplate, setIsEditingTemplate] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
   // Process data with engine
-  const filteredItems = applyFilters(items, activeView.filter || [], properties);
+  const searchedItems = items.filter(item => {
+    if (!searchQuery) return true;
+    const titleVal = item.properties["title"];
+    if (typeof titleVal === "string") {
+      return titleVal.toLowerCase().includes(searchQuery.toLowerCase());
+    }
+    return false;
+  });
+
+  const filteredItems = applyFilters(searchedItems, activeView.filter || [], properties);
   const processedItems = applySorts(filteredItems, activeView.sort || [], properties);
 
   // Compute which property IDs are visible in this view
@@ -52,11 +66,19 @@ export default function DatabaseBlockView(props: NodeViewProps) {
     if (selectedItem?.id === updatedItem.id) setSelectedItem(updatedItem);
   };
 
-  const addItem = () => {
-    // Generate initial properties dynamically from schema
+  const addItem = (template?: DatabaseRow | null) => {
+    addItemWithProps({}, template);
+  };
+
+  const addItemWithProps = (overrideProps: Record<string, any>, template?: DatabaseRow | null) => {
+    // Generate initial properties dynamically from schema or template
     const initProps: Record<string, any> = {};
     properties.forEach(prop => {
-      if (prop.type === "date") {
+      if (overrideProps[prop.id] !== undefined) {
+        initProps[prop.id] = overrideProps[prop.id];
+      } else if (template?.properties?.[prop.id] !== undefined) {
+        initProps[prop.id] = template.properties[prop.id];
+      } else if (prop.type === "date") {
         initProps[prop.id] = { start: dayjs().toISOString(), end: dayjs().add(1, "day").toISOString() };
       } else if (prop.type === "status" || prop.type === "select") {
         // Default to first option if available
@@ -68,15 +90,68 @@ export default function DatabaseBlockView(props: NodeViewProps) {
     const newItem: DatabaseRow = {
       id: `item-${Date.now()}`,
       properties: initProps,
-      content: null,
+      content: template?.content ?? null,
     };
     props.updateAttributes({ rows: [...items, newItem] });
+    setIsEditingTemplate(false);
     setSelectedItem(newItem);
+  };
+
+  const addTemplate = () => {
+    const initProps: Record<string, any> = {};
+    properties.forEach(prop => {
+      if (prop.id === "title") initProps[prop.id] = "New Template";
+    });
+    const newTemplate: DatabaseRow = {
+      id: `tpl-${Date.now()}`,
+      properties: initProps,
+      content: null,
+    };
+    props.updateAttributes({ templates: [...templates, newTemplate] });
+    setIsEditingTemplate(true);
+    setSelectedItem(newTemplate);
+  };
+
+  const updateTemplate = (updatedTemplate: DatabaseRow) => {
+    const newTemplates = templates.map(t => t.id === updatedTemplate.id ? updatedTemplate : t);
+    props.updateAttributes({ templates: newTemplates });
+    if (selectedItem?.id === updatedTemplate.id) setSelectedItem(updatedTemplate);
   };
 
   const openItem = (id: string) => {
     const found = items.find(i => i.id === id) || null;
+    setIsEditingTemplate(false);
     setSelectedItem(found);
+  };
+
+  const handleAddView = (layout: DatabaseViewLayout) => {
+    const newViewId = `view-${Date.now()}`;
+    const newView: DatabaseView = {
+      id: newViewId,
+      name: layout.charAt(0).toUpperCase() + layout.slice(1),
+      layout,
+      visibility: properties.map(p => p.id),
+      filter: [],
+      sort: [],
+      groupBy: null,
+    };
+    props.updateAttributes({ 
+      views: [...views, newView],
+      activeViewId: newViewId
+    });
+  };
+
+  const handleCreateDateProperty = (target: "calendarBy" | "calendarEnd") => {
+    const newProp = createDefaultProperty("date");
+    newProp.name = "Date";
+    const newProperties = [...properties, newProp];
+    const newViews = views.map(v => {
+      if (v.id === activeView.id) {
+        return { ...v, [target]: newProp.id };
+      }
+      return v;
+    });
+    props.updateAttributes({ schema: newProperties, views: newViews });
   };
 
   if (isUninitialized) {
@@ -148,13 +223,33 @@ export default function DatabaseBlockView(props: NodeViewProps) {
                 </UnstyledButton>
               );
             })}
-            <ActionIcon variant="subtle" size="sm" c="dimmed" style={{ marginLeft: 4 }}>
-              <IconPlus size={14} />
-            </ActionIcon>
+            <Menu withinPortal position="bottom-start" width={160}>
+              <Menu.Target>
+                <ActionIcon variant="subtle" size="sm" c="dimmed" style={{ marginLeft: 4 }}>
+                  <IconPlus size={14} />
+                </ActionIcon>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Item leftSection={<IconTable size={14} />} onClick={() => handleAddView("table")}>Table</Menu.Item>
+                <Menu.Item leftSection={<IconColumns size={14} />} onClick={() => handleAddView("kanban")}>Board</Menu.Item>
+                <Menu.Item leftSection={<IconCalendar size={14} />} onClick={() => handleAddView("calendar")}>Calendar</Menu.Item>
+                <Menu.Item leftSection={<IconTimeline size={14} />} onClick={() => handleAddView("timeline")}>Timeline</Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
           </div>
 
           {/* Right: Actions */}
           <div style={{ display: "flex", alignItems: "center", gap: 2, paddingRight: 8 }}>
+            <DatabaseToolbar 
+              view={activeView}
+              schema={properties}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              onUpdateView={(updates) => {
+                const newViews = views.map(v => v.id === activeView.id ? { ...v, ...updates } : v);
+                props.updateAttributes({ views: newViews });
+              }}
+            />
             <ViewSettingsPanel 
               view={activeView}
               schema={properties}
@@ -162,24 +257,49 @@ export default function DatabaseBlockView(props: NodeViewProps) {
                 const newViews = views.map(v => v.id === activeView.id ? { ...v, ...updates } : v);
                 props.updateAttributes({ views: newViews });
               }}
+              onDuplicateView={() => {
+                const newViewId = `view-${Date.now()}`;
+                const newView = { ...activeView, id: newViewId, name: `${activeView.name} (Copy)` };
+                props.updateAttributes({ views: [...views, newView], activeViewId: newViewId });
+              }}
               onDeleteView={views.length > 1 ? () => {
                 const newViews = views.filter(v => v.id !== activeView.id);
                 props.updateAttributes({ views: newViews, activeViewId: newViews[0].id });
               } : undefined}
+              onCreateDateProperty={(target) => handleCreateDateProperty(target as "calendarBy" | "calendarEnd")}
             />
             <div style={{ display: "flex", borderRadius: 6, overflow: "hidden", marginLeft: 4 }}>
               <Button
                 size="xs"
                 color="blue"
                 variant="filled"
-                onClick={addItem}
+                onClick={() => addItem()}
                 style={{ height: 26, padding: "0 10px", fontSize: 13, borderRadius: "6px 0 0 6px" }}
               >
                 New
               </Button>
-              <Button size="xs" color="blue" variant="filled" style={{ height: 26, padding: "0 6px", borderRadius: "0 6px 6px 0", borderLeft: "1px solid rgba(255,255,255,0.2)" }}>
-                <IconChevronDown size={12} />
-              </Button>
+              <Menu position="bottom-end" shadow="md" width={220}>
+                <Menu.Target>
+                  <Button size="xs" color="blue" variant="filled" style={{ height: 26, padding: "0 6px", borderRadius: "0 6px 6px 0", borderLeft: "1px solid rgba(255,255,255,0.2)" }}>
+                    <IconChevronDown size={12} />
+                  </Button>
+                </Menu.Target>
+                <Menu.Dropdown>
+                  <Menu.Item leftSection={<IconFile size={14} />} onClick={() => addItem()}>
+                    Empty page
+                  </Menu.Item>
+                  {templates.length > 0 && <Menu.Divider />}
+                  {templates.map(tpl => (
+                    <Menu.Item key={tpl.id} leftSection={<IconFileText size={14} />} onClick={() => addItem(tpl)}>
+                      {tpl.properties?.title || "Untitled Template"}
+                    </Menu.Item>
+                  ))}
+                  <Menu.Divider />
+                  <Menu.Item leftSection={<IconPlus size={14} />} onClick={addTemplate}>
+                    New template
+                  </Menu.Item>
+                </Menu.Dropdown>
+              </Menu>
             </div>
           </div>
         </div>
@@ -213,15 +333,19 @@ export default function DatabaseBlockView(props: NodeViewProps) {
               visiblePropIds={visiblePropIds}
               onUpdateItem={updateItem}
               onOpenItem={openItem}
-              onAddRow={addItem}
+              groupByPropId={activeView.groupBy || undefined}
+              dateGroupMode={activeView.dateGroupMode}
+              onAddRow={(propId, val) => addItemWithProps({ [propId]: val })}
             />
           )}
           {activeView.layout === "calendar" && (
             <CalendarView
+              view={activeView}
               items={processedItems}
               properties={properties}
               onUpdateItem={updateItem}
               onOpenItem={openItem}
+              onAddItem={addItemWithProps}
             />
           )}
           {activeView.layout === "timeline" && (
@@ -241,7 +365,8 @@ export default function DatabaseBlockView(props: NodeViewProps) {
         properties={properties}
         opened={!!selectedItem}
         onClose={() => setSelectedItem(null)}
-        onUpdate={updateItem}
+        onUpdate={isEditingTemplate ? updateTemplate : updateItem}
+        isTemplate={isEditingTemplate}
         onAddProperty={(type) => {
           const newProp = createDefaultProperty(type as DatabasePropertyType);
           props.updateAttributes({ schema: [...properties, newProp] });
